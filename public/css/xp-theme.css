@@ -1,0 +1,393 @@
+/* Windows XP Classic Theme CSS for 赛博修仙 MUD */
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 14px;
+  background: #3a6ea5;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* XP Button Style */
+.xp-btn {
+  background: linear-gradient(180deg, #fff 0%, #ece9d8 30%, #d6d2c2 100%);
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: #000;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(0,0,0,0.2);
+  min-height: 23px;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.xp-btn:active {
+  background: linear-gradient(180deg, #d6d2c2 0%, #ece9d8 100%);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+}
+.xp-btn:focus { outline: 1px dotted #000; outline-offset: -3px; }
+.xp-btn:disabled { color: #808080; cursor: default; }
+
+/* XP Input Style */
+.xp-input {
+  border: 1px solid #7f9db9;
+  border-top-color: #436f9a;
+  border-left-color: #436f9a;
+  padding: 3px 5px;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  background: #fff;
+  color: #000;
+  outline: none;
+}
+.xp-input:focus { border-color: #003c74; }
+
+/* Main Window Frame */
+#xp-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  background: #ece9d8;
+  overflow: hidden;
+}
+
+/* Title Bar */
+.title-bar {
+  background: linear-gradient(180deg, #0a246a 0%, #3a6ea5 30%, #0a246a 100%);
+  height: 30px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.title-bar-icon {
+  width: 16px; height: 16px; margin-right: 4px;
+  background: #ffd700; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #0a246a; font-weight: bold;
+}
+.title-bar-text {
+  color: #fff;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.title-bar-controls {
+  display: flex; gap: 2px;
+}
+.title-bar-controls button {
+  width: 21px; height: 21px;
+  background: linear-gradient(180deg, #fff 0%, #3481d8 50%, #0a246a 100%);
+  border: 1px solid #fff;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+
+/* Status Bar */
+.status-bar {
+  background: #ece9d8;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #a0a0a0;
+  padding: 3px 6px;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  min-height: 28px;
+  align-items: center;
+}
+.status-item {
+  display: flex; align-items: center; gap: 3px;
+  padding: 0 6px;
+  border-right: 1px solid #a0a0a0;
+}
+.status-item:last-child { border-right: none; }
+.status-label { color: #333; }
+.status-value { color: #0a246a; font-weight: bold; }
+.status-bar-hp { color: #c00; }
+.status-bar-sp { color: #0066cc; }
+.status-bar-st { color: #090; }
+.status-bar-silver { color: #666; }
+
+/* Main Content Area */
+.main-area {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Side Panel */
+.side-panel {
+  width: 80px;
+  min-width: 80px;
+  background: #ece9d8;
+  border-right: 1px solid #a0a0a0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  gap: 4px;
+  overflow-y: auto;
+}
+.side-panel .xp-btn {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  padding: 8px 4px;
+}
+.side-panel-label {
+  text-align: center;
+  font-size: 10px;
+  color: #666;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  border-bottom: 1px solid #a0a0a0;
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+/* Game Text Area */
+.game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.game-text {
+  flex: 1;
+  background: #0c0c0c;
+  color: #33ff33;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  -webkit-overflow-scrolling: touch;
+}
+.game-text::-webkit-scrollbar { width: 14px; }
+.game-text::-webkit-scrollbar-track { background: #1a1a1a; }
+.game-text::-webkit-scrollbar-thumb {
+  background: #444;
+  border: 2px solid #1a1a1a;
+}
+.game-text::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* Message types */
+.msg-system { color: #ffd700; }
+.msg-chat { color: #e0e0e0; }
+.msg-combat { color: #ff4444; }
+.msg-npc { color: #00cccc; }
+.msg-error { color: #888; }
+.msg-self { color: #88ff88; }
+.msg-info { color: #33ff33; }
+
+/* Chat Input Area */
+.chat-area {
+  background: #ece9d8;
+  border-top: 1px solid #fff;
+  display: flex;
+  padding: 4px;
+  gap: 4px;
+  min-height: 36px;
+}
+.chat-area input {
+  flex: 1;
+  min-width: 0;
+}
+.chat-area .xp-btn {
+  min-width: 50px;
+}
+
+/* Login/Setup Overlay */
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.overlay.hidden { display: none; }
+
+.overlay-box {
+  background: #ece9d8;
+  border: 2px solid #003c74;
+  border-radius: 8px 8px 0 0;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+}
+.overlay-titlebar {
+  background: linear-gradient(180deg, #0a246a 0%, #3a6ea5 30%, #0a246a 100%);
+  padding: 6px 10px;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+}
+.overlay-titlebar h2 {
+  color: #fff;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+.overlay-body {
+  padding: 16px;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+}
+.overlay-body label {
+  display: block;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: 3px;
+  margin-top: 10px;
+}
+.overlay-body label:first-child { margin-top: 0; }
+.overlay-body .xp-input {
+  width: 100%;
+}
+.overlay-body .form-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.overlay-body .toggle-link {
+  color: #003c74;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 11px;
+  margin-top: 10px;
+  display: inline-block;
+}
+.overlay-body .error-msg {
+  color: #c00;
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+/* Profession Selection */
+.profession-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.profession-card {
+  background: #fff;
+  border: 2px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  font-size: 11px;
+}
+.profession-card:hover { border-color: #3a6ea5; }
+.profession-card.selected { border-color: #0a246a; background: #ddeeff; }
+.profession-card .prof-name {
+  font-weight: bold;
+  font-size: 12px;
+  color: #0a246a;
+}
+.profession-card .prof-stats {
+  color: #555;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.profession-card .prof-bonus {
+  color: #090;
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+/* Attribute Allocation */
+.attr-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.attr-name {
+  width: 40px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #333;
+}
+.attr-value {
+  width: 40px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: #0a246a;
+}
+.attr-row .xp-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+.attr-total {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+/* Responsive: hide side panel on small screens */
+@media (max-width: 600px) {
+  .side-panel {
+    width: 56px;
+    min-width: 56px;
+  }
+  .side-panel .xp-btn {
+    font-size: 11px;
+    padding: 6px 2px;
+  }
+  .game-text { font-size: 13px; }
+  .status-bar { font-size: 10px; }
+  .profession-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 400px) {
+  .side-panel {
+    position: fixed;
+    bottom: 70px;
+    right: 0;
+    width: auto;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid #a0a0a0;
+    z-index: 50;
+    background: rgba(236,233,216,0.95);
+  }
+  .side-panel .xp-btn { padding: 6px 8px; }
+}

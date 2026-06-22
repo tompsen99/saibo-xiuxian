@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛博修仙</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #0a0a1a; 
+      color: #00ff88; 
+      font-family: 'Courier New', monospace;
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 200px;
+      background: #0d0d2b;
+      padding: 10px;
+      border-right: 1px solid #1a1a4a;
+    }
+    #sidebar h3 { color: #00ccff; margin-bottom: 10px; }
+    #status-bar p { font-size: 12px; margin: 5px 0; }
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-output {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    #input-area {
+      display: flex;
+      padding: 10px;
+      background: #0d0d2b;
+      border-top: 1px solid #1a1a4a;
+    }
+    #user-input {
+      flex: 1;
+      background: #1a1a3a;
+      border: 1px solid #2a2a5a;
+      color: #00ff88;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    #send-btn {
+      background: #2a2a5a;
+      border: 1px solid #3a3a6a;
+      color: #00ff88;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    #send-btn:hover { background: #3a3a6a; }
+    .msg-system { color: #ffff00; }
+    .msg-chat { color: #00ffff; }
+    .msg-error { color: #ff4444; }
+    .msg-room { color: #ffffff; }
+    .msg-local { color: #ff88ff; }
+    
+    /* Auth forms */
+    #auth-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100%;
+      background: #0a0a1a;
+    }
+    .auth-box {
+      background: #0d0d2b;
+      padding: 30px;
+      border: 1px solid #1a1a4a;
+      border-radius: 5px;
+      width: 350px;
+    }
+    .auth-box h2 { 
+      text-align: center; 
+      color: #00ccff; 
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .auth-box input {
+      width: 100%;
+      background: #1a1a3a;
+      border: 1px solid #2a2a5a;
+      color: #00ff88;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    .auth-box input:focus { border-color: #00ccff; }
+    .auth-box button {
+      width: 100%;
+      background: #2a2a5a;
+      border: 1px solid #3a3a6a;
+      color: #00ff88;
+      padding: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .auth-box button:hover { background: #3a3a6a; }
+    .auth-box .toggle { 
+      text-align: center; 
+      margin-top: 15px; 
+      color: #888;
+    }
+    .auth-box .toggle a { 
+      color: #00ccff; 
+      cursor: pointer; 
+      text-decoration: underline;
+    }
+    .hidden { display: none !important; }
+    #auth-error { color: #ff4444; text-align: center; margin-bottom: 10px; }
+    
+    /* Professions */
+    .profession-select {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .profession-option {
+      flex: 1;
+      background: #1a1a3a;
+      border: 2px solid #2a2a5a;
+      color: #888;
+      padding: 10px 5px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .profession-option.selected {
+      border-color: #00ccff;
+      color: #00ccff;
+      background: #1a1a4a;
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <h2>赛博修仙</h2>
+      <div id="auth-error"></div>
+      
+      <!-- Login Form -->
+      <div id="login-form">
+        <input type="email" id="login-email" placeholder="邮箱">
+        <input type="password" id="login-password" placeholder="密码">
+        <button onclick="doLogin()">登录</button>
+        <div class="toggle">没有账号？<a onclick="showRegister()">立即注册</a></div>
+      </div>
+      
+      <!-- Register Form -->
+      <div id="register-form" class="hidden">
+        <input type="email" id="reg-email" placeholder="邮箱">
+        <input type="password" id="reg-password" placeholder="密码">
+        <input type="text" id="reg-name" placeholder="角色名">
+        <div class="profession-select">
+          <div class="profession-option selected" data-prof="散修" onclick="selectProfession(this)">散修<br><small>平衡发展</small></div>
+          <div class="profession-option" data-prof="剑修" onclick="selectProfession(this)">剑修<br><small>力量+3</small></div>
+          <div class="profession-option" data-prof="法修" onclick="selectProfession(this)">法修<br><small>悟性+3</small></div>
+        </div>
+        <button onclick="doRegister()">注册</button>
+        <div class="toggle">已有账号？<a onclick="showLogin()">立即登录</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="hidden">
+    <div id="sidebar">
+      <h3 id="player-name">角色名</h3>
+      <div id="status-bar">
+        <p>境界: <span id="realm">练气期</span></p>
+        <p>等级: <span id="level">1</span></p>
+        <p>生命: <span id="hp">100/100</span></p>
+        <p>灵力: <span id="spirit">50/50</span></p>
+        <p>体力: <span id="stamina">100/100</span></p>
+        <p>灵石: <span id="silver">100</span></p>
+      </div>
+      <hr style="border-color: #1a1a4a; margin: 10px 0;">
+      <div id="location">
+        <p>位置:</p>
+        <p id="current-location">新手村 - 村口</p>
+      </div>
+    </div>
+    
+    <div id="main">
+      <div id="game-output"></div>
+      <div id="input-area">
+        <input type="text" id="user-input" placeholder="输入命令或聊天内容..." autofocus>
+        <button id="send-btn" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ws = null;
+    let token = localStorage.getItem('saibo_token');
+    let currentPlayer = null;
+    let selectedProfession = '散修';
+
+    function showLogin() {
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('auth-error').textContent = '';
+    }
+
+    function showRegister() {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.remove('hidden');
+      document.getElementById('auth-error').textContent = '';
+    }
+
+    function selectProfession(el) {
+      document.querySelectorAll('.profession-option').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedProfession = el.dataset.prof;
+    }
+
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+      ws.onopen = () => {
+        console.log('已连接到服务器');
+        if (token) {
+          ws.send(JSON.stringify({ type: 'login_with_token', data: { token } }));
+        }
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleMessage(message);
+      };
+
+      ws.onclose = () => {
+        appendOutput('与服务器断开连接，正在重连...', 'error');
+        setTimeout(connect, 3000);
+      };
+    }
+
+    function handleMessage(message) {
+      const { type, data } = message;
+
+      switch (type) {
+        case 'login_response':
+          if (data.success) {
+            token = data.token;
+            localStorage.setItem('saibo_token', token);
+            currentPlayer = data.player;
+            showGame();
+            updateStatus(data.player);
+          } else {
+            document.getElementById('auth-error').textContent = data.message;
+          }
+          break;
+
+        case 'register_response':
+          if (data.success) {
+            token = data.token;
+            localStorage.setItem('saibo_token', token);
+            currentPlayer = data.player;
+            showGame();
+            updateStatus(data.player);
+          } else {
+            document.getElementById('auth-error').textContent = data.message;
+          }
+          break;
+
+        case 'system':
+          appendOutput(data.message, 'system');
+          break;
+
+        case 'chat':
+          appendOutput(`[世界] ${data.sender}: ${data.message}`, 'chat');
+          break;
+
+        case 'local_chat':
+          appendOutput(`[本地] ${data.sender}: ${data.message}`, 'local');
+          break;
+
+        case 'room':
+          displayRoom(data);
+          break;
+
+        case 'move_response':
+          if (data.success) {
+            displayRoom(data.room);
+            if (currentPlayer) {
+              currentPlayer.currentMap = data.room.map || currentPlayer.currentMap;
+              currentPlayer.currentRoom = data.room.name;
+            }
+          }
+          break;
+
+        case 'command_response':
+          appendOutput(data.content, 'room');
+          break;
+
+        case 'status_response':
+          updateStatus(data);
+          break;
+
+        case 'status_update':
+          if (data.spirit !== undefined) document.getElementById('spirit').textContent = `${data.spirit}/${data.maxSpirit}`;
+          break;
+
+        case 'error':
+          appendOutput(data.message, 'error');
+          break;
+
+        case 'kicked':
+          appendOutput(data.message, 'error');
+          token = null;
+          localStorage.removeItem('saibo_token');
+          setTimeout(() => location.reload(), 2000);
+          break;
+      }
+    }
+
+    function showGame() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('user-input').focus();
+    }
+
+    function doLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      ws.send(JSON.stringify({ type: 'login', data: { email, password } }));
+    }
+
+    function doRegister() {
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const name = document.getElementById('reg-name').value;
+      ws.send(JSON.stringify({ type: 'register', data: { email, password, name, profession: selectedProfession } }));
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (text.startsWith('/')) {
+        const parts = text.split(' ');
+        const command = parts[0];
+        
+        if (command === '/移动') {
+          const direction = parts[1] || '';
+          ws.send(JSON.stringify({ type: 'move', data: { direction } }));
+        } else {
+          ws.send(JSON.stringify({ type: 'command', data: { command: text } }));
+        }
+      } else {
+        ws.send(JSON.stringify({ type: 'chat', data: { message: text } }));
+      }
+
+      input.value = '';
+    }
+
+    function displayRoom(room) {
+      let output = `\n═══════════════════════════════════════\n`;
+      output += `  ${room.name}\n`;
+      output += `═══════════════════════════════════════\n\n`;
+      output += `  ${room.description}\n\n`;
+      
+      if (room.exits) {
+        const exits = Object.keys(room.exits).map(e => {
+          const names = { north: '北', south: '南', east: '东', west: '西' };
+          return names[e] || e;
+        }).join('、');
+        output += `  出口: ${exits}\n`;
+      }
+      
+      if (room.players && room.players.length > 0) {
+        output += `\n  这里还有:\n`;
+        room.players.forEach(p => {
+          output += `    ${p.name} (${p.profession} ${p.level}级 ${p.realm})\n`;
+        });
+      }
+      
+      output += `\n═══════════════════════════════════════`;
+      appendOutput(output, 'room');
+      
+      if (currentPlayer) {
+        document.getElementById('current-location').textContent = `${currentPlayer.currentMap || '?'} - ${room.name}`;
+      }
+    }
+
+    function updateStatus(player) {
+      if (player.name) document.getElementById('player-name').textContent = player.name;
+      if (player.realm) document.getElementById('realm').textContent = player.realm;
+      if (player.level) document.getElementById('level').textContent = player.level;
+      if (player.hp !== undefined) document.getElementById('hp').textContent = `${player.hp}/${player.maxHp}`;
+      if (player.spirit !== undefined) document.getElementById('spirit').textContent = `${player.spirit}/${player.maxSpirit}`;
+      if (player.stamina !== undefined) document.getElementById('stamina').textContent = `${player.stamina}/${player.maxStamina}`;
+      if (player.silver !== undefined) document.getElementById('silver').textContent = player.silver;
+      if (player.location) document.getElementById('current-location').textContent = player.location;
+    }
+
+    function appendOutput(text, className = '') {
+      const output = document.getElementById('game-output');
+      const line = document.createElement('div');
+      line.className = className ? `msg-${className}` : '';
+      line.textContent = text;
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    // Enter key handler
+    document.getElementById('user-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Login form enter key
+    document.getElementById('login-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    document.getElementById('reg-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doRegister();
+    });
+
+    // Connect on load
+    connect();
+  </script>
+</body>
+</html>
