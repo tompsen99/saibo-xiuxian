@@ -423,6 +423,16 @@ const QUESTS_DATA = {
     requirement: { type: 'kill_any', target: 3 },
     reward: { exp: 50, silver: 20 },
     prereq: null
+  },
+  // Cyber quest: Admin Watch
+  q_admin_watch: {
+    id: 'q_admin_watch',
+    name: '世界异常',
+    type: 'main',
+    description: '你感觉到了这个世界的异常...探索竹林寻找真相',
+    requirement: { type: 'explore_bamboo', target: 1 },
+    reward: { exp: 150, silver: 50, special: 'admin_watch' },
+    prereq: null
   }
 };
 
@@ -446,6 +456,66 @@ const NPCS = {
       '听说高级副本里能打出稀有材料，拿来打造神兵利器再好不过了。'
     ]
   }
+};
+
+// ===== PROGRAM RELIC (程序遗物) SYSTEM =====
+const RELICS_DATA = {
+  // Category 1: 十二月遗物 (Monthly Relics)
+  M01: { id: 'M01', name: '正月·春雷碎片', category: '十二月', desc: '悟性+5%, 突破率+3%', effects: { wisdom: 0.05, breakthrough: 0.03 } },
+  M02: { id: 'M02', name: '二月·惊蛰之种', category: '十二月', desc: 'HP+8%, 回复+15%', effects: { hp: 0.08, regen: 0.15 } },
+  M03: { id: 'M03', name: '三月·清明露珠', category: '十二月', desc: '灵力+10%, 炼丹+5%', effects: { spirit: 0.10, alchemy: 0.05 } },
+  M04: { id: 'M04', name: '四月·谷雨精华', category: '十二月', desc: '经验+5%, 体力恢复+10%', effects: { exp: 0.05, staminaRecovery: 0.10 } },
+  M05: { id: 'M05', name: '五月·端午龙鳞', category: '十二月', desc: '防御+8%, 毒抗+20%', effects: { defense: 0.08, poisonResist: 0.20 } },
+  M06: { id: 'M06', name: '六月·夏至烈焰', category: '十二月', desc: '攻击+10%, 暴击伤害+15%', effects: { attack: 0.10, critDamage: 0.15 } },
+  // Category 2: 十二时辰遗物 (Time Relics)
+  T01: { id: 'T01', name: '子时·夜半钟声', category: '十二时辰', desc: '挂机经验+8%, 夜间修炼+15%', effects: { idleExp: 0.08, nightCultivation: 0.15 } },
+  T02: { id: 'T02', name: '丑时·鸡鸣破晓', category: '十二时辰', desc: '闪避+10%, 先手+8%', effects: { dodge: 0.10, initiative: 0.08 } },
+  T03: { id: 'T03', name: '寅时·平旦微光', category: '十二时辰', desc: 'HP回复+12%, 减益时间-20%', effects: { hpRegen: 0.12, debuffReduction: 0.20 } },
+  // Category 3: 十二生肖遗物 (Zodiac Relics)
+  Z01: { id: 'Z01', name: '子鼠·窃运之爪', category: '十二生肖', desc: '偷取+10%, 掉落+5%', effects: { stealChance: 0.10, lootBonus: 0.05 } },
+  Z02: { id: 'Z02', name: '丑牛·蛮力之心', category: '十二生肖', desc: '力量+15%, 负重+30%', effects: { strength: 0.15, carryWeight: 0.30 } },
+  Z03: { id: 'Z03', name: '寅虎·啸风之牙', category: '十二生肖', desc: '暴击率+10%, 恐惧+8%', effects: { critRate: 0.10, fearChance: 0.08 } }
+};
+
+// Admin Watch level thresholds
+const WATCH_THRESHOLDS = [
+  { level: 0, relics: 0, abilities: '无' },
+  { level: 1, relics: 1, abilities: '查看隐藏信息(怪物真实HP)' },
+  { level: 2, relics: 3, abilities: 'Bug探测器(查看Bug位置)' },
+  { level: 3, relics: 6, abilities: '自动Bug任务, 瞬移(5次/天)' },
+  { level: 4, relics: 9, abilities: '战斗预测, 经验+10%' }
+];
+
+// ===== BUG EXPLOITATION SYSTEM =====
+const BUGS_DATA = {
+  // Experience bugs
+  B01: { id: 'B01', name: '时间膨胀泡', category: '经验', desc: '挂机经验x3 持续10分钟', dailyLimit: 3, duration: 600000 },
+  B02: { id: 'B02', name: '经验溢出点', category: '经验', desc: '战斗经验x2 持续1小时', dailyLimit: 1, duration: 3600000 },
+  // Item bugs
+  B11: { id: 'B11', name: '背包溢出', category: '物品', desc: '临时+100背包格 1小时', dailyLimit: 1, duration: 3600000 },
+  B12: { id: 'B12', name: '商店漏洞', category: '物品', desc: '免费随机商店物品', dailyLimit: 1, duration: 0 },
+  // Combat bugs
+  B31: { id: 'B31', name: '伤害溢出', category: '战斗', desc: '下次攻击伤害x3', dailyLimit: 3, duration: 0 },
+  B33: { id: 'B33', name: '怪物卡住', category: '战斗', desc: '怪物跳过1回合', dailyLimit: 3, duration: 0 },
+  // Special bugs
+  B45: { id: 'B45', name: '道心漏洞', category: '特殊', desc: '道心+200 持续1小时', dailyLimit: 1, duration: 3600000 },
+  B49: { id: 'B49', name: '体力漏洞', category: '特殊', desc: '无限体力30分钟', dailyLimit: 1, duration: 1800000 },
+  B50: { id: 'B50', name: '掉率漏洞', category: '特殊', desc: '掉率x5 持续1小时', dailyLimit: 1, duration: 3600000 },
+  // Teleport bugs
+  B17: { id: 'B17', name: '瞬移漏洞', category: '传送', desc: '传送到已探索地图', dailyLimit: 3, duration: 0 },
+  B20: { id: 'B20', name: '回城Bug', category: '传送', desc: '瞬间回到新手村', dailyLimit: 999, duration: 0 },
+  B21: { id: 'B21', name: '传送门', category: '传送', desc: '创建传送门30分钟', dailyLimit: 1, duration: 1800000 }
+};
+
+// Bug discovery locations
+const BUG_LOCATIONS = {
+  '竹林': ['B01', 'B33'],
+  '村长屋': ['B12', 'B45'],
+  '集市': ['B11', 'B50'],
+  '客栈': ['B02', 'B49'],
+  '药铺': ['B21'],
+  '铁匠铺': ['B31'],
+  '修炼场': ['B17', 'B20']
 };
 
 // Get player data
@@ -570,7 +640,16 @@ function createPlayer(email, password, name, profession) {
     pendingFriendRequests: [],
     lastSignIn: null,
     channel: 'world',
-    pendingEncounter: null
+    pendingEncounter: null,
+    // Cyber systems
+    relics: [],
+    adminWatch: false,
+    adminWatchLevel: 0,
+    discoveredBugs: [],
+    bugUsage: {},
+    mysteryLetters: 0,
+    activeBugs: {},
+    exploredRooms: []
   };
   
   players[playerId] = newPlayer;
@@ -835,6 +914,15 @@ function handleLogin(ws, data) {
   if (!result.player.lastSignIn) result.player.lastSignIn = null;
   if (!result.player.channel) result.player.channel = 'world';
   if (!result.player.pendingEncounter) result.player.pendingEncounter = null;
+  // Cyber system fields
+  if (!result.player.relics) result.player.relics = [];
+  if (!result.player.adminWatch) result.player.adminWatch = false;
+  if (!result.player.adminWatchLevel) result.player.adminWatchLevel = 0;
+  if (!result.player.discoveredBugs) result.player.discoveredBugs = [];
+  if (!result.player.bugUsage) result.player.bugUsage = {};
+  if (!result.player.mysteryLetters) result.player.mysteryLetters = 0;
+  if (!result.player.activeBugs) result.player.activeBugs = {};
+  if (!result.player.exploredRooms) result.player.exploredRooms = [];
   savePlayers(getPlayers());
   
   connectedClients.set(ws, {
@@ -1124,6 +1212,17 @@ function handleCommand(ws, data) {
     handleFleeCommand(ws, player);
   } else if (command.startsWith('/商人购买')) {
     handleMerchantBuyCommand(ws, player, command);
+  } else if (command.startsWith('/遗物')) {
+    handleRelicCommand(ws, player);
+  } else if (command.startsWith('/手表')) {
+    handleWatchCommand(ws, player);
+  } else if (command.startsWith('/探索Bug')) {
+    handleExploreBugCommand(ws, player);
+  } else if (command.startsWith('/使用Bug')) {
+    const bugId = command.replace('/使用Bug', '').trim();
+    handleUseBugCommand(ws, player, bugId);
+  } else if (command.startsWith('/Bug')) {
+    handleBugListCommand(ws, player);
   } else {
     sendToClient(ws, {
       type: 'error',
@@ -1293,6 +1392,16 @@ function handleMoveCommand(ws, player, direction) {
   const pAfter = playersAfter[player.id];
   if (pAfter) {
     checkEncounter(ws, pAfter, 'explore');
+    // Track explored rooms
+    if (!pAfter.exploredRooms) pAfter.exploredRooms = [];
+    const roomKey = `${pAfter.currentMap}:${newRoomName}`;
+    if (!pAfter.exploredRooms.includes(roomKey)) {
+      pAfter.exploredRooms.push(roomKey);
+    }
+    // Quest progress for explore_bamboo
+    if (newRoomName === '竹林') {
+      updateQuestProgress(pAfter, 'explore_bamboo', 1);
+    }
     savePlayers(playersAfter);
   }
 }
@@ -1693,6 +1802,13 @@ function handleHelpCommand(ws, player) {
 ║  在竹林挂机会自动与怪物战斗
 ║  移动时可能触发奇遇事件
 ║  修炼功法可提升功法等级，增强战斗
+║
+║  🧬 赛博系统 (核心特色):
+║  /遗物  - 查看收集的程序遗物
+║  /手表  - 查看管理员手表状态
+║  /Bug   - 查看已发现的Bug
+║  /探索Bug - 搜索当前房间的Bug
+║  /使用Bug <BugID> - 激活Bug效果
 ╚══════════════════════════════╝`
     }
   });
@@ -1782,8 +1898,12 @@ function handlePracticeSkillCommand(ws, player, skillId) {
   
   // Check stamina
   if (player.stamina < 10) {
-    sendToClient(ws, { type: 'system', data: { message: '体力不足，无法修炼功法。需要至少10点体力。' } });
-    return;
+    // Check B49 infinite stamina bug
+    const activeBugs = player.activeBugs || {};
+    if (!(activeBugs.B49 && activeBugs.B49 > Date.now())) {
+      sendToClient(ws, { type: 'system', data: { message: '体力不足，无法修炼功法。需要至少10点体力。' } });
+      return;
+    }
   }
   
   const skillData = SKILLS_DATA[skillId];
@@ -1797,8 +1917,11 @@ function handlePracticeSkillCommand(ws, player, skillId) {
     p.idleStartTime = null;
   }
   
-  // Use stamina
-  p.stamina -= 10;
+  // Use stamina (skip if B49 infinite stamina bug active)
+  const practiceBugCheck = p.activeBugs || {};
+  if (!(practiceBugCheck.B49 && practiceBugCheck.B49 > Date.now())) {
+    p.stamina -= 10;
+  }
   
   // Gain skill exp
   ps.exp += 5;
@@ -2435,6 +2558,15 @@ function handleCompleteQuestCommand(ws, player, command) {
       rewardMsg += `${pd ? pd.name : pillId}x${count} `;
     }
   }
+  // Special reward: Admin Watch
+  if (qd.reward.special === 'admin_watch') {
+    p.adminWatch = true;
+    p.adminWatchLevel = 1;
+    p.mysteryLetters = (p.mysteryLetters || 0) + 1;
+    rewardMsg += '\n⌚ 获得了【管理员手表】！输入 /手表 查看详情。';
+    rewardMsg += '\n📩 获得了1封神秘信件。';
+    rewardMsg += '\n"你感觉到了这个世界的异常...代码的回声在耳边响起。"';
+  }
   
   savePlayers(players);
   
@@ -2787,6 +2919,360 @@ function handleMerchantBuyCommand(ws, player, command) {
 }
 
 // Helper functions
+
+// ===== CYBER SYSTEM HELPER =====
+function calcWatchLevel(relicCount) {
+  if (relicCount >= 9) return 4;
+  if (relicCount >= 6) return 3;
+  if (relicCount >= 1) return 1;
+  return 0;
+}
+
+// Get total stat bonuses from relics
+function getRelicBonuses(player) {
+  const bonuses = { attack: 0, defense: 0, hp: 0, spirit: 0, exp: 0, dodge: 0, critRate: 0, critDmg: 0, regen: 0 };
+  const relics = player.relics || [];
+  for (const id of relics) {
+    const r = RELICS_DATA[id];
+    if (!r || !r.effects) continue;
+    if (r.effects.attack) bonuses.attack += r.effects.attack;
+    if (r.effects.defense) bonuses.defense += r.effects.defense;
+    if (r.effects.hp) bonuses.hp += r.effects.hp;
+    if (r.effects.spirit) bonuses.spirit += r.effects.spirit;
+    if (r.effects.exp) bonuses.exp += r.effects.exp;
+    if (r.effects.dodge) bonuses.dodge += r.effects.dodge;
+    if (r.effects.critRate) bonuses.critRate += r.effects.critRate;
+    if (r.effects.critDamage) bonuses.critDmg += r.effects.critDamage;
+    if (r.effects.regen) bonuses.regen += r.effects.regen;
+    if (r.effects.hpRegen) bonuses.regen += r.effects.hpRegen;
+  }
+  return bonuses;
+}
+
+// ===== RELIC COMMANDS =====
+
+// /遗物 - show collected relics
+function handleRelicCommand(ws, player) {
+  const relics = player.relics || [];
+  if (relics.length === 0) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '程序遗物',
+        content: `\n╔══════════════════════════════╗\n║  程序遗物 (程序遗物)\n╠══════════════════════════════╣\n║  你还没有发现任何程序遗物。\n║\n║  击败怪物时有极小概率掉落。\n║  程序遗物是这个世界的源代码碎片...\n║  作为2030年的退休程序员，\n║  你似乎能感知到它们的存在。\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  // Group by category
+  const categories = {};
+  for (const relicId of relics) {
+    const r = RELICS_DATA[relicId];
+    if (!r) continue;
+    if (!categories[r.category]) categories[r.category] = [];
+    categories[r.category].push(r);
+  }
+  
+  let list = '';
+  for (const [cat, items] of Object.entries(categories)) {
+    list += `║  【${cat}】\n`;
+    for (const r of items) {
+      list += `║    ${r.name} - ${r.desc}\n`;
+    }
+  }
+  
+  const watchStatus = player.adminWatch ? `Lv${player.adminWatchLevel}` : '未获得';
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '程序遗物',
+      content: `\n╔══════════════════════════════╗\n║  程序遗物 (已收集 ${relics.length}/12)\n╠══════════════════════════════╣\n${list}╠══════════════════════════════╣\n║  管理员手表: ${watchStatus}\n║  手表详情: /手表\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /手表 - show admin watch status
+function handleWatchCommand(ws, player) {
+  if (!player.adminWatch) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '管理员手表',
+        content: `\n╔══════════════════════════════╗\n║  管理员手表\n╠══════════════════════════════╣\n║  你还未获得管理员手表。\n║\n║  完成任务「世界异常」获取。\n║  (等级5时自动触发)\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  const level = player.adminWatchLevel || 0;
+  const relicCount = (player.relics || []).length;
+  
+  let abilities = '';
+  for (let i = 0; i <= 4; i++) {
+    const wt = WATCH_THRESHOLDS[i];
+    const marker = i <= level ? '✅' : '🔒';
+    abilities += `║  ${marker} Lv${wt.level} (${wt.relics}遗物): ${wt.abilities}\n`;
+  }
+  
+  // Show teleport usage if watch level >= 3
+  let teleportInfo = '';
+  if (level >= 3) {
+    const bugUsage = player.bugUsage || {};
+    const teleportUsed = (bugUsage['B17']?.dailyCount || 0);
+    teleportInfo = `║  瞬移使用: ${teleportUsed}/5\n`;
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '管理员手表',
+      content: `\n╔══════════════════════════════╗\n║  管理员手表 Lv${level}\n╠══════════════════════════════╣\n║  遗物数量: ${relicCount}\n║  神秘信件: ${player.mysteryLetters || 0}\n╠══════════════════════════════╣\n║  等级能力:\n${abilities}${teleportInfo}╚══════════════════════════════╝`
+    }
+  });
+}
+
+// ===== BUG COMMANDS =====
+
+// /Bug - show discovered bugs
+function handleBugListCommand(ws, player) {
+  const bugs = player.discoveredBugs || [];
+  if (bugs.length === 0) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: 'Bug列表',
+        content: `\n╔══════════════════════════════╗\n║  Bug列表\n╠══════════════════════════════╣\n║  你还没有发现任何Bug。\n║\n║  使用 /探索Bug 在当前房间搜索。\n║  (需要管理员手表才能直接使用Bug)\n║  没有手表时会获得神秘信件。\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  const today = new Date().toISOString().slice(0, 10);
+  const bugUsage = player.bugUsage || {};
+  
+  let bugList = '';
+  for (const bugId of bugs) {
+    const bd = BUGS_DATA[bugId];
+    if (!bd) continue;
+    const usage = bugUsage[bugId];
+    const usedToday = (usage && usage.lastUsed === today) ? usage.dailyCount : 0;
+    const limitStr = bd.dailyLimit >= 999 ? '无限' : `${usedToday}/${bd.dailyLimit}`;
+    bugList += `║  【${bd.name}】(${bd.id})\n║    ${bd.desc}\n║    今日使用: ${limitStr}\n`;
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: 'Bug列表',
+      content: `\n╔══════════════════════════════╗\n║  Bug列表 (已发现 ${bugs.length})\n╠══════════════════════════════╣\n${bugList}╠══════════════════════════════╣\n║  使用: /使用Bug <BugID>\n║  探索: /探索Bug\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /探索Bug - search current room for bugs
+function handleExploreBugCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p) return;
+  
+  // Check stamina
+  if (p.stamina < 15) {
+    sendToClient(ws, { type: 'system', data: { message: '体力不足，探索Bug需要15点体力。' } });
+    return;
+  }
+  
+  // Check if room has bugs
+  const roomBugs = BUG_LOCATIONS[p.currentRoom];
+  if (!roomBugs || roomBugs.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: `${p.currentRoom}没有发现任何Bug痕迹。尝试其他地方探索。` } });
+    return;
+  }
+  
+  // Consume stamina
+  p.stamina -= 15;
+  
+  // Try to find a bug (50% chance per exploration)
+  if (Math.random() < 0.5) {
+    // Find an undiscovered bug in this room
+    const undiscovered = roomBugs.filter(id => !(p.discoveredBugs || []).includes(id));
+    
+    if (undiscovered.length === 0) {
+      // Already discovered all bugs here, give mystery letter
+      p.mysteryLetters = (p.mysteryLetters || 0) + 1;
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `你在${p.currentRoom}搜索，发现了一封神秘信件... (神秘信件+1)\n  "这个世界的代码比你想象的要复杂..."` }
+      });
+      savePlayers(players);
+      return;
+    }
+    
+    const bugId = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+    const bd = BUGS_DATA[bugId];
+    
+    if (p.adminWatch) {
+      // Has watch: discover bug directly
+      if (!p.discoveredBugs) p.discoveredBugs = [];
+      p.discoveredBugs.push(bugId);
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `⌚ 管理员手表闪烁！你发现了一个Bug！\n  【${bd.name}】- ${bd.desc}\n  使用 /使用Bug ${bugId} 来激活。` }
+      });
+    } else {
+      // No watch: get mystery letter instead
+      p.mysteryLetters = (p.mysteryLetters || 0) + 1;
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `你感觉到了一股异常的数据波动...但无法理解它的含义。\n  获得了一封神秘信件。(神秘信件+1)\n  "也许获得管理员手表后才能解读这些Bug..."` }
+      });
+    }
+  } else {
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: `你在${p.currentRoom}仔细搜索，但什么也没发现。消耗15体力。` }
+    });
+  }
+  
+  savePlayers(players);
+}
+
+// /使用Bug <bugId> - activate a bug
+function handleUseBugCommand(ws, player, bugId) {
+  if (!bugId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /使用Bug <BugID>\n输入 /Bug 查看已发现的Bug。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p) return;
+  
+  // Check if player has admin watch
+  if (!p.adminWatch) {
+    sendToClient(ws, { type: 'system', data: { message: '你需要管理员手表才能使用Bug。完成任务「世界异常」获取。' } });
+    return;
+  }
+  
+  // Check if bug is discovered
+  if (!p.discoveredBugs || !p.discoveredBugs.includes(bugId)) {
+    sendToClient(ws, { type: 'system', data: { message: `你还没有发现Bug【${bugId}】。使用 /探索Bug 来寻找。` } });
+    return;
+  }
+  
+  const bd = BUGS_DATA[bugId];
+  if (!bd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该Bug。' } });
+    return;
+  }
+  
+  // Check daily limit
+  const today = new Date().toISOString().slice(0, 10);
+  if (!p.bugUsage) p.bugUsage = {};
+  if (!p.bugUsage[bugId]) p.bugUsage[bugId] = { lastUsed: '', dailyCount: 0 };
+  
+  const usage = p.bugUsage[bugId];
+  if (usage.lastUsed !== today) {
+    usage.lastUsed = today;
+    usage.dailyCount = 0;
+  }
+  
+  if (usage.dailyCount >= bd.dailyLimit) {
+    sendToClient(ws, { type: 'system', data: { message: `Bug【${bd.name}】今日使用次数已达上限(${bd.dailyLimit}次)。` } });
+    return;
+  }
+  
+  usage.dailyCount++;
+  
+  // Apply bug effect
+  let msg = '';
+  if (!p.activeBugs) p.activeBugs = {};
+  
+  switch (bugId) {
+    case 'B01': // 时间膨胀泡 - idle exp x3 for 10 min
+      p.activeBugs.B01 = Date.now() + bd.duration;
+      msg = `⏳ 激活了【${bd.name}】！挂机经验x3，持续10分钟。`;
+      break;
+    case 'B02': // 经验溢出点 - combat exp x2 for 1 hour
+      p.activeBugs.B02 = Date.now() + bd.duration;
+      msg = `✨ 激活了【${bd.name}】！战斗经验x2，持续1小时。`;
+      break;
+    case 'B11': // 背包溢出
+      p.activeBugs.B11 = Date.now() + bd.duration;
+      msg = `🎒 激活了【${bd.name}】！临时+100背包格，持续1小时。`;
+      break;
+    case 'B12': { // 商店漏洞 - free random shop item
+      const shopIds = Object.keys(SHOP_ITEMS);
+      const randomId = shopIds[Math.floor(Math.random() * shopIds.length)];
+      const item = SHOP_ITEMS[randomId];
+      if (item.type === 'pill') {
+        if (!p.pills) p.pills = {};
+        p.pills[randomId] = (p.pills[randomId] || 0) + 1;
+      } else if (item.type === 'equipment') {
+        p.equipmentBag.push({ id: randomId });
+      }
+      msg = `🆓 激活了【${bd.name}】！免费获得了【${item.name}】！`;
+      break;
+    }
+    case 'B31': // 伤害溢出 - next attack x3
+      p.activeBugs.B31 = 1; // 1 charge
+      msg = `💥 激活了【${bd.name}】！下次攻击伤害x3！`;
+      break;
+    case 'B33': // 怪物卡住
+      p.activeBugs.B33 = 1; // 1 charge
+      msg = `🐛 激活了【${bd.name}】！怪物将跳过1回合！`;
+      break;
+    case 'B45': // 道心漏洞
+      p.activeBugs.B45 = Date.now() + bd.duration;
+      msg = `🧘 激活了【${bd.name}】！道心+200，持续1小时。`;
+      break;
+    case 'B49': // 体力漏洞
+      p.activeBugs.B49 = Date.now() + bd.duration;
+      p.stamina = p.maxStamina;
+      msg = `⚡ 激活了【${bd.name}】！体力恢复满！无限体力30分钟。`;
+      break;
+    case 'B50': // 掉率漏洞
+      p.activeBugs.B50 = Date.now() + bd.duration;
+      msg = `🍀 激活了【${bd.name}】！掉率x5，持续1小时。`;
+      break;
+    case 'B17': // 瞬移漏洞
+      if (p.currentMap === '新手村') {
+        const allRooms = Object.keys(WORLD_DATA.maps['新手村'].rooms);
+        msg = `🌀 激活了【${bd.name}】！可传送房间:\n`;
+        msg += allRooms.map((r, i) => `  ${i + 1}. ${r}`).join('\n');
+        msg += `\n输入 /移动 <房间名> 传送到目标房间。`;
+        p.activeBugs.B17 = 1; // 1 charge
+      } else {
+        msg = `🌀 你不在可传送的地图上。`;
+      }
+      break;
+    case 'B20': // 回城Bug
+      p.currentRoom = '村口';
+      p.currentMap = '新手村';
+      msg = `🏠 激活了【${bd.name}】！瞬间回到了新手村村口！`;
+      // Send new room
+      const newRoom = getRoom(p.currentMap, p.currentRoom);
+      if (newRoom) {
+        sendToClient(ws, {
+          type: 'room',
+          data: { name: newRoom.name, description: newRoom.description, exits: newRoom.exits, players: [] }
+        });
+      }
+      break;
+    case 'B21': // 传送门
+      p.activeBugs.B21 = Date.now() + bd.duration;
+      msg = `🚪 激活了【${bd.name}】！创建了传送门，持续30分钟。在村口和当前位置间自由传送。`;
+      break;
+    default:
+      msg = `激活了Bug【${bd.name}】。效果: ${bd.desc}`;
+  }
+  
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: msg } });
+}
+
+// Helper functions
 function getRoom(mapName, roomName) {
   const map = WORLD_DATA.maps[mapName];
   if (!map) return null;
@@ -2951,8 +3437,15 @@ function executeCombat(ws, player, room) {
   
   // Player stats
   const equipBonuses = getEquipmentBonuses(player);
-  const playerAttack = player.stats.str * 2 + player.level * 3 + equipBonuses.attack + equipBonuses.str * 2;
-  const playerDefense = player.stats.con * 1.5 + player.level * 2 + equipBonuses.defense;
+  let playerAttack = player.stats.str * 2 + player.level * 3 + equipBonuses.attack + equipBonuses.str * 2;
+  let playerDefense = player.stats.con * 1.5 + player.level * 2 + equipBonuses.defense;
+  
+  // Apply relic bonuses to stats
+  if (player.relics) {
+    if (player.relics.includes('M06')) playerAttack = Math.floor(playerAttack * 1.10); // M06: attack+10%
+    if (player.relics.includes('M05')) playerDefense = Math.floor(playerDefense * 1.08); // M05: defense+8%
+    if (player.relics.includes('Z02')) playerAttack = Math.floor(playerAttack * 1.15); // Z02: str+15%
+  }
   
   // Find best active skill for bonus damage
   let activeSkillBonus = 0;
@@ -2982,6 +3475,8 @@ function executeCombat(ws, player, room) {
       }
     }
   }
+  // Relic dodge bonus (T02)
+  if (player.relics && player.relics.includes('T02')) dodgeChance += 0.10;
   
   // Check sect bonus
   let sectDefenseBonus = 1;
@@ -3009,10 +3504,30 @@ function executeCombat(ws, player, room) {
       playerDmg += activeSkillBonus;
       if (round === 1) combatLog.push(`⚔️ 发动功法【${activeSkillName}】，额外造成 ${activeSkillBonus} 点伤害！`);
     }
+    // Apply B31 damage bug
+    const combatBugs = player.activeBugs || {};
+    if (combatBugs.B31 && combatBugs.B31 > 0 && round === 1) {
+      playerDmg *= 3;
+      player.activeBugs.B31 = 0; // consume charge
+      combatLog.push('  [Bug效果] 伤害溢出 - 伤害x3！');
+    }
+    // Apply relic damage bonuses
+    if (player.relics && player.relics.includes('M06')) playerDmg = Math.floor(playerDmg * 1.10); // M06: attack+10%
+    if (player.relics && player.relics.includes('Z03') && Math.random() < 0.10) {
+      playerDmg = Math.floor(playerDmg * 1.5); // Z03: 10% crit rate
+      combatLog.push('  [遗物效果] 暴击！');
+    }
     monster.hp -= playerDmg;
     combatLog.push(`第${round}回合: 你攻击 ${monster.name}，造成 ${playerDmg} 点伤害！${monster.name} HP: ${Math.max(0, monster.hp)}/${monsterTemplate.maxHp || monsterTemplate.hp}`);
     
     if (monster.hp <= 0) break;
+    
+    // Check B33 monster skip bug
+    if (player.activeBugs && player.activeBugs.B33 && player.activeBugs.B33 > 0) {
+      player.activeBugs.B33 = 0; // consume charge
+      combatLog.push(`        [Bug效果] 怪物卡住！${monster.name} 跳过了本回合！`);
+      continue; // skip monster attack
+    }
     
     // Monster attacks player (check dodge)
     if (dodgeChance > 0 && Math.random() < dodgeChance) {
@@ -3033,9 +3548,24 @@ function executeCombat(ws, player, room) {
     combatLog.push(`🎉 你击败了 ${monster.name}！`);
     
     const expGain = Math.floor(monster.exp * sectExpBonus);
+    
+    // Apply bug effects to exp gain
+    let finalExpGain = expGain;
+    const activeBugs = player.activeBugs || {};
+    if (activeBugs.B02 && activeBugs.B02 > Date.now()) {
+      finalExpGain *= 2; // B02: combat exp x2
+      combatLog.push('  [Bug效果] 经验溢出点 - 经验x2！');
+    }
+    if (player.adminWatch && player.adminWatchLevel >= 4) {
+      finalExpGain = Math.floor(finalExpGain * 1.1); // Watch Lv4: exp+10%
+    }
+    // Relic bonuses
+    if (player.relics && player.relics.includes('M04')) finalExpGain = Math.floor(finalExpGain * 1.05);
+    if (player.relics && player.relics.includes('Z01')) finalExpGain = Math.floor(finalExpGain * 1.05);
+    
     const silverGain = monster.silver;
     player.silver += silverGain;
-    combatLog.push(`获得 ${expGain} 经验，${silverGain} 灵石`);
+    combatLog.push(`获得 ${finalExpGain} 经验，${silverGain} 灵石`);
     
     // Skill exp gain from combat
     if (player.skills) {
@@ -3056,6 +3586,45 @@ function executeCombat(ws, player, room) {
       combatLog.push(`🍀 ${monster.name} 掉落了一件物品！`);
     }
     
+    // ===== RELIC DROP CHECK =====
+    {
+      let relicChance = 0.001; // base 0.1%
+      // Level bonus: +0.01% per level, max 0.5%
+      relicChance = Math.min(0.005, relicChance + player.level * 0.0001);
+      // VIP bonus placeholder (would need vip field)
+      // if (player.vip === 'monthly') relicChance += 0.0005;
+      // if (player.vip === 'yearly') relicChance += 0.001;
+      // B50 drop rate bug bonus
+      if (player.activeBugs && player.activeBugs.B50 && player.activeBugs.B50 > Date.now()) {
+        relicChance *= 5;
+        combatLog.push('  [Bug效果] 掉率漏洞 - 掉率x5！');
+      }
+      
+      if (Math.random() < relicChance) {
+        // Pick a random undiscovered relic
+        const owned = player.relics || [];
+        const available = Object.keys(RELICS_DATA).filter(id => !owned.includes(id));
+        if (available.length > 0) {
+          const relicId = available[Math.floor(Math.random() * available.length)];
+          const relic = RELICS_DATA[relicId];
+          player.relics = [...owned, relicId];
+          combatLog.push(`✨✨✨ 程序遗物发现！你获得了【${relic.name}】！`);
+          combatLog.push(`  ${relic.desc}`);
+          // Update admin watch level if player has the watch
+          if (player.adminWatch) {
+            const oldLevel = player.adminWatchLevel || 0;
+            const newLevel = calcWatchLevel(player.relics.length);
+            if (newLevel > oldLevel) {
+              player.adminWatchLevel = newLevel;
+              combatLog.push(`⌚ 管理员手表升级！Lv${oldLevel} → Lv${newLevel}`);
+              const wt = WATCH_THRESHOLDS[newLevel];
+              combatLog.push(`  新能力: ${wt.abilities}`);
+            }
+          }
+        }
+      }
+    }
+    
     // Quest progress tracking for kills
     if (player.currentRoom === '竹林') {
       updateQuestProgress(player, 'kill_bamboo', 1);
@@ -3063,11 +3632,18 @@ function executeCombat(ws, player, room) {
     updateQuestProgress(player, 'kill_any', 1);
     
     // Check level up and realm progression
-    const { leveled, realmChanged } = addExp(player, expGain);
+    const { leveled, realmChanged } = addExp(player, finalExpGain);
     if (leveled) combatLog.push(`🎊 恭喜！你升级了！当前等级: ${player.level}`);
     if (realmChanged) combatLog.push(`✨ 突破成功！你的境界提升为: ${player.realm}`);
     
-    result = { success: true, victory: true, exp: expGain, silver: silverGain };
+    // Auto-accept admin watch quest at level 5
+    if (leveled && player.level >= 5 && !player.quests.active.includes('q_admin_watch') && !player.quests.completed.includes('q_admin_watch')) {
+      player.quests.active.push('q_admin_watch');
+      player.quests.progress['q_admin_watch'] = 0;
+      combatLog.push('📋 新任务: 【世界异常】- 探索竹林寻找真相');
+    }
+    
+    result = { success: true, victory: true, exp: finalExpGain, silver: silverGain };
   } else if (player.hp <= 0) {
     // Player dies
     combatLog.push(`💀 你被 ${monster.name} 击败了！`);
@@ -3108,9 +3684,32 @@ const idleTickInterval = setInterval(() => {
     
     let changed = false;
     
-    // Gain 2 exp per minute (doubled rate during idle)
-    const { leveled, realmChanged } = addExp(player, 2);
+    // Check bug effects on idle exp
+    let idleExpAmount = 2;
+    const activeBugs = player.activeBugs || {};
+    if (activeBugs.B01 && activeBugs.B01 > Date.now()) {
+      idleExpAmount *= 3; // B01: idle exp x3
+    }
+    if (player.adminWatch && player.adminWatchLevel >= 4) {
+      idleExpAmount = Math.floor(idleExpAmount * 1.1); // Watch Lv4: exp+10%
+    }
+    // Relic bonuses
+    if (player.relics && player.relics.includes('M04')) idleExpAmount = Math.floor(idleExpAmount * 1.05); // M04: exp+5%
+    if (player.relics && player.relics.includes('T01')) idleExpAmount = Math.floor(idleExpAmount * 1.08); // T01: idle exp+8%
+    
+    // Gain exp (doubled rate during idle)
+    const { leveled, realmChanged } = addExp(player, idleExpAmount);
     changed = true;
+    
+    // Auto-accept admin watch quest at level 5
+    if (leveled && player.level >= 5 && !player.quests.active.includes('q_admin_watch') && !player.quests.completed.includes('q_admin_watch')) {
+      player.quests.active.push('q_admin_watch');
+      player.quests.progress['q_admin_watch'] = 0;
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: '📋 新任务自动接取: 【世界异常】\n你感觉到了这个世界的异常...探索竹林寻找真相。\n输入 /任务 查看详情。' }
+      });
+    }
     
     // Skill exp gain during idle (1 per minute per skill)
     if (player.skills && player.skills.length > 0) {

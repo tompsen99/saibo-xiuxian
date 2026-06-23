@@ -340,6 +340,37 @@
         }
         break;
 
+      // Relic found event
+      case 'relic_found':
+        var relicText = data.content || data.message || data.text || '';
+        var relicLines = data.lines || data.log || [];
+        appendMessage('💎 ═══ 遗物发现！═══', 'system');
+        if (Array.isArray(relicLines) && relicLines.length > 0) {
+          relicLines.forEach(function(line) { appendMessage(line, 'npc'); });
+        } else if (relicText) {
+          appendMessage(relicText, 'npc');
+        }
+        break;
+
+      // Bug found event
+      case 'bug_found':
+        var bugText = data.content || data.message || data.text || '';
+        var bugLines = data.lines || data.log || [];
+        appendMessage('🐛 ═══ Bug发现！═══', 'system');
+        if (Array.isArray(bugLines) && bugLines.length > 0) {
+          bugLines.forEach(function(line) { appendMessage(line, 'npc'); });
+        } else if (bugText) {
+          appendMessage(bugText, 'npc');
+        }
+        break;
+
+      // Watch upgrade event (admin)
+      case 'watch_upgrade':
+        var watchText = data.content || data.message || data.text || '';
+        appendMessage('👁️ ═══ 天道监察升级！═══', 'system');
+        appendMessage(watchText, 'npc');
+        break;
+
       // Status
       case 'status_response':
       case 'status':
@@ -619,6 +650,7 @@
     appendMessage('  输入 /帮助 查看可用指令（包括 /学习、/修炼 等）', 'system');
     appendMessage('  /丹药 炼丹/使用丹药 | /装备 查看/穿戴装备 | /任务 查看任务', 'system');
     appendMessage('  /商店 交易物品 | /签到 每日签到 | /好友 好友系统 | /奇遇 随机事件', 'system');
+    appendMessage('  /遗物 查看遗物系统 | /Bug 查看Bug系统', 'system');
     appendMessage('════════════════════════════════════════', 'system');
 
     $chatInput.focus();
