@@ -597,6 +597,7 @@
     appendMessage('  欢迎来到 赛博修仙 世界！', 'system');
     appendMessage('  你是一位60岁的退休老人，意识穿越到了武侠修仙游戏世界。', 'system');
     appendMessage('  输入 /帮助 查看可用指令（包括 /学习、/修炼 等）', 'system');
+    appendMessage('  /丹药 炼丹/使用丹药 | /装备 查看/穿戴装备 | /任务 查看任务', 'system');
     appendMessage('════════════════════════════════════════', 'system');
 
     $chatInput.focus();

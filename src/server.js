@@ -174,6 +174,157 @@ const SECTS_DATA = {
   }
 };
 
+// ===== PILLS (丹药) SYSTEM =====
+const PILLS_DATA = {
+  hp_pill: {
+    id: 'hp_pill',
+    name: '回血丹',
+    effect: '恢复50点生命',
+    price: 10,
+    apply: (player) => {
+      const healed = Math.min(50, player.maxHp - player.hp);
+      player.hp = Math.min(player.maxHp, player.hp + 50);
+      return `恢复了 ${healed} 点生命值。当前HP: ${player.hp}/${player.maxHp}`;
+    }
+  },
+  spirit_pill: {
+    id: 'spirit_pill',
+    name: '回灵丹',
+    effect: '恢复30点灵力',
+    price: 15,
+    apply: (player) => {
+      const restored = Math.min(30, player.maxSpirit - player.spirit);
+      player.spirit = Math.min(player.maxSpirit, player.spirit + 30);
+      return `恢复了 ${restored} 点灵力。当前灵力: ${player.spirit}/${player.maxSpirit}`;
+    }
+  },
+  stamina_pill: {
+    id: 'stamina_pill',
+    name: '体力丹',
+    effect: '恢复50点体力',
+    price: 20,
+    apply: (player) => {
+      const restored = Math.min(50, player.maxStamina - player.stamina);
+      player.stamina = Math.min(player.maxStamina, player.stamina + 50);
+      return `恢复了 ${restored} 点体力。当前体力: ${player.stamina}/${player.maxStamina}`;
+    }
+  },
+  exp_pill: {
+    id: 'exp_pill',
+    name: '小培元丹',
+    effect: '获得50经验',
+    price: 50,
+    apply: (player) => {
+      const result = addExp(player, 50);
+      let msg = '获得了 50 经验！';
+      if (result.leveled) msg += `\n🎊 恭喜！你升级了！当前等级: ${player.level}`;
+      if (result.realmChanged) msg += `\n✨ 突破成功！你的境界提升为: ${player.realm}`;
+      return msg;
+    }
+  }
+};
+
+// ===== EQUIPMENT (装备) SYSTEM =====
+const EQUIPMENT_DATA = {
+  wooden_sword: {
+    id: 'wooden_sword',
+    name: '木剑',
+    slot: 'weapon',
+    attack: 5,
+    price: 20,
+    description: '一把普通的木剑，适合初学者。'
+  },
+  iron_sword: {
+    id: 'iron_sword',
+    name: '铁剑',
+    slot: 'weapon',
+    attack: 12,
+    price: 80,
+    description: '精铁打造的长剑，锋利耐用。'
+  },
+  cloth_armor: {
+    id: 'cloth_armor',
+    name: '布衣',
+    slot: 'body',
+    defense: 3,
+    price: 15,
+    description: '简单的布衣，聊胜于无。'
+  },
+  leather_armor: {
+    id: 'leather_armor',
+    name: '皮甲',
+    slot: 'body',
+    defense: 8,
+    price: 60,
+    description: '厚实的皮甲，提供不错的防护。'
+  },
+  straw_shoes: {
+    id: 'straw_shoes',
+    name: '草鞋',
+    slot: 'feet',
+    speed: 2,
+    price: 10,
+    description: '编织的草鞋，轻便舒适。'
+  },
+  iron_ring: {
+    id: 'iron_ring',
+    name: '铁戒指',
+    slot: 'ring',
+    str: 2,
+    price: 30,
+    description: '附有微弱灵力的铁戒指，提升力量。'
+  }
+};
+
+// ===== QUESTS (任务) SYSTEM =====
+const QUESTS_DATA = {
+  q_first_steps: {
+    id: 'q_first_steps',
+    name: '初入修仙',
+    type: 'main',
+    description: '修仙之路始于足下，提升到3级',
+    requirement: { type: 'level', target: 3 },
+    reward: { exp: 100, silver: 50 },
+    prereq: null
+  },
+  q_bamboo_trial: {
+    id: 'q_bamboo_trial',
+    name: '竹林历练',
+    type: 'main',
+    description: '在竹林中击败5只怪物',
+    requirement: { type: 'kill_bamboo', target: 5 },
+    reward: { exp: 200, pills: { hp_pill: 5 } },
+    prereq: 'q_first_steps'
+  },
+  q_join_sect: {
+    id: 'q_join_sect',
+    name: '加入门派',
+    type: 'main',
+    description: '拜入门派，开始正式修炼',
+    requirement: { type: 'join_sect', target: 1 },
+    reward: { exp: 150, silver: 100 },
+    prereq: null
+  },
+  dq_daily_cultivate: {
+    id: 'dq_daily_cultivate',
+    name: '每日修炼',
+    type: 'daily',
+    description: '修炼功法3次',
+    requirement: { type: 'practice_skill', target: 3 },
+    reward: { exp: 30, silver: 10 },
+    prereq: null
+  },
+  dq_daily_combat: {
+    id: 'dq_daily_combat',
+    name: '每日战斗',
+    type: 'daily',
+    description: '击杀3只怪物',
+    requirement: { type: 'kill_any', target: 3 },
+    reward: { exp: 50, silver: 20 },
+    prereq: null
+  }
+};
+
 // NPC data
 const NPCS = {
   '村长': {
@@ -308,6 +459,10 @@ function createPlayer(email, password, name, profession) {
     ],
     sect: null,
     sectContribution: 0,
+    pills: { hp_pill: 3, spirit_pill: 2 },
+    equipment: { weapon: null, head: null, body: null, feet: null, ring: null },
+    equipmentBag: [],
+    quests: { active: [], completed: [], dailyCompleted: {}, progress: {} },
     createdAt: new Date().toISOString()
   };
   
@@ -562,6 +717,11 @@ function handleLogin(ws, data) {
   if (!result.player.sectContribution) result.player.sectContribution = 0;
   if (!result.player.isIdle) result.player.isIdle = false;
   if (!result.player.idleStartTime) result.player.idleStartTime = null;
+  if (!result.player.pills) result.player.pills = { hp_pill: 3, spirit_pill: 2 };
+  if (!result.player.equipment) result.player.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!result.player.equipmentBag) result.player.equipmentBag = [];
+  if (!result.player.quests) result.player.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
+  if (!result.player.quests.progress) result.player.quests.progress = {};
   savePlayers(getPlayers());
   
   connectedClients.set(ws, {
@@ -801,6 +961,30 @@ function handleCommand(ws, data) {
     handleSectInfoCommand(ws, player);
   } else if (command.startsWith('/门派')) {
     handleSectListCommand(ws, player);
+  } else if (command.startsWith('/购买丹药')) {
+    handleBuyPillCommand(ws, player, command);
+  } else if (command.startsWith('/使用')) {
+    handleUsePillCommand(ws, player, command);
+  } else if (command.startsWith('/炼丹')) {
+    handleCraftPillCommand(ws, player, command);
+  } else if (command.startsWith('/丹药')) {
+    handlePillListCommand(ws, player);
+  } else if (command.startsWith('/购买装备')) {
+    handleBuyEquipmentCommand(ws, player, command);
+  } else if (command.startsWith('/装备栏')) {
+    handleEquipmentBagCommand(ws, player);
+  } else if (command.startsWith('/穿戴')) {
+    handleEquipCommand(ws, player, command);
+  } else if (command.startsWith('/脱下')) {
+    handleUnequipCommand(ws, player, command);
+  } else if (command.startsWith('/装备')) {
+    handleEquipmentCommand(ws, player);
+  } else if (command.startsWith('/提交任务')) {
+    handleCompleteQuestCommand(ws, player, command);
+  } else if (command.startsWith('/接任务')) {
+    handleAcceptQuestCommand(ws, player, command);
+  } else if (command.startsWith('/任务')) {
+    handleQuestListCommand(ws, player);
   } else {
     sendToClient(ws, {
       type: 'error',
@@ -1292,6 +1476,24 @@ function handleHelpCommand(ws, player) {
 ║  /加入门派 <门派ID> - 加入门派
 ║  /门派信息 - 查看当前门派详情
 ║  
+║  💊 丹药系统:
+║  /丹药  - 查看丹药背包
+║  /使用 <丹药ID> - 使用丹药
+║  /购买丹药 <丹药ID> [数量] - 在药铺购买丹药
+║  /炼丹 <丹药ID> - 炼制丹药（需材料）
+║  
+║  🛡️ 装备系统:
+║  /装备  - 查看已穿戴装备
+║  /装备栏  - 查看装备背包
+║  /穿戴 <装备ID> - 穿戴装备
+║  /脱下 <部位> - 脱下装备
+║  /购买装备 <装备ID> - 在铁匠铺购买装备
+║  
+║  📋 任务系统:
+║  /任务  - 查看可接和进行中的任务
+║  /接任务 <任务ID> - 接受任务
+║  /提交任务 <任务ID> - 提交完成的任务
+║  
 ║  💬 社交:
 ║  /频道  - 查看当前频道信息
 ║  /交谈 <内容> - 在当前房间说话
@@ -1514,6 +1716,578 @@ function handleSectInfoCommand(ws, player) {
   });
 }
 
+// ===== PILL COMMANDS =====
+
+// Show pill inventory
+function handlePillListCommand(ws, player) {
+  if (!player.pills || Object.keys(player.pills).length === 0) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '丹药背包',
+        content: `\n╔══════════════════════════════╗\n║  丹药背包\n╠══════════════════════════════╣\n║  你没有任何丹药。\n║\n║  可在药铺购买: /购买丹药 <丹药ID>\n║  药铺位置: 村广场 向西\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  let pillList = '';
+  for (const [pillId, count] of Object.entries(player.pills)) {
+    if (count <= 0) continue;
+    const pd = PILLS_DATA[pillId];
+    if (!pd) continue;
+    pillList += `║  【${pd.name}】x${count}\n║    ${pd.effect} | 单价: ${pd.price}灵石\n║    ID: ${pd.id}\n`;
+  }
+  
+  if (!pillList) {
+    pillList = '║  你没有任何丹药。\n';
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '丹药背包',
+      content: `\n╔══════════════════════════════╗\n║  丹药背包\n╠══════════════════════════════╣\n${pillList}╠══════════════════════════════╣\n║  使用: /使用 <丹药ID>\n║  购买: /购买丹药 <丹药ID> [数量]\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Use a pill
+function handleUsePillCommand(ws, player, command) {
+  const pillId = command.replace('/使用', '').trim();
+  if (!pillId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /使用 <丹药ID>\n输入 /丹药 查看拥有的丹药。' } });
+    return;
+  }
+  
+  const pd = PILLS_DATA[pillId];
+  if (!pd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该丹药。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pills) p.pills = {};
+  if (!p.pills[pillId] || p.pills[pillId] <= 0) {
+    sendToClient(ws, { type: 'system', data: { message: `你没有【${pd.name}】。` } });
+    return;
+  }
+  
+  p.pills[pillId]--;
+  if (p.pills[pillId] <= 0) delete p.pills[pillId];
+  
+  const effectMsg = pd.apply(p);
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `💊 使用了【${pd.name}】！${effectMsg}` }
+  });
+}
+
+// Buy pills from herb shop
+function handleBuyPillCommand(ws, player, command) {
+  if (player.currentRoom !== '药铺') {
+    sendToClient(ws, { type: 'system', data: { message: '你需要在药铺才能购买丹药。药铺位于村广场向西。' } });
+    return;
+  }
+  
+  const args = command.replace('/购买丹药', '').trim().split(/\s+/);
+  const pillId = args[0];
+  const quantity = parseInt(args[1]) || 1;
+  
+  if (!pillId) {
+    let shopList = '🏪 药铺商品:\n';
+    for (const [id, pd] of Object.entries(PILLS_DATA)) {
+      shopList += `  【${pd.name}】(${id}) - ${pd.effect} - ${pd.price}灵石/个\n`;
+    }
+    shopList += '\n用法: /购买丹药 <丹药ID> [数量]';
+    sendToClient(ws, { type: 'system', data: { message: shopList } });
+    return;
+  }
+  
+  const pd = PILLS_DATA[pillId];
+  if (!pd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该丹药。' } });
+    return;
+  }
+  
+  if (quantity < 1 || quantity > 99) {
+    sendToClient(ws, { type: 'system', data: { message: '购买数量需在1-99之间。' } });
+    return;
+  }
+  
+  const totalCost = pd.price * quantity;
+  const players = getPlayers();
+  const p = players[player.id];
+  
+  if (p.silver < totalCost) {
+    sendToClient(ws, { type: 'system', data: { message: `灵石不足！需要 ${totalCost} 灵石，你只有 ${p.silver} 灵石。` } });
+    return;
+  }
+  
+  p.silver -= totalCost;
+  if (!p.pills) p.pills = {};
+  p.pills[pillId] = (p.pills[pillId] || 0) + quantity;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🏪 购买了 ${quantity} 个【${pd.name}】，花费 ${totalCost} 灵石。剩余: ${p.silver} 灵石` }
+  });
+}
+
+// Craft pills (placeholder)
+function handleCraftPillCommand(ws, player, command) {
+  const pillId = command.replace('/炼丹', '').trim();
+  if (!pillId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /炼丹 <丹药ID>\n可炼制: hp_pill, spirit_pill, stamina_pill, exp_pill\n提示: 炼丹系统即将开放，敬请期待！' } });
+    return;
+  }
+  
+  const pd = PILLS_DATA[pillId];
+  if (!pd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该丹药。' } });
+    return;
+  }
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🔥 炼丹系统开发中，敬请期待！\n以后你将能炼制【${pd.name}】等丹药。` }
+  });
+}
+
+// ===== EQUIPMENT COMMANDS =====
+
+// Show equipped items
+function handleEquipmentCommand(ws, player) {
+  const equip = player.equipment || { weapon: null, head: null, body: null, feet: null, ring: null };
+  
+  let equipList = '';
+  const slotNames = { weapon: '武器', head: '头部', body: '身体', feet: '足部', ring: '戒指' };
+  let totalAttack = 0, totalDefense = 0, totalStr = 0, totalSpeed = 0;
+  
+  for (const [slot, equipId] of Object.entries(equip)) {
+    if (equipId) {
+      const ed = EQUIPMENT_DATA[equipId];
+      if (ed) {
+        let stats = [];
+        if (ed.attack) { stats.push(`攻击+${ed.attack}`); totalAttack += ed.attack; }
+        if (ed.defense) { stats.push(`防御+${ed.defense}`); totalDefense += ed.defense; }
+        if (ed.str) { stats.push(`力量+${ed.str}`); totalStr += ed.str; }
+        if (ed.speed) { stats.push(`速度+${ed.speed}`); totalSpeed += ed.speed; }
+        equipList += `║  [${slotNames[slot]}] ${ed.name} - ${stats.join(' ')}\n`;
+      } else {
+        equipList += `║  [${slotNames[slot]}] 空\n`;
+      }
+    } else {
+      equipList += `║  [${slotNames[slot]}] 空\n`;
+    }
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '装备栏',
+      content: `\n╔══════════════════════════════╗\n║  装备栏\n╠══════════════════════════════╣\n${equipList}╠══════════════════════════════╣\n║  装备加成: 攻击+${totalAttack} 防御+${totalDefense} 力量+${totalStr} 速度+${totalSpeed}\n╠══════════════════════════════╣\n║  穿戴: /穿戴 <装备ID>\n║  脱下: /脱下 <部位>\n║  装备背包: /装备栏\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Show equipment bag
+function handleEquipmentBagCommand(ws, player) {
+  const bag = player.equipmentBag || [];
+  
+  if (bag.length === 0) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '装备背包',
+        content: `\n╔══════════════════════════════╗\n║  装备背包\n╠══════════════════════════════╣\n║  背包中没有装备。\n║\n║  可在铁匠铺购买: /购买装备 <装备ID>\n║  铁匠铺位置: 村口 向东南\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  let bagList = '';
+  bag.forEach((item, index) => {
+    const ed = EQUIPMENT_DATA[item.id];
+    if (ed) {
+      let stats = [];
+      if (ed.attack) stats.push(`攻击+${ed.attack}`);
+      if (ed.defense) stats.push(`防御+${ed.defense}`);
+      if (ed.str) stats.push(`力量+${ed.str}`);
+      if (ed.speed) stats.push(`速度+${ed.speed}`);
+      bagList += `║  ${index + 1}. ${ed.name} - ${stats.join(' ')} (ID: ${ed.id})\n`;
+    }
+  });
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '装备背包',
+      content: `\n╔══════════════════════════════╗\n║  装备背包\n╠══════════════════════════════╣\n${bagList}╠══════════════════════════════╣\n║  穿戴: /穿戴 <装备ID>\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Equip an item
+function handleEquipCommand(ws, player, command) {
+  const equipId = command.replace('/穿戴', '').trim();
+  if (!equipId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /穿戴 <装备ID>\n输入 /装备栏 查看可用装备。' } });
+    return;
+  }
+  
+  const ed = EQUIPMENT_DATA[equipId];
+  if (!ed) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该装备。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.equipment) p.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!p.equipmentBag) p.equipmentBag = [];
+  
+  // Find item in bag
+  const bagIndex = p.equipmentBag.findIndex(item => item.id === equipId);
+  if (bagIndex === -1) {
+    sendToClient(ws, { type: 'system', data: { message: `你背包中没有【${ed.name}】。` } });
+    return;
+  }
+  
+  // If slot is occupied, move current equipment to bag
+  const slot = ed.slot;
+  if (p.equipment[slot]) {
+    const currentEquipId = p.equipment[slot];
+    p.equipmentBag.push({ id: currentEquipId });
+    const currentEd = EQUIPMENT_DATA[currentEquipId];
+    sendToClient(ws, { type: 'system', data: { message: `脱下了【${currentEd.name}】，放入背包。` } });
+  }
+  
+  // Equip new item
+  p.equipmentBag.splice(bagIndex, 1);
+  p.equipment[slot] = equipId;
+  savePlayers(players);
+  
+  let stats = [];
+  if (ed.attack) stats.push(`攻击+${ed.attack}`);
+  if (ed.defense) stats.push(`防御+${ed.defense}`);
+  if (ed.str) stats.push(`力量+${ed.str}`);
+  if (ed.speed) stats.push(`速度+${ed.speed}`);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🛡️ 穿戴了【${ed.name}】！${stats.join(' ')}` }
+  });
+}
+
+// Unequip an item
+function handleUnequipCommand(ws, player, command) {
+  const slot = command.replace('/脱下', '').trim();
+  if (!slot) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /脱下 <部位>\n部位: weapon(武器), head(头部), body(身体), feet(足部), ring(戒指)' } });
+    return;
+  }
+  
+  const validSlots = ['weapon', 'head', 'body', 'feet', 'ring'];
+  if (!validSlots.includes(slot)) {
+    sendToClient(ws, { type: 'system', data: { message: '无效部位。可用: weapon, head, body, feet, ring' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.equipment) p.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!p.equipmentBag) p.equipmentBag = [];
+  
+  if (!p.equipment[slot]) {
+    sendToClient(ws, { type: 'system', data: { message: '该部位没有装备。' } });
+    return;
+  }
+  
+  const equipId = p.equipment[slot];
+  const ed = EQUIPMENT_DATA[equipId];
+  p.equipmentBag.push({ id: equipId });
+  p.equipment[slot] = null;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🛡️ 脱下了【${ed.name}】，放入背包。` }
+  });
+}
+
+// Buy equipment from blacksmith
+function handleBuyEquipmentCommand(ws, player, command) {
+  if (player.currentRoom !== '铁匠铺') {
+    sendToClient(ws, { type: 'system', data: { message: '你需要在铁匠铺才能购买装备。铁匠铺位于村口向东南。' } });
+    return;
+  }
+  
+  const equipId = command.replace('/购买装备', '').trim();
+  if (!equipId) {
+    let shopList = '🏪 铁匠铺商品:\n';
+    for (const [id, ed] of Object.entries(EQUIPMENT_DATA)) {
+      let stats = [];
+      if (ed.attack) stats.push(`攻击+${ed.attack}`);
+      if (ed.defense) stats.push(`防御+${ed.defense}`);
+      if (ed.str) stats.push(`力量+${ed.str}`);
+      if (ed.speed) stats.push(`速度+${ed.speed}`);
+      shopList += `  【${ed.name}】(${id}) - ${stats.join(' ')} - ${ed.price}灵石\n`;
+    }
+    shopList += '\n用法: /购买装备 <装备ID>';
+    sendToClient(ws, { type: 'system', data: { message: shopList } });
+    return;
+  }
+  
+  const ed = EQUIPMENT_DATA[equipId];
+  if (!ed) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该装备。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.equipmentBag) p.equipmentBag = [];
+  
+  if (p.silver < ed.price) {
+    sendToClient(ws, { type: 'system', data: { message: `灵石不足！需要 ${ed.price} 灵石，你只有 ${p.silver} 灵石。` } });
+    return;
+  }
+  
+  p.silver -= ed.price;
+  p.equipmentBag.push({ id: equipId });
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🏪 购买了【${ed.name}】，花费 ${ed.price} 灵石。剩余: ${p.silver} 灵石\n使用 /穿戴 ${equipId} 来装备。` }
+  });
+}
+
+// ===== QUEST COMMANDS =====
+
+// Show quests
+function handleQuestListCommand(ws, player) {
+  if (!player.quests) player.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
+  
+  let content = '';
+  
+  // Active quests
+  if (player.quests.active.length > 0) {
+    content += '║  📋 进行中的任务:\n';
+    for (const qId of player.quests.active) {
+      const qd = QUESTS_DATA[qId];
+      if (!qd) continue;
+      const progress = player.quests.progress[qId] || 0;
+      const target = qd.requirement.target;
+      content += `║  【${qd.name}】(${qId})\n║    ${qd.description}\n║    进度: ${progress}/${target}\n║    完成: /提交任务 ${qId}\n`;
+    }
+  }
+  
+  // Available main quests
+  content += '║  \n║  📜 可接主线任务:\n';
+  let hasMain = false;
+  for (const [id, qd] of Object.entries(QUESTS_DATA)) {
+    if (qd.type !== 'main') continue;
+    if (player.quests.completed.includes(id)) continue;
+    if (player.quests.active.includes(id)) continue;
+    if (qd.prereq && !player.quests.completed.includes(qd.prereq)) continue;
+    content += `║  【${qd.name}】(${id})\n║    ${qd.description}\n║    接取: /接任务 ${id}\n`;
+    hasMain = true;
+  }
+  if (!hasMain) content += '║  暂无可用主线任务\n';
+  
+  // Available daily quests
+  const today = new Date().toISOString().slice(0, 10);
+  content += '║  \n║  🔄 每日任务:\n';
+  for (const [id, qd] of Object.entries(QUESTS_DATA)) {
+    if (qd.type !== 'daily') continue;
+    const completedToday = player.quests.dailyCompleted[id] === today;
+    if (completedToday) {
+      content += `║  【${qd.name}】(${id}) - ✅ 今日已完成\n`;
+    } else if (player.quests.active.includes(id)) {
+      const progress = player.quests.progress[id] || 0;
+      content += `║  【${qd.name}】(${id}) - 进度: ${progress}/${qd.requirement.target}\n║    完成: /提交任务 ${id}\n`;
+    } else {
+      content += `║  【${qd.name}】(${id})\n║    ${qd.description}\n║    接取: /接任务 ${id}\n`;
+    }
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '任务系统',
+      content: `\n╔══════════════════════════════╗\n║  任务系统\n╠══════════════════════════════╣\n${content}╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Accept a quest
+function handleAcceptQuestCommand(ws, player, command) {
+  const questId = command.replace('/接任务', '').trim();
+  if (!questId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /接任务 <任务ID>\n输入 /任务 查看可接任务。' } });
+    return;
+  }
+  
+  const qd = QUESTS_DATA[questId];
+  if (!qd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该任务。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.quests) p.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
+  if (!p.quests.progress) p.quests.progress = {};
+  
+  // Check if already active
+  if (p.quests.active.includes(questId)) {
+    sendToClient(ws, { type: 'system', data: { message: '你已经在进行这个任务了。' } });
+    return;
+  }
+  
+  // Check if already completed (main quests)
+  if (qd.type === 'main' && p.quests.completed.includes(questId)) {
+    sendToClient(ws, { type: 'system', data: { message: '你已经完成了这个任务。' } });
+    return;
+  }
+  
+  // Check daily completion
+  if (qd.type === 'daily') {
+    const today = new Date().toISOString().slice(0, 10);
+    if (p.quests.dailyCompleted[questId] === today) {
+      sendToClient(ws, { type: 'system', data: { message: '你今天已经完成了这个每日任务。' } });
+      return;
+    }
+  }
+  
+  // Check prerequisite
+  if (qd.prereq && !p.quests.completed.includes(qd.prereq)) {
+    const prereqQuest = QUESTS_DATA[qd.prereq];
+    sendToClient(ws, { type: 'system', data: { message: `需要先完成前置任务: ${prereqQuest ? prereqQuest.name : qd.prereq}` } });
+    return;
+  }
+  
+  p.quests.active.push(questId);
+  p.quests.progress[questId] = 0;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `📋 接受了任务【${qd.name}】！\n${qd.description}\n输入 /任务 查看进度。` }
+  });
+}
+
+// Complete a quest
+function handleCompleteQuestCommand(ws, player, command) {
+  const questId = command.replace('/提交任务', '').trim();
+  if (!questId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /提交任务 <任务ID>' } });
+    return;
+  }
+  
+  const qd = QUESTS_DATA[questId];
+  if (!qd) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该任务。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.quests) p.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
+  if (!p.quests.progress) p.quests.progress = {};
+  
+  // Check if quest is active
+  if (!p.quests.active.includes(questId)) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有在进行这个任务。先用 /接任务 接受任务。' } });
+    return;
+  }
+  
+  // Check if requirement is met
+  const progress = p.quests.progress[questId] || 0;
+  const target = qd.requirement.target;
+  
+  if (progress < target) {
+    sendToClient(ws, { type: 'system', data: { message: `任务尚未完成！进度: ${progress}/${target}` } });
+    return;
+  }
+  
+  // Remove from active, add to completed
+  p.quests.active = p.quests.active.filter(id => id !== questId);
+  if (qd.type === 'main') {
+    p.quests.completed.push(questId);
+  } else if (qd.type === 'daily') {
+    const today = new Date().toISOString().slice(0, 10);
+    p.quests.dailyCompleted[questId] = today;
+  }
+  delete p.quests.progress[questId];
+  
+  // Give rewards
+  let rewardMsg = '';
+  if (qd.reward.exp) {
+    const result = addExp(p, qd.reward.exp);
+    rewardMsg += `${qd.reward.exp}经验 `;
+    if (result.leveled) rewardMsg += `🎊 升级了！ `;
+    if (result.realmChanged) rewardMsg += `✨ 境界突破！ `;
+  }
+  if (qd.reward.silver) {
+    p.silver += qd.reward.silver;
+    rewardMsg += `${qd.reward.silver}灵石 `;
+  }
+  if (qd.reward.pills) {
+    if (!p.pills) p.pills = {};
+    for (const [pillId, count] of Object.entries(qd.reward.pills)) {
+      p.pills[pillId] = (p.pills[pillId] || 0) + count;
+      const pd = PILLS_DATA[pillId];
+      rewardMsg += `${pd ? pd.name : pillId}x${count} `;
+    }
+  }
+  
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🎉 完成了任务【${qd.name}】！\n获得奖励: ${rewardMsg}` }
+  });
+}
+
+// Quest progress tracking helper
+function updateQuestProgress(player, type, amount) {
+  if (!player.quests || !player.quests.active) return;
+  
+  for (const questId of player.quests.active) {
+    const qd = QUESTS_DATA[questId];
+    if (!qd) continue;
+    if (qd.requirement.type === type) {
+      if (!player.quests.progress) player.quests.progress = {};
+      player.quests.progress[questId] = (player.quests.progress[questId] || 0) + amount;
+    }
+  }
+}
+
+// Get equipment bonuses for combat
+function getEquipmentBonuses(player) {
+  let attack = 0, defense = 0, str = 0, speed = 0;
+  if (!player.equipment) return { attack, defense, str, speed };
+  
+  for (const equipId of Object.values(player.equipment)) {
+    if (!equipId) continue;
+    const ed = EQUIPMENT_DATA[equipId];
+    if (!ed) continue;
+    if (ed.attack) attack += ed.attack;
+    if (ed.defense) defense += ed.defense;
+    if (ed.str) str += ed.str;
+    if (ed.speed) speed += ed.speed;
+  }
+  
+  return { attack, defense, str, speed };
+}
+
 // Helper functions
 function getRoom(mapName, roomName) {
   const map = WORLD_DATA.maps[mapName];
@@ -1678,8 +2452,9 @@ function executeCombat(ws, player, room) {
   const monster = { ...monsterTemplate, hp: monsterTemplate.maxHp || monsterTemplate.hp };
   
   // Player stats
-  const playerAttack = player.stats.str * 2 + player.level * 3;
-  const playerDefense = player.stats.con * 1.5 + player.level * 2;
+  const equipBonuses = getEquipmentBonuses(player);
+  const playerAttack = player.stats.str * 2 + player.level * 3 + equipBonuses.attack + equipBonuses.str * 2;
+  const playerDefense = player.stats.con * 1.5 + player.level * 2 + equipBonuses.defense;
   
   // Find best active skill for bonus damage
   let activeSkillBonus = 0;
@@ -1782,6 +2557,12 @@ function executeCombat(ws, player, room) {
     if (Math.random() < monster.dropRate) {
       combatLog.push(`🍀 ${monster.name} 掉落了一件物品！`);
     }
+    
+    // Quest progress tracking for kills
+    if (player.currentRoom === '竹林') {
+      updateQuestProgress(player, 'kill_bamboo', 1);
+    }
+    updateQuestProgress(player, 'kill_any', 1);
     
     // Check level up and realm progression
     const { leveled, realmChanged } = addExp(player, expGain);
