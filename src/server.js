@@ -584,6 +584,12 @@ function getSessions() {
 
 // Save player data
 function savePlayers(players) {
+  // P0-4: Update lastOnlineTime for all connected players
+  for (const [ws, clientInfo] of connectedClients.entries()) {
+    if (ws.readyState === WebSocket.OPEN && players[clientInfo.playerId]) {
+      players[clientInfo.playerId].lastOnlineTime = Date.now();
+    }
+  }
   writeJSON(PLAYERS_FILE, players);
 }
 
@@ -704,7 +710,18 @@ function createPlayer(email, password, name, profession) {
     bugUsage: {},
     mysteryLetters: 0,
     activeBugs: {},
-    exploredRooms: []
+    exploredRooms: [],
+    // P0-1: Dao Heart system
+    daoHeart: 500,
+    // P0-2: Credit Score system
+    creditScore: 500,
+    // P0-3: Bag capacity
+    bagCapacity: 50,
+    // P0-4: Offline gains tracking
+    lastOnlineTime: Date.now(),
+    // P0-6a: Lifespan system
+    lifespan: 100,
+    age: 60
   };
   
   players[playerId] = newPlayer;
@@ -979,6 +996,37 @@ function handleLogin(ws, data) {
   if (!result.player.activeBugs) result.player.activeBugs = {};
   if (!result.player.exploredRooms) result.player.exploredRooms = [];
   if (result.player.isAdmin === undefined) result.player.isAdmin = result.player.email === 'admin@game.com';
+  // P0-1: Dao Heart initialization
+  if (result.player.daoHeart === undefined) result.player.daoHeart = 500;
+  // P0-2: Credit Score initialization
+  if (result.player.creditScore === undefined) result.player.creditScore = 500;
+  // P0-3: Bag capacity initialization
+  if (result.player.bagCapacity === undefined) result.player.bagCapacity = 50;
+  // P0-6a: Lifespan initialization
+  if (result.player.lifespan === undefined) result.player.lifespan = getRealmLifespan(result.player.realm);
+  if (result.player.age === undefined) result.player.age = 60;
+  
+  // P0-4: Offline gains calculation
+  const now = Date.now();
+  if (result.player.lastOnlineTime) {
+    const offlineDuration = now - result.player.lastOnlineTime;
+    if (offlineDuration > 5 * 60 * 1000) { // > 5 minutes
+      const offlineMinutes = Math.min(offlineDuration / 60000, 1440); // max 24 hours
+      const offlineExp = Math.floor(offlineMinutes * 0.5);
+      if (offlineExp > 0) {
+        addExp(result.player, offlineExp);
+        // Partial recovery of spirit and stamina
+        result.player.spirit = Math.min(result.player.maxSpirit, Math.floor(result.player.spirit + offlineMinutes * 0.5));
+        result.player.stamina = Math.min(result.player.maxStamina, Math.floor(result.player.stamina + offlineMinutes * 0.3));
+        sendToClient(ws, {
+          type: 'system',
+          data: { message: `⏰ 你在离线期间（${Math.floor(offlineMinutes)}分钟）获得了 ${offlineExp} 经验，灵力和体力也有所恢复。` }
+        });
+      }
+    }
+  }
+  result.player.lastOnlineTime = now;
+  
   savePlayers(getPlayers());
   
   connectedClients.set(ws, {
@@ -1279,6 +1327,10 @@ function handleCommand(ws, data) {
     handleUseBugCommand(ws, player, bugId);
   } else if (command.startsWith('/Bug')) {
     handleBugListCommand(ws, player);
+  } else if (command.startsWith('/道心')) {
+    handleDaoHeartCommand(ws, player);
+  } else if (command.startsWith('/信誉')) {
+    handleCreditScoreCommand(ws, player);
   } else if (command.startsWith('/管理员')) {
     handleAdminCommand(ws, player, command);
   } else {
@@ -1296,6 +1348,13 @@ function handleStatsCommand(ws, player) {
   const idleStatus = player.isIdle ? '🧘 打坐中' : '活跃';
   const realmProgress = realmInfo && realmInfo.subLevel ? 
     `${player.exp}/${realmInfo.subLevel.expRequired} (${Math.floor(player.exp / realmInfo.subLevel.expRequired * 100)}%)` : '-';
+  
+  const dh = player.daoHeart || 500;
+  const dhBonus = getDaoHeartBonus(player);
+  const cs = player.creditScore || 500;
+  const csBonus = getCreditBonus(player);
+  const age = player.age || 60;
+  const lifespan = player.lifespan || 100;
   
   sendToClient(ws, {
     type: 'command_response',
@@ -1319,6 +1378,10 @@ function handleStatsCommand(ws, player) {
 ║  体质: ${player.stats.con}
 ║  悟性: ${player.stats.wis}
 ╠══════════════════════════════╣
+║  道心: ${dh}/1000 [${dhBonus.label}]
+║  信誉: ${cs}/1000 [${csBonus.label}]
+║  年龄: ${Math.floor(age)}岁 / 寿命: ${lifespan}年
+╠══════════════════════════════╣
 ║  灵石: ${player.silver}
 ║  仙玉: ${player.jade}
 ╚══════════════════════════════╝`
@@ -1328,17 +1391,41 @@ function handleStatsCommand(ws, player) {
 
 // Inventory command
 function handleInventoryCommand(ws, player) {
+  const used = getBagUsed(player);
+  const capacity = getBagCapacity(player);
+  
+  let pillList = '';
+  if (player.pills && Object.keys(player.pills).length > 0) {
+    for (const [id, qty] of Object.entries(player.pills)) {
+      if (qty <= 0) continue;
+      const pd = (typeof PILLS_DATA !== 'undefined' && PILLS_DATA[id]) ? PILLS_DATA[id] : null;
+      const name = pd ? pd.name : id;
+      pillList += `║  【${name}】x${qty} (${id})\n`;
+    }
+  }
+  
+  let equipList = '';
+  if (player.equipmentBag && player.equipmentBag.length > 0) {
+    for (const eq of player.equipmentBag) {
+      const ed = (typeof EQUIPMENT_DATA !== 'undefined' && EQUIPMENT_DATA[eq.id]) ? EQUIPMENT_DATA[eq.id] : null;
+      const name = ed ? ed.name : eq.id;
+      equipList += `║  【${name}】(${eq.id})\n`;
+    }
+  }
+  
+  const items = pillList + equipList;
+  const display = items || '║  [空空如也]\n';
+  
   sendToClient(ws, {
     type: 'command_response',
     data: {
       title: '背包',
       content: `
 ╔══════════════════════════════╗
-║  背包
+║  背包 [${used}/${capacity}]
 ╠══════════════════════════════╣
-║  [空空如也]
-║
-║  提示: 你可以在集市购买物品
+${display}║
+║  提示: 背包容量上限 ${capacity}
 ╚══════════════════════════════╝`
     }
   });
@@ -1779,6 +1866,12 @@ function handleRealmCommand(ws, player) {
   const percent = subLevel ? Math.floor(player.exp / subLevel.expRequired * 100) : 0;
   const desc = subLevel ? subLevel.description : '';
   
+  const dh = player.daoHeart || 500;
+  const dhBonus = getDaoHeartBonus(player);
+  const age = player.age || 60;
+  const lifespan = player.lifespan || getRealmLifespan(player.realm);
+  const agePercent = Math.floor(age / lifespan * 100);
+  
   sendToClient(ws, {
     type: 'command_response',
     data: {
@@ -1793,6 +1886,9 @@ function handleRealmCommand(ws, player) {
 ║  
 ║  境界说明: ${realm.description}
 ║  阶段描述: ${desc}
+║  
+║  道心状态: ${dh}/1000 [${dhBonus.label}]
+║  寿命: ${Math.floor(age)}/${lifespan}年 (${agePercent}%)
 ║  
 ║  境界列表:
 ║  练气 → 筑基 → 金丹 → 元婴
@@ -1820,6 +1916,8 @@ function handleHelpCommand(ws, player) {
 ║  /属性  - 查看角色属性详情
 ║  /境界  - 查看境界信息和进度
 ║  /背包  - 查看背包物品
+║  /道心  - 查看道心状态
+║  /信誉  - 查看信誉分状态
 ║  
 ║  🗺️ 移动探索:
 ║  /地图  - 查看当前地图
@@ -1897,6 +1995,70 @@ function handleHelpCommand(ws, player) {
 ║  /Bug   - 查看已发现的Bug
 ║  /探索Bug - 搜索当前房间的Bug
 ║  /使用Bug <BugID> - 激活Bug效果
+╚══════════════════════════════╝`
+    }
+  });
+}
+
+// ===== P0 COMMANDS =====
+
+// P0-1: Dao Heart command
+function handleDaoHeartCommand(ws, player) {
+  const dh = player.daoHeart || 500;
+  const bonus = getDaoHeartBonus(player);
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '道心信息',
+      content: `
+╔══════════════════════════════╗
+║  道心详情
+╠══════════════════════════════╣
+║  道心值: ${dh}/1000
+║  状态: ${bonus.label}
+║  
+║  效果:
+║  暴击加成: ${bonus.critBonus > 0 ? '+' : ''}${bonus.critBonus}%
+║  奇遇概率: ${bonus.encounterBonus > 0 ? '+' : ''}${bonus.encounterBonus}%
+║  突破加成: ${bonus.breakthroughBonus > 0 ? '+' : ''}${bonus.breakthroughBonus}%
+║  经验加成: ${bonus.expBonus > 0 ? '+' : ''}${bonus.expBonus}%
+║  
+║  道心说明:
+║  0-199: 心魔缠身 (极弱)
+║  200-499: 道心不稳 (偏弱)
+║  500-799: 道心坚定 (正常)
+║  800-1000: 道心圆满 (增强)
+╚══════════════════════════════╝`
+    }
+  });
+}
+
+// P0-2: Credit Score command
+function handleCreditScoreCommand(ws, player) {
+  const cs = player.creditScore || 500;
+  const bonus = getCreditBonus(player);
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '信誉信息',
+      content: `
+╔══════════════════════════════╗
+║  信誉详情
+╠══════════════════════════════╣
+║  信誉分: ${cs}/1000
+║  状态: ${bonus.label}
+║  
+║  效果:
+║  交易权限: ${bonus.canTrade ? '✅ 允许' : '❌ 禁止'}
+║  拍卖权限: ${bonus.canAuction ? '✅ 允许' : '❌ 禁止'}
+║  师徒权限: ${bonus.canMentor ? '✅ 允许' : '❌ 禁止'}
+║  交易税率: ${bonus.tradeTax > 0 ? '+' : ''}${bonus.tradeTax}%
+║  
+║  信誉说明:
+║  0-199: 红名 (交易禁止)
+║  200-499: 信用不良 (税率+50%)
+║  500-799: 正常 (无加减)
+║  800-1000: 信誉良好 (税率-20%)
 ╚══════════════════════════════╝`
     }
   });
@@ -3511,6 +3673,30 @@ function checkRealmProgression(player) {
       return false; // Already at max realm
     }
     
+    // P0-5c: Breakthrough failure chance
+    const dhBonus = getDaoHeartBonus(player);
+    const successRate = Math.min(100, 80 + dhBonus.breakthroughBonus);
+    if (Math.random() * 100 >= successRate) {
+      // Breakthrough failed!
+      const expLoss = Math.floor(player.exp * 0.3);
+      player.exp = Math.max(0, player.exp - expLoss);
+      
+      // If at first sub-level, drop to previous realm's last sub-level
+      if (currentSubIndex === 0 && currentRealmOrder > 0) {
+        const prevRealm = realms.find(r => r.order === currentRealmOrder - 1);
+        if (prevRealm) {
+          player.realm = prevRealm.name + prevRealm.subLevels[3].name;
+        }
+      }
+      // Update lifespan to match realm
+      player.lifespan = getRealmLifespan(player.realm);
+      
+      // Return a special value to indicate failure (we'll handle message in caller)
+      player._breakthroughFailed = true;
+      player._breakthroughExpLoss = expLoss;
+      return false;
+    }
+    
     player.realm = nextRealm.name + nextSubLevel.name;
     player.exp -= realmInfo.subLevel.expRequired;
     
@@ -3520,9 +3706,82 @@ function checkRealmProgression(player) {
     player.hp = player.maxHp;
     player.spirit = player.maxSpirit;
     
+    // P0-6a: Reset age and update lifespan on breakthrough
+    player.age = 0;
+    player.lifespan = getRealmLifespan(player.realm);
+    
     return true;
   }
   return false;
+}
+
+// ===== P0 HELPER FUNCTIONS =====
+
+// P0-1: Dao Heart system
+function getDaoHeartBonus(player) {
+  const dh = player.daoHeart || 500;
+  if (dh < 200) return { critBonus: 0, encounterBonus: -30, breakthroughBonus: -20, expBonus: -10, label: '心魔缠身' };
+  if (dh < 500) return { critBonus: 0, encounterBonus: -10, breakthroughBonus: -5, expBonus: 0, label: '道心不稳' };
+  if (dh < 800) return { critBonus: 0, encounterBonus: 0, breakthroughBonus: 0, expBonus: 0, label: '道心坚定' };
+  return { critBonus: 10, encounterBonus: 15, breakthroughBonus: 20, expBonus: 0, label: '道心圆满' };
+}
+
+// P0-2: Credit Score system
+function getCreditBonus(player) {
+  const cs = player.creditScore || 500;
+  if (cs < 200) return { canTrade: false, canAuction: false, canMentor: false, tradeTax: 0, label: '红名' };
+  if (cs < 500) return { canTrade: true, canAuction: true, canMentor: true, tradeTax: 50, label: '信用不良' };
+  if (cs < 800) return { canTrade: true, canAuction: true, canMentor: true, tradeTax: 0, label: '正常' };
+  return { canTrade: true, canAuction: true, canMentor: true, tradeTax: -20, label: '信誉良好' };
+}
+
+// P0-3: Bag capacity helpers
+function getBagUsed(player) {
+  let count = 0;
+  if (player.pills) { for (const c of Object.values(player.pills)) count += c; }
+  if (player.equipmentBag) count += player.equipmentBag.length;
+  return count;
+}
+
+function getBagCapacity(player) {
+  let cap = player.bagCapacity || 50;
+  // VIP bonus would go here
+  return cap;
+}
+
+// P0-5b: Realm order helper
+function getRealmOrder(realmStr) {
+  const realmNames = ['练气','筑基','金丹','元婴','化神','炼虚','合体','大乘','渡劫','飞升','仙人','神尊'];
+  for (let i = 0; i < realmNames.length; i++) {
+    if (realmStr.includes(realmNames[i])) return i;
+  }
+  return 0;
+}
+
+// P0-6b: Profession bonus helper
+function getProfessionBonus(player) {
+  const profs = {
+    '退休警察': { primary: { type: '追击伤害', value: 0.10 }, secondary: { type: '体力恢复', value: 0.05 } },
+    '退休军人': { primary: { type: '防御', value: 0.10 }, secondary: { type: 'HP上限', value: 0.05 } },
+    '退休医生': { primary: { type: '治疗效果', value: 0.10 }, secondary: { type: '炼丹成功率', value: 0.05 } },
+    '退休教师': { primary: { type: '功法修炼速度', value: 0.10 }, secondary: { type: '悟性成长', value: 0.05 } },
+    '退休程序员': { primary: { type: 'Bug发现率', value: 0.10 }, secondary: { type: '解谜线索', value: 0.05 } },
+    '退休工人': { primary: { type: '力道成长', value: 0.10 }, secondary: { type: '负重', value: 0.05 } },
+    '退休厨师': { primary: { type: '食物效果', value: 0.10 }, secondary: { type: '体力上限', value: 0.05 } },
+    '退休商人': { primary: { type: '银两获取', value: 0.10 }, secondary: { type: '交易税', value: -0.05 } },
+    '退休运动员': { primary: { type: '速度', value: 0.10 }, secondary: { type: '闪避', value: 0.05 } },
+    '退休艺术家': { primary: { type: '奇遇概率', value: 0.10 }, secondary: { type: '道心成长', value: 0.05 } },
+    '退休农民': { primary: { type: '采集效率', value: 0.10 }, secondary: { type: '寿命', value: 0.05 } },
+    '无业/自由': { primary: { type: '全属性', value: 0.03 }, secondary: null }
+  };
+  return profs[player.profession] || null;
+}
+
+// P0-6a: Lifespan by realm
+function getRealmLifespan(realmStr) {
+  const order = getRealmOrder(realmStr);
+  const lifespans = [100, 200, 500, 1000, 2000, 3000, 5000, 8000, 10000, 15000, 20000, 50000];
+  return lifespans[order] || 100;
 }
 
 // ===== COMBAT SYSTEM =====
@@ -3541,12 +3800,39 @@ function executeCombat(ws, player, room) {
   const equipBonuses = getEquipmentBonuses(player);
   let playerAttack = player.stats.str * 2 + player.level * 3 + equipBonuses.attack + equipBonuses.str * 2;
   let playerDefense = player.stats.con * 1.5 + player.level * 2 + equipBonuses.defense;
+  let playerSpeed = player.stats.dex * 1.5 + equipBonuses.speed;
   
   // Apply relic bonuses to stats
   if (player.relics) {
     if (player.relics.includes('M06')) playerAttack = Math.floor(playerAttack * 1.10); // M06: attack+10%
     if (player.relics.includes('M05')) playerDefense = Math.floor(playerDefense * 1.08); // M05: defense+8%
     if (player.relics.includes('Z02')) playerAttack = Math.floor(playerAttack * 1.15); // Z02: str+15%
+  }
+  
+  // P0-6b: Apply profession bonuses
+  const profBonus = getProfessionBonus(player);
+  if (profBonus) {
+    if (profBonus.primary.type === '追击伤害' || profBonus.primary.type === '全属性') playerAttack = Math.floor(playerAttack * (1 + profBonus.primary.value));
+    if (profBonus.primary.type === '防御' || profBonus.primary.type === '全属性') playerDefense = Math.floor(playerDefense * (1 + profBonus.primary.value));
+    if (profBonus.primary.type === '速度' || profBonus.primary.type === '全属性') playerSpeed = Math.floor(playerSpeed * (1 + profBonus.primary.value));
+  }
+  
+  // P0-5b: Realm suppression bonus
+  const playerRealmOrder = getRealmOrder(player.realm);
+  let realmDmgBonus = 1;
+  let realmDmgReduce = 1;
+  let realmSupMsg = '';
+  if (monsterTemplate.realm) {
+    const monsterRealmOrder = getRealmOrder(monsterTemplate.realm);
+    if (playerRealmOrder > monsterRealmOrder) {
+      realmDmgBonus = 1.2;
+      realmDmgReduce = 0.8;
+      realmSupMsg = '境界压制！你对低境界怪物造成额外伤害，受到伤害减少！';
+    } else if (playerRealmOrder < monsterRealmOrder) {
+      realmDmgBonus = 0.8;
+      realmDmgReduce = 1.2;
+      realmSupMsg = '境界差距！你对高境界怪物伤害降低，受到伤害增加！';
+    }
   }
   
   // Find best active skill for bonus damage
@@ -3595,16 +3881,42 @@ function executeCombat(ws, player, room) {
   const combatLog = [];
   combatLog.push(`⚔️ 战斗开始！你遭遇了 ${monster.name}！`);
   combatLog.push(`${monster.name}: HP ${monster.hp}/${monster.maxHp || monster.hp} | 攻击 ${monster.attack} | 防御 ${monster.defense}`);
+  if (realmSupMsg) combatLog.push(`🔸 ${realmSupMsg}`);
+  combatLog.push('');
+  
+  // P0-5a: Combat initiative (先手判定)
+  const monsterSpeed = (monster.attack + monster.defense) * 0.5; // Approximate monster speed
+  const playerGoesFirst = playerSpeed >= monsterSpeed;
+  if (playerGoesFirst) {
+    combatLog.push('🏃 你身法敏捷，率先出手！');
+  } else {
+    combatLog.push('💨 怪物速度更快，率先攻击！');
+  }
   combatLog.push('');
   
   let round = 0;
   const maxRounds = 50; // Safety limit
   
+  // P0-1: Dao heart crit bonus
+  const dhBonus = getDaoHeartBonus(player);
+  
   while (player.hp > 0 && monster.hp > 0 && round < maxRounds) {
     round++;
     
+    // Monster attacks first if not playerGoesFirst (only first round)
+    if (!playerGoesFirst && round === 1) {
+      if (dodgeChance > 0 && Math.random() < dodgeChance) {
+        combatLog.push(`        ${monster.name} 攻击你，但你身法灵动闪避了！`);
+      } else {
+        const monsterDmg = Math.max(1, Math.floor((monster.attack - playerDefense * sectDefenseBonus / 2 + Math.floor(Math.random() * 5) - 2) * realmDmgReduce));
+        player.hp -= monsterDmg;
+        combatLog.push(`        ${monster.name} 攻击你，造成 ${monsterDmg} 点伤害！你的 HP: ${Math.max(0, player.hp)}/${player.maxHp}`);
+      }
+      if (player.hp <= 0) break;
+    }
+    
     // Player attacks monster
-    let playerDmg = Math.max(1, Math.floor(playerAttack - monster.defense / 2 + Math.floor(Math.random() * 5) - 2));
+    let playerDmg = Math.max(1, Math.floor((playerAttack - monster.defense / 2 + Math.floor(Math.random() * 5) - 2) * realmDmgBonus));
     // Apply active skill bonus
     if (activeSkillBonus > 0) {
       playerDmg += activeSkillBonus;
@@ -3629,6 +3941,11 @@ function executeCombat(ws, player, room) {
       playerDmg = Math.floor(playerDmg * 1.5);
       if (round === 1) combatLog.push('  [门派效果] 暴击！');
     }
+    // P0-1: Apply dao heart critBonus
+    if (dhBonus.critBonus > 0 && Math.random() * 100 < dhBonus.critBonus) {
+      playerDmg = Math.floor(playerDmg * 1.5);
+      combatLog.push('  [道心效果] 暴击！');
+    }
     monster.hp -= playerDmg;
     combatLog.push(`第${round}回合: 你攻击 ${monster.name}，造成 ${playerDmg} 点伤害！${monster.name} HP: ${Math.max(0, monster.hp)}/${monsterTemplate.maxHp || monsterTemplate.hp}`);
     
@@ -3645,7 +3962,7 @@ function executeCombat(ws, player, room) {
     if (dodgeChance > 0 && Math.random() < dodgeChance) {
       combatLog.push(`        ${monster.name} 攻击你，但你身法灵动闪避了！`);
     } else {
-      const monsterDmg = Math.max(1, Math.floor(monster.attack - playerDefense * sectDefenseBonus / 2 + Math.floor(Math.random() * 5) - 2));
+      const monsterDmg = Math.max(1, Math.floor((monster.attack - playerDefense * sectDefenseBonus / 2 + Math.floor(Math.random() * 5) - 2) * realmDmgReduce));
       player.hp -= monsterDmg;
       combatLog.push(`        ${monster.name} 攻击你，造成 ${monsterDmg} 点伤害！你的 HP: ${Math.max(0, player.hp)}/${player.maxHp}`);
     }
@@ -3712,15 +4029,27 @@ function executeCombat(ws, player, room) {
         roll -= item.weight;
         if (roll <= 0) { dropItem = item; break; }
       }
-      // Add item to player inventory
-      if (dropItem.type === 'pill') {
-        if (!player.pills) player.pills = {};
-        player.pills[dropItem.id] = (player.pills[dropItem.id] || 0) + 1;
-      } else if (dropItem.type === 'equipment') {
-        if (!player.equipmentBag) player.equipmentBag = [];
-        player.equipmentBag.push({ id: dropItem.id });
+      // Add item to player inventory (P0-3: check bag capacity)
+      const currentBagUsed = getBagUsed(player);
+      const currentBagCap = getBagCapacity(player);
+      if (currentBagUsed >= currentBagCap) {
+        combatLog.push(`⚠️ 背包已满（${currentBagUsed}/${currentBagCap}），无法拾取【${dropItem.name}】！`);
+      } else {
+        if (dropItem.type === 'pill') {
+          if (!player.pills) player.pills = {};
+          const currentPillQty = player.pills[dropItem.id] || 0;
+          if (currentPillQty >= 99) {
+            combatLog.push(`⚠️ 【${dropItem.name}】已达最大堆叠数99，无法拾取！`);
+          } else {
+            player.pills[dropItem.id] = currentPillQty + 1;
+            combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！已收入背包。`);
+          }
+        } else if (dropItem.type === 'equipment') {
+          if (!player.equipmentBag) player.equipmentBag = [];
+          player.equipmentBag.push({ id: dropItem.id });
+          combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！已收入背包。`);
+        }
       }
-      combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！已收入背包。`);
     }
     
     // ===== RELIC DROP CHECK =====
@@ -3772,6 +4101,12 @@ function executeCombat(ws, player, room) {
     const { leveled, realmChanged } = addExp(player, finalExpGain);
     if (leveled) combatLog.push(`🎊 恭喜！你升级了！当前等级: ${player.level}`);
     if (realmChanged) combatLog.push(`✨ 突破成功！你的境界提升为: ${player.realm}`);
+    // P0-5c: Breakthrough failure message
+    if (player._breakthroughFailed) {
+      combatLog.push(`💥 渡劫失败！修为倒退，损失 ${player._breakthroughExpLoss} 经验`);
+      delete player._breakthroughFailed;
+      delete player._breakthroughExpLoss;
+    }
     
     // Auto-accept admin watch quest at level 5
     if (leveled && player.level >= 5 && !player.quests.active.includes('q_admin_watch') && !player.quests.completed.includes('q_admin_watch')) {
