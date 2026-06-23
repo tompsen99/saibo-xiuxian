@@ -5,79 +5,78 @@
 (function () {
   'use strict';
 
-  // ─── Profession Data (from game design doc, total=100) ───
   const PROFESSIONS = [
     {
-      id: 'retired_police', name: '退休警察',
-      stats: { 力道: 14, 根骨: 16, 身法: 15, 悟性: 10 },
-      bonusMain: '追击伤害+10%', bonusSub: '体力恢复+5%',
-      desc: '60年从警生涯，身手矫健，根骨扎实。穿越后依然保留着追击本能。'
+      id: 'police', name: '退休警察',
+      desc: '60年执法生涯，练就一身正气',
+      stats: { str: 14, con: 16, dex: 15, wis: 10 },
+      primary: '追击伤害+10%', secondary: '体力恢复+5%'
     },
     {
-      id: 'retired_soldier', name: '退休军人',
-      stats: { 力道: 16, 根骨: 14, 身法: 14, 悟性: 11 },
-      bonusMain: '防御+10%', bonusSub: 'HP上限+5%',
-      desc: '军旅一生，体魄强健，攻防兼备。战场上积累的战斗经验不会消失。'
+      id: 'soldier', name: '退休军人',
+      desc: '半生戎马，铁骨铮铮',
+      stats: { str: 16, con: 14, dex: 14, wis: 11 },
+      primary: '防御+10%', secondary: 'HP上限+5%'
     },
     {
-      id: 'retired_doctor', name: '退休医生',
-      stats: { 力道: 10, 根骨: 12, 身法: 10, 悟性: 23 },
-      bonusMain: '治疗效果+10%', bonusSub: '炼丹成功率+5%',
-      desc: '悬壶济世数十载，对人体经络了然于胸。修仙炼丹事半功倍。'
+      id: 'doctor', name: '退休医生',
+      desc: '悬壶济世一甲子，深谙人体奥秘',
+      stats: { str: 10, con: 12, dex: 10, wis: 23 },
+      primary: '治疗效果+10%', secondary: '炼丹成功率+5%'
     },
     {
-      id: 'retired_teacher', name: '退休教师',
-      stats: { 力道: 10, 根骨: 12, 身法: 10, 悟性: 23 },
-      bonusMain: '功法修炼速度+10%', bonusSub: '悟性成长+5%',
-      desc: '教书育人一辈子，学习能力超强。对功法的理解比常人更快。'
+      id: 'teacher', name: '退休教师',
+      desc: '桃李满天下，悟性超群',
+      stats: { str: 10, con: 12, dex: 10, wis: 23 },
+      primary: '功法修炼速度+10%', secondary: '悟性成长+5%'
     },
     {
-      id: 'retired_programmer', name: '退休程序员',
-      stats: { 力道: 8, 根骨: 10, 身法: 12, 悟性: 25 },
-      bonusMain: 'Bug发现率+10%', bonusSub: '解谜线索+5%',
-      desc: '写了40年代码，是唯一能读懂这个世界Bug残留代码碎片的人。'
+      id: 'programmer', name: '退休程序员',
+      desc: '与代码为伍四十载，洞察一切Bug',
+      stats: { str: 8, con: 10, dex: 12, wis: 25 },
+      primary: 'Bug发现率+10%', secondary: '解谜线索+5%'
     },
     {
-      id: 'retired_worker', name: '退休工人',
-      stats: { 力道: 18, 根骨: 16, 身法: 10, 悟性: 11 },
-      bonusMain: '力道成长+10%', bonusSub: '负重+5%',
-      desc: '干了一辈子体力活，力大无穷。穿越后这副身板依然结实。'
+      id: 'worker', name: '退休工人',
+      desc: '一辈子劳作，力大无穷',
+      stats: { str: 18, con: 16, dex: 10, wis: 11 },
+      primary: '力道成长+10%', secondary: '负重+5%'
     },
     {
-      id: 'retired_chef', name: '退休厨师',
-      stats: { 力道: 12, 根骨: 14, 身法: 10, 悟性: 19 },
-      bonusMain: '食物效果+10%', bonusSub: '体力上限+5%',
-      desc: '掌勺四十年，深谙食补之道。吃什么都比别人多恢复一些。'
+      id: 'chef', name: '退休厨师',
+      desc: '民以食为天，深谙食补之道',
+      stats: { str: 12, con: 14, dex: 10, wis: 19 },
+      primary: '食物效果+10%', secondary: '体力上限+5%'
     },
     {
-      id: 'retired_merchant', name: '退休商人',
-      stats: { 力道: 10, 根骨: 10, 身法: 14, 悟性: 21 },
-      bonusMain: '银两获取+10%', bonusSub: '交易税-5%',
-      desc: '商场沉浮半生，精于算计。穿越后做生意照样精明。'
+      id: 'merchant', name: '退休商人',
+      desc: '精于算计，善于交易',
+      stats: { str: 10, con: 10, dex: 14, wis: 21 },
+      primary: '银两获取+10%', secondary: '交易税-5%'
     },
     {
-      id: 'retired_athlete', name: '退休运动员',
-      stats: { 力道: 14, 根骨: 14, 身法: 18, 悟性: 9 },
-      bonusMain: '速度+10%', bonusSub: '闪避+5%',
-      desc: '退役运动员，身体素质极佳。身法敏捷，来去如风。'
+      id: 'athlete', name: '退休运动员',
+      desc: '赛场拼搏数十载，身手敏捷',
+      stats: { str: 14, con: 14, dex: 18, wis: 9 },
+      primary: '速度+10%', secondary: '闪避+5%'
     },
     {
-      id: 'retired_artist', name: '退休艺术家',
-      stats: { 力道: 10, 根骨: 10, 身法: 14, 悟性: 21 },
-      bonusMain: '奇遇概率+10%', bonusSub: '道心成长+5%',
-      desc: '艺术人生，感知敏锐。容易触发奇遇，道心修炼更快。'
+      id: 'artist', name: '退休艺术家',
+      desc: '追求美与灵感，直觉敏锐',
+      stats: { str: 10, con: 10, dex: 14, wis: 21 },
+      primary: '奇遇概率+10%', secondary: '道心成长+5%'
     },
     {
-      id: 'retired_farmer', name: '退休农民',
-      stats: { 力道: 16, 根骨: 18, 身法: 8, 悟性: 13 },
-      bonusMain: '采集效率+10%', bonusSub: '寿命+5%',
-      desc: '面朝黄土背朝天几十年，身体底子最好。寿命比一般人长。'
+      id: 'farmer', name: '退休农民',
+      desc: '面朝黄土背朝天，根基深厚',
+      stats: { str: 16, con: 18, dex: 8, wis: 13 },
+      primary: '采集效率+10%', secondary: '寿命+5%'
     },
     {
-      id: 'retired_freelance', name: '无业/自由',
-      stats: { 力道: 12, 根骨: 12, 身法: 12, 悟性: 19 },
-      bonusMain: '全属性+3%', bonusSub: '无',
-      desc: '自由自在一辈子，没有专精但也没有短板。全面均衡发展。'
+      id: 'freelance', name: '无业/自由',
+      desc: '自由自在无拘无束，全面发展',
+      stats: { str: 12, con: 12, dex: 12, wis: 19 },
+      primary: '全属性+3%', secondary: '无'
     }
   ];
 
@@ -88,7 +87,8 @@
   let token = null;
   let gameState = 'login'; // login | profession | attributes | game
   let selectedProfession = null;
-  let attrValues = { 力道: 0, 根骨: 0, 身法: 0, 悟性: 0 };
+  let attrValues = { str: 0, con: 0, dex: 0, wis: 0 };
+  let pendingPlayerId = null;
   let messageCount = 0;
   const MAX_MESSAGES = 500;
 
@@ -126,12 +126,6 @@
     ws.onopen = function () {
       reconnectDelay = 1000;
       appendMessage('[系统] 已连接到服务器', 'system');
-      // If we have stored credentials, try auto-login
-      var storedEmail = localStorage.getItem('sbxx_email');
-      var storedToken = localStorage.getItem('sbxx_token');
-      if (storedToken && storedEmail) {
-        sendWS('login', { email: storedEmail, token: storedToken });
-      }
     };
 
     ws.onmessage = function (evt) {
@@ -175,11 +169,15 @@
     switch (type) {
       case 'system':
       case 'message':
-        appendMessage(data.text || data.message || JSON.stringify(data), data.style || 'system');
+        appendMessage(data.text || data.message || JSON.stringify(data), 'system');
         break;
 
       case 'chat':
-        appendMessage((data.sender ? data.sender + ': ' : '') + (data.text || ''), 'chat');
+        appendMessage((data.sender ? data.sender + ': ' : '') + (data.message || data.text || ''), 'chat');
+        break;
+
+      case 'local_chat':
+        appendMessage('[本地] ' + (data.sender || '') + ': ' + (data.message || ''), 'local');
         break;
 
       case 'combat':
@@ -194,38 +192,74 @@
         appendMessage('错误: ' + (data.message || data.text || '未知错误'), 'error');
         break;
 
-      case 'login_success':
-        token = data.token || 'ok';
-        localStorage.setItem('sbxx_email', data.email || document.getElementById('login-email').value);
-        localStorage.setItem('sbxx_token', token);
-        appendMessage('[系统] 登录成功！欢迎回来，' + (data.name || '修仙者'), 'system');
-        if (data.needsProfession) {
+      // Registration response
+      case 'register_response':
+        if (data.success) {
+          pendingPlayerId = data.playerId || null;
+          appendMessage('[系统] 注册成功！请先选择你的前世职业。', 'system');
           showProfessionSelection();
-        } else if (data.needsAttributes) {
-          showAttributeAllocation(data.baseStats);
         } else {
-          enterGame(data);
+          document.getElementById('register-error').textContent = data.message || '注册失败';
         }
         break;
 
-      case 'register_success':
-        token = data.token || 'ok';
-        localStorage.setItem('sbxx_email', data.email || document.getElementById('reg-email').value);
-        localStorage.setItem('sbxx_token', token);
-        appendMessage('[系统] 注册成功！请先选择你的前世职业。', 'system');
-        showProfessionSelection();
+      // Login response
+      case 'login_response':
+        if (data.success) {
+          token = data.token;
+          localStorage.setItem('sbxx_token', token);
+          if (data.player) {
+            pendingPlayerId = data.player.id;
+            updateStatusFromPlayer(data.player);
+          }
+          if (data.needsProfession) {
+            pendingPlayerId = data.playerId || (data.player && data.player.id);
+            appendMessage('[系统] 请先选择你的前世职业。', 'system');
+            showProfessionSelection();
+          } else {
+            appendMessage('[系统] 登录成功！欢迎回来，' + (data.player ? data.player.name : '修仙者'), 'system');
+            enterGame(data);
+          }
+        } else {
+          document.getElementById('login-error').textContent = data.message || '登录失败';
+        }
         break;
 
-      case 'profession_selected':
-        appendMessage('[系统] 职业选择成功！请分配属性。', 'system');
-        showAttributeAllocation(data.baseStats);
+      // Profession selection response
+      case 'select_profession_response':
+        if (data.success) {
+          token = data.token || token;
+          localStorage.setItem('sbxx_token', token);
+          if (data.player) {
+            pendingPlayerId = data.player.id;
+            updateStatusFromPlayer(data.player);
+          }
+          appendMessage('[系统] ' + (data.message || '职业选择完成！'), 'system');
+          enterGame(data);
+        } else {
+          appendMessage('[系统] ' + (data.message || '职业选择失败'), 'error');
+        }
         break;
 
-      case 'attributes_confirmed':
-      case 'enter_game':
-        enterGame(data);
+      // Room display
+      case 'room':
+        displayRoom(data);
         break;
 
+      // Move response
+      case 'move_response':
+        if (data.success && data.room) {
+          displayRoom(data.room);
+        }
+        break;
+
+      // Command response
+      case 'command_response':
+        appendMessage(data.content || data.message || '', 'room');
+        break;
+
+      // Status
+      case 'status_response':
       case 'status':
         updateStatus(data);
         break;
@@ -287,13 +321,10 @@
     }
 
     if (text.charAt(0) === '/') {
-      var parts = text.slice(1).split(/\s+/);
-      var cmd = parts[0];
-      var args = parts.slice(1).join(' ');
-      sendWS('command', { command: cmd, args: args });
+      sendWS('command', { command: text });
       appendMessage('> ' + text, 'self');
     } else {
-      sendWS('chat', { text: text });
+      sendWS('chat', { message: text });
     }
   }
 
@@ -342,9 +373,14 @@
       card.dataset.id = p.id;
       card.innerHTML =
         '<div class="prof-name">' + p.name + '</div>' +
-        '<div class="prof-stats">力' + p.stats.力道 + ' 根' + p.stats.根骨 + ' 身' + p.stats.身法 + ' 悟' + p.stats.悟性 + '</div>' +
-        '<div class="prof-bonus">' + p.bonusMain + ' / ' + p.bonusSub + '</div>' +
-        '<div style="margin-top:3px;color:#666;font-size:10px;">' + p.desc + '</div>';
+        '<div class="prof-desc">' + p.desc + '</div>' +
+        '<div class="prof-stats">' +
+          '<div class="stat-bar"><span class="stat-label">力道</span><div class="bar-track"><div class="bar-fill" style="width:' + (p.stats.str * 4) + '%"></div></div><span class="stat-val">' + p.stats.str + '</span></div>' +
+          '<div class="stat-bar"><span class="stat-label">根骨</span><div class="bar-track"><div class="bar-fill" style="width:' + (p.stats.con * 4) + '%"></div></div><span class="stat-val">' + p.stats.con + '</span></div>' +
+          '<div class="stat-bar"><span class="stat-label">身法</span><div class="bar-track"><div class="bar-fill" style="width:' + (p.stats.dex * 4) + '%"></div></div><span class="stat-val">' + p.stats.dex + '</span></div>' +
+          '<div class="stat-bar"><span class="stat-label">悟性</span><div class="bar-track"><div class="bar-fill" style="width:' + (p.stats.wis * 4) + '%"></div></div><span class="stat-val">' + p.stats.wis + '</span></div>' +
+        '</div>' +
+        '<div class="prof-bonus"><span class="bonus-main">' + p.primary + '</span>' + (p.secondary !== '无' ? ' <span class="bonus-sub">' + p.secondary + '</span>' : '') + '</div>';
       card.addEventListener('click', function () {
         document.querySelectorAll('.profession-card').forEach(function (c) { c.classList.remove('selected'); });
         card.classList.add('selected');
@@ -357,131 +393,137 @@
 
   function confirmProfession() {
     if (!selectedProfession) return;
-    sendWS('command', { command: 'select_profession', args: selectedProfession.id });
     appendMessage('[系统] 你选择了前世职业: ' + selectedProfession.name, 'system');
+    showAttributeAllocation();
   }
 
   // ─── Attribute Allocation UI ───
-  function showAttributeAllocation(baseStats) {
-    gameState = 'attributes';
-    $professionOverlay.classList.add('hidden');
-    $attrOverlay.classList.remove('hidden');
-
-    if (baseStats) {
-      attrValues = {
-        力道: baseStats.力道 || baseStats.str || 25,
-        根骨: baseStats.根骨 || baseStats.con || 25,
-        身法: baseStats.身法 || baseStats.dex || 25,
-        悟性: baseStats.悟性 || baseStats.int || 25
-      };
-    } else if (selectedProfession) {
-      attrValues = randomizeFromProfession(selectedProfession.stats);
-    } else {
-      attrValues = { 力道: 25, 根骨: 25, 身法: 25, 悟性: 25 };
-    }
-
-    renderAttrControls();
-  }
+   function showAttributeAllocation(baseStats) {
+     gameState = 'attributes';
+     $professionOverlay.classList.add('hidden');
+     $attrOverlay.classList.remove('hidden');
+ 
+     if (baseStats) {
+       attrValues = {
+         str: baseStats.str || 25,
+         con: baseStats.con || 25,
+         dex: baseStats.dex || 25,
+         wis: baseStats.wis || 25
+       };
+     } else if (selectedProfession) {
+       attrValues = randomizeFromProfession(selectedProfession.stats);
+     } else {
+       attrValues = { str: 25, con: 25, dex: 25, wis: 25 };
+     }
+ 
+     renderAttrControls();
+   }
 
   function randomizeFromProfession(base) {
-    var result = {};
-    var total = 0;
-    var keys = ['力道', '根骨', '身法', '悟性'];
-    keys.forEach(function (k) {
-      var v = base[k] + Math.floor(Math.random() * 7) - 3; // ±3
-      v = Math.max(1, Math.min(50, v));
-      result[k] = v;
-      total += v;
-    });
-    // Normalize to 100
-    var diff = 100 - total;
-    var i = 0;
-    while (diff !== 0 && i < 100) {
-      var k = keys[i % 4];
-      if (diff > 0 && result[k] < 50) { result[k]++; diff--; }
-      else if (diff < 0 && result[k] > 1) { result[k]--; diff++; }
-      i++;
-    }
-    return result;
-  }
+     var result = {};
+     var total = 0;
+     var keys = ['str', 'con', 'dex', 'wis'];
+     keys.forEach(function (k) {
+       var v = base[k] + Math.floor(Math.random() * 7) - 3; // ±3
+       v = Math.max(1, Math.min(50, v));
+       result[k] = v;
+       total += v;
+     });
+     // Normalize to 100
+     var diff = 100 - total;
+     var i = 0;
+     while (diff !== 0 && i < 100) {
+       var k = keys[i % 4];
+       if (diff > 0 && result[k] < 50) { result[k]++; diff--; }
+       else if (diff < 0 && result[k] > 1) { result[k]--; diff++; }
+       i++;
+     }
+     return result;
+   }
 
   function renderAttrControls() {
-    $attrControls.innerHTML = '';
-    var keys = ['力道', '根骨', '身法', '悟性'];
-    var labels = {
-      力道: '物理伤害、近战、负重',
-      根骨: '血量、防御、渡劫、寿命',
-      身法: '闪避、攻速、先手、逃跑',
-      悟性: '修炼速度、奇遇、Bug发现'
-    };
-
-    keys.forEach(function (k) {
-      var row = document.createElement('div');
-      row.className = 'attr-row';
-      row.innerHTML =
-        '<span class="attr-name">' + k + '</span>' +
-        '<button class="xp-btn attr-minus" data-attr="' + k + '">−</button>' +
-        '<span class="attr-value" id="av-' + k + '">' + attrValues[k] + '</span>' +
-        '<button class="xp-btn attr-plus" data-attr="' + k + '">+</button>' +
-        '<span style="font-size:10px;color:#666;">' + labels[k] + '</span>';
-      $attrControls.appendChild(row);
-    });
-
-    updateAttrTotal();
-  }
+     $attrControls.innerHTML = '';
+     var keys = ['str', 'con', 'dex', 'wis'];
+     var names = { str: '力道', con: '根骨', dex: '身法', wis: '悟性' };
+     var labels = {
+       str: '物理伤害、近战、负重',
+       con: '血量、防御、渡劫、寿命',
+       dex: '闪避、攻速、先手、逃跑',
+       wis: '修炼速度、奇遇、Bug发现'
+     };
+ 
+     keys.forEach(function (k) {
+       var row = document.createElement('div');
+       row.className = 'attr-row';
+       row.innerHTML =
+         '<span class="attr-name">' + names[k] + '</span>' +
+         '<button class="xp-btn attr-minus" data-attr="' + k + '">−</button>' +
+         '<span class="attr-value" id="av-' + k + '">' + attrValues[k] + '</span>' +
+         '<button class="xp-btn attr-plus" data-attr="' + k + '">+</button>' +
+         '<span style="font-size:10px;color:#666;">' + labels[k] + '</span>';
+       $attrControls.appendChild(row);
+     });
+ 
+     updateAttrTotal();
+   }
 
   function adjustAttr(key, delta) {
-    var newVal = attrValues[key] + delta;
-    if (newVal < 1 || newVal > 50) return;
-
-    // Find a counter-attr to balance
-    var keys = ['力道', '根骨', '身法', '悟性'];
-    var otherKey = null;
-    for (var i = 0; i < keys.length; i++) {
-      if (keys[i] !== key) {
-        var ov = attrValues[keys[i]] - delta;
-        if (ov >= 1 && ov <= 50) {
-          otherKey = keys[i];
-          break;
-        }
-      }
-    }
-    if (!otherKey) return;
-
-    attrValues[key] = newVal;
-    attrValues[otherKey] -= delta;
-    document.getElementById('av-' + key).textContent = attrValues[key];
-    document.getElementById('av-' + otherKey).textContent = attrValues[otherKey];
-    updateAttrTotal();
-  }
+     var newVal = attrValues[key] + delta;
+     if (newVal < 1 || newVal > 50) return;
+ 
+     // Find a counter-attr to balance
+     var keys = ['str', 'con', 'dex', 'wis'];
+     var otherKey = null;
+     for (var i = 0; i < keys.length; i++) {
+       if (keys[i] !== key) {
+         var ov = attrValues[keys[i]] - delta;
+         if (ov >= 1 && ov <= 50) {
+           otherKey = keys[i];
+           break;
+         }
+       }
+     }
+     if (!otherKey) return;
+ 
+     attrValues[key] = newVal;
+     attrValues[otherKey] -= delta;
+     document.getElementById('av-' + key).textContent = attrValues[key];
+     document.getElementById('av-' + otherKey).textContent = attrValues[otherKey];
+     updateAttrTotal();
+   }
 
   function updateAttrTotal() {
-    var total = attrValues.力道 + attrValues.根骨 + attrValues.身法 + attrValues.悟性;
-    var el = document.getElementById('attr-total');
-    el.textContent = '总计: ' + total + (total === 100 ? ' ✓' : ' (需=100)');
-    el.style.color = total === 100 ? '#090' : '#c00';
-  }
-
-  function confirmAttributes() {
-    var total = attrValues.力道 + attrValues.根骨 + attrValues.身法 + attrValues.悟性;
-    if (total !== 100) {
-      appendMessage('[系统] 属性总和必须为100', 'error');
-      return;
-    }
-    sendWS('command', {
-      command: 'confirm_attributes',
-      args: JSON.stringify(attrValues)
-    });
-    appendMessage('[系统] 属性已确认，正在进入游戏...', 'system');
-  }
+     var total = attrValues.str + attrValues.con + attrValues.dex + attrValues.wis;
+     var el = document.getElementById('attr-total');
+     el.textContent = '总计: ' + total + (total === 100 ? ' ✓' : ' (需=100)');
+     el.style.color = total === 100 ? '#090' : '#c00';
+   }
+ 
+   function confirmAttributes() {
+     console.log('confirmAttributes called');
+     var total = attrValues.str + attrValues.con + attrValues.dex + attrValues.wis;
+     console.log('total:', total, 'attrValues:', JSON.stringify(attrValues));
+     if (total !== 100) {
+       appendMessage('[系统] 属性总和必须为100', 'error');
+       return;
+     }
+     console.log('pendingPlayerId:', pendingPlayerId, 'selectedProfession:', selectedProfession ? selectedProfession.id : null);
+     sendWS('select_profession', {
+       playerId: pendingPlayerId,
+       professionId: selectedProfession.id,
+       stats: attrValues
+     });
+     appendMessage('[系统] 属性已确认，正在进入游戏...', 'system');
+   }
 
   function enterGame(data) {
     gameState = 'game';
     $loginOverlay.classList.add('hidden');
     $professionOverlay.classList.add('hidden');
     $attrOverlay.classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
 
-    if (data && data.status) updateStatus(data.status);
+    if (data && data.player) updateStatusFromPlayer(data.player);
 
     appendMessage('════════════════════════════════════════', 'system');
     appendMessage('  欢迎来到 赛博修仙 世界！', 'system');
@@ -492,15 +534,62 @@
     $chatInput.focus();
   }
 
+  // Update status bar from player object
+  function updateStatusFromPlayer(player) {
+    if (!player) return;
+    if (player.name) document.getElementById('player-name').textContent = player.name;
+    if (player.realm) $statRealm.textContent = player.realm;
+    if (player.level) document.getElementById('stat-level').textContent = player.level;
+    if (player.hp !== undefined) $statHp.textContent = player.hp + '/' + player.maxHp;
+    if (player.spirit !== undefined) $statSp.textContent = player.spirit + '/' + player.maxSpirit;
+    if (player.stamina !== undefined) $statSt.textContent = player.stamina + '/' + player.maxStamina;
+    if (player.silver !== undefined) $statSilver.textContent = player.silver;
+    if (player.currentMap && player.currentRoom) {
+      document.getElementById('current-location').textContent = player.currentMap + ' - ' + player.currentRoom;
+    }
+  }
+
+  // Display room
+  function displayRoom(room) {
+    if (!room) return;
+    var output = '\n═══════════════════════════════════════\n';
+    output += '  ' + room.name + '\n';
+    output += '═══════════════════════════════════════\n\n';
+    output += '  ' + room.description + '\n\n';
+
+    if (room.exits) {
+      var exitNames = { north: '北', south: '南', east: '东', west: '西', up: '上', down: '下' };
+      var exits = Object.keys(room.exits).map(function(e) { return exitNames[e] || e; }).join('、');
+      output += '  出口: ' + exits + '\n';
+    }
+
+    if (room.npcs && room.npcs.length > 0) {
+      output += '\n  NPC: ' + room.npcs.join('、') + '\n';
+    }
+
+    if (room.players && room.players.length > 0) {
+      output += '\n  这里还有:\n';
+      room.players.forEach(function(p) {
+        output += '    ' + p.name + '\n';
+      });
+    }
+
+    output += '\n═══════════════════════════════════════';
+    appendMessage(output, 'room');
+
+    // Update location in sidebar
+    document.getElementById('current-location').textContent = room.name;
+  }
+
   // ─── Event Bindings ───
   // Login form toggle
   document.getElementById('show-register').addEventListener('click', function () {
-    $loginForm.style.display = 'none';
-    $registerForm.style.display = 'block';
+    $loginForm.classList.add('hidden');
+    $registerForm.classList.remove('hidden');
   });
   document.getElementById('show-login').addEventListener('click', function () {
-    $registerForm.style.display = 'none';
-    $loginForm.style.display = 'block';
+    $registerForm.classList.add('hidden');
+    $loginForm.classList.remove('hidden');
   });
 
   // Login/Register submit
@@ -527,13 +616,13 @@
   });
 
   document.getElementById('attr-randomize').addEventListener('click', function () {
-    if (selectedProfession) {
-      attrValues = randomizeFromProfession(selectedProfession.stats);
-    } else {
-      attrValues = { 力道: 25, 根骨: 25, 身法: 25, 悟性: 25 };
-    }
-    renderAttrControls();
-  });
+     if (selectedProfession) {
+       attrValues = randomizeFromProfession(selectedProfession.stats);
+     } else {
+       attrValues = { str: 25, con: 25, dex: 25, wis: 25 };
+     }
+     renderAttrControls();
+   });
 
   document.getElementById('attr-confirm').addEventListener('click', confirmAttributes);
 
@@ -556,16 +645,16 @@
       return;
     }
     if (cmd.charAt(0) === '/') {
-      sendWS('command', { command: cmd.slice(1), args: '' });
+      sendWS('command', { command: cmd });
       appendMessage('> ' + cmd, 'self');
     } else {
-      sendWS('chat', { text: cmd });
+      sendWS('chat', { message: cmd });
     }
   });
 
   // Prevent zoom on double-tap (mobile)
   document.addEventListener('touchend', function (e) {
-    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
     e.preventDefault();
   }, { passive: false });
 

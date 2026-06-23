@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const professions = require('./data/professions');
 
 // Configuration
 const PORT = process.env.PORT || 3000;
@@ -124,6 +125,8 @@ const wss = new WebSocket.Server({ server });
 
 // Track connected clients
 const connectedClients = new Map(); // ws -> { playerId, playerName }
+// Track players pending profession selection
+const pendingProfessionSelections = new Map(); // playerId -> ws
 
 // Broadcast message to all connected clients
 function broadcast(message, excludeWs = null) {
@@ -175,26 +178,22 @@ function createPlayer(email, password, name, profession) {
     email: email,
     password: hashedPassword,
     name: name,
-    profession: profession || '散修',
-    stats: {
-      str: 10,
-      dex: 10,
-      con: 10,
-      wis: 10
-    },
+    profession: null,
+    stats: null,
     level: 1,
     realm: '练气期',
     exp: 0,
-    hp: 100,
-    maxHp: 100,
-    spirit: 50,
-    maxSpirit: 50,
-    stamina: 100,
-    maxStamina: 100,
+    hp: 0,
+    maxHp: 0,
+    spirit: 0,
+    maxSpirit: 0,
+    stamina: 0,
+    maxStamina: 0,
     silver: 100,
     jade: 0,
-    currentMap: '新手村',
-    currentRoom: '村口',
+    currentMap: null,
+    currentRoom: null,
+    needsProfession: true,
     createdAt: new Date().toISOString()
   };
   
@@ -299,6 +298,12 @@ function handleMessage(ws, message) {
     case 'login':
       handleLogin(ws, data);
       break;
+    case 'select_profession':
+      handleSelectProfession(ws, data);
+      break;
+    case 'get_professions':
+      sendToClient(ws, { type: 'professions_list', data: { professions } });
+      break;
     case 'chat':
       handleChat(ws, data);
       break;
@@ -360,35 +365,18 @@ function handleRegister(ws, data) {
     return;
   }
   
-  // Auto-login after registration
-  const token = createSession(result.player.id);
-  
-  connectedClients.set(ws, {
-    playerId: result.player.id,
-    playerName: result.player.name
-  });
+  // Don't auto-login - require profession selection first
+  pendingProfessionSelections.set(result.player.id, ws);
   
   sendToClient(ws, {
     type: 'register_response',
     data: {
       success: true,
-      message: '注册成功！',
-      token: token,
-      player: sanitizePlayer(result.player)
+      needsProfession: true,
+      playerId: result.player.id,
+      professions: professions
     }
   });
-  
-  // Send welcome message
-  sendToClient(ws, {
-    type: 'system',
-    data: { message: `欢迎来到赛博修仙世界，${result.player.name}！你出现在了新手村的村口。` }
-  });
-  
-  // Broadcast new player joining
-  broadcast({
-    type: 'system',
-    data: { message: `${result.player.name} 降临了修仙世界` }
-  }, ws);
 }
 
 // Login handler
@@ -409,6 +397,21 @@ function handleLogin(ws, data) {
     sendToClient(ws, {
       type: 'login_response',
       data: { success: false, message: result.error }
+    });
+    return;
+  }
+  
+  // Check if player needs profession selection
+  if (result.player.needsProfession) {
+    pendingProfessionSelections.set(result.player.id, ws);
+    sendToClient(ws, {
+      type: 'login_response',
+      data: {
+        success: true,
+        needsProfession: true,
+        playerId: result.player.id,
+        professions: professions
+      }
     });
     return;
   }
@@ -461,6 +464,126 @@ function handleLogin(ws, data) {
   broadcast({
     type: 'system',
     data: { message: `${result.player.name} 进入了游戏` }
+  }, ws);
+}
+
+// Select profession handler
+function handleSelectProfession(ws, data) {
+  const { playerId, professionId, stats } = data;
+  
+  // Validate profession exists
+  const profession = professions.find(p => p.id === professionId);
+  if (!profession) {
+    sendToClient(ws, {
+      type: 'select_profession_response',
+      data: { success: false, message: '无效的职业选择' }
+    });
+    return;
+  }
+  
+  // Validate stats exist
+  if (!stats || typeof stats.str !== 'number' || typeof stats.dex !== 'number' || typeof stats.con !== 'number' || typeof stats.wis !== 'number') {
+    sendToClient(ws, {
+      type: 'select_profession_response',
+      data: { success: false, message: '属性数据无效' }
+    });
+    return;
+  }
+  
+  // Validate stats total = 100
+  const total = stats.str + stats.dex + stats.con + stats.wis;
+  if (total !== 100) {
+    sendToClient(ws, {
+      type: 'select_profession_response',
+      data: { success: false, message: `属性总和必须为100，当前为${total}` }
+    });
+    return;
+  }
+  
+  // Validate each stat is within reasonable range (1-50)
+  for (const stat of ['str', 'dex', 'con', 'wis']) {
+    if (stats[stat] < 1 || stats[stat] > 50) {
+      sendToClient(ws, {
+        type: 'select_profession_response',
+        data: { success: false, message: `${stat}属性超出范围（1-50），当前值${stats[stat]}` }
+      });
+      return;
+    }
+  }
+  
+  // Update player
+  const players = getPlayers();
+  const player = players[playerId];
+  if (!player) {
+    sendToClient(ws, {
+      type: 'select_profession_response',
+      data: { success: false, message: '玩家不存在' }
+    });
+    return;
+  }
+  
+  player.profession = profession.name;
+  player.stats = stats;
+  player.needsProfession = false;
+  player.currentMap = '新手村';
+  player.currentRoom = '村口';
+  
+  // Calculate maxHp/maxSpirit/maxStamina based on stats
+  player.maxHp = 80 + stats.con * 2;
+  player.maxSpirit = 30 + stats.wis * 2;
+  player.maxStamina = 80 + stats.con + stats.dex;
+  player.hp = player.maxHp;
+  player.spirit = player.maxSpirit;
+  player.stamina = player.maxStamina;
+  
+  savePlayers(players);
+  
+  // Remove from pending
+  pendingProfessionSelections.delete(playerId);
+  
+  // Auto-login
+  const token = createSession(playerId);
+  connectedClients.set(ws, { playerId: player.id, playerName: player.name });
+  
+  sendToClient(ws, {
+    type: 'select_profession_response',
+    data: {
+      success: true,
+      message: '职业选择完成！',
+      token: token,
+      player: sanitizePlayer(player)
+    }
+  });
+  
+  // Also send login_response for client compatibility
+  sendToClient(ws, {
+    type: 'login_response',
+    data: {
+      success: true,
+      message: '职业选择完成！',
+      token: token,
+      player: sanitizePlayer(player)
+    }
+  });
+  
+  // Send room
+  const room = getRoom(player.currentMap, player.currentRoom);
+  if (room) {
+    sendToClient(ws, {
+      type: 'room',
+      data: {
+        name: room.name,
+        description: room.description,
+        exits: room.exits,
+        players: []
+      }
+    });
+  }
+  
+  // Broadcast new player joining
+  broadcast({
+    type: 'system',
+    data: { message: `${player.name} 穿越到了这个世界` }
   }, ws);
 }
 
