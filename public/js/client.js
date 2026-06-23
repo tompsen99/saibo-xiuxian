@@ -320,6 +320,26 @@
         }
         break;
 
+      // Encounter event
+      case 'encounter':
+        var encText = data.content || data.message || data.text || '';
+        var encLines = data.lines || data.log || [];
+        if (Array.isArray(encLines) && encLines.length > 0) {
+          appendMessage('✨ ═══ 奇遇 ═══', 'system');
+          encLines.forEach(function(line) { appendMessage(line, 'npc'); });
+        } else if (encText) {
+          appendMessage('✨ ═══ 奇遇 ═══', 'system');
+          appendMessage(encText, 'npc');
+        }
+        // Update status if provided
+        if (data.hp !== undefined) {
+          $statHp.textContent = data.hp + '/' + (data.maxHp || data.hp);
+        }
+        if (data.silver !== undefined) {
+          $statSilver.textContent = data.silver;
+        }
+        break;
+
       // Status
       case 'status_response':
       case 'status':
@@ -598,6 +618,7 @@
     appendMessage('  你是一位60岁的退休老人，意识穿越到了武侠修仙游戏世界。', 'system');
     appendMessage('  输入 /帮助 查看可用指令（包括 /学习、/修炼 等）', 'system');
     appendMessage('  /丹药 炼丹/使用丹药 | /装备 查看/穿戴装备 | /任务 查看任务', 'system');
+    appendMessage('  /商店 交易物品 | /签到 每日签到 | /好友 好友系统 | /奇遇 随机事件', 'system');
     appendMessage('════════════════════════════════════════', 'system');
 
     $chatInput.focus();

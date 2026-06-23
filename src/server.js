@@ -276,6 +276,107 @@ const EQUIPMENT_DATA = {
   }
 };
 
+// ===== SHOP ITEMS =====
+const SHOP_ITEMS = {
+  hp_pill: { id: 'hp_pill', name: '回血丹', type: 'pill', price: 10, desc: '恢复50点生命' },
+  spirit_pill: { id: 'spirit_pill', name: '回灵丹', type: 'pill', price: 15, desc: '恢复30点灵力' },
+  stamina_pill: { id: 'stamina_pill', name: '体力丹', type: 'pill', price: 20, desc: '恢复50点体力' },
+  exp_pill: { id: 'exp_pill', name: '小培元丹', type: 'pill', price: 50, desc: '获得50经验' },
+  wooden_sword: { id: 'wooden_sword', name: '木剑', type: 'equipment', price: 20, desc: '攻击+5' },
+  cloth_armor: { id: 'cloth_armor', name: '布衣', type: 'equipment', price: 15, desc: '防御+3' }
+};
+
+// ===== ENCOUNTER SYSTEM =====
+const ENCOUNTERS = [
+  {
+    id: 'master_guide', name: '高人指点', chance: 0.05,
+    trigger: 'explore',
+    text: '一位白发老者出现在你面前，指点了几句修炼心得...',
+    apply: (ws, player) => {
+      const { leveled, realmChanged } = addExp(player, 50);
+      let msg = '获得 50 经验！';
+      if (leveled) msg += '\n🎊 恭喜！你升级了！';
+      if (realmChanged) msg += '\n✨ 境界突破！';
+      // 30% chance to learn a random unlearned skill
+      const unlearned = Object.keys(SKILLS_DATA).filter(id => !player.skills.some(s => s.id === id));
+      if (unlearned.length > 0 && Math.random() < 0.3) {
+        const newSkillId = unlearned[Math.floor(Math.random() * unlearned.length)];
+        player.skills.push({ id: newSkillId, level: 1, exp: 0 });
+        const sd = SKILLS_DATA[newSkillId];
+        msg += `\n📜 领悟了新功法【${sd.name}】！`;
+      }
+      return msg;
+    }
+  },
+  {
+    id: 'ancient_ruins', name: '上古遗迹', chance: 0.03,
+    trigger: 'explore',
+    text: '你发现了一处上古遗迹，里面有些宝物...',
+    apply: (ws, player) => {
+      const { leveled, realmChanged } = addExp(player, 100);
+      const equipIds = Object.keys(EQUIPMENT_DATA);
+      const randomEquipId = equipIds[Math.floor(Math.random() * equipIds.length)];
+      player.equipmentBag.push({ id: randomEquipId });
+      const ed = EQUIPMENT_DATA[randomEquipId];
+      let msg = `获得 100 经验，发现【${ed.name}】！`;
+      if (leveled) msg += '\n🎊 恭喜！你升级了！';
+      if (realmChanged) msg += '\n✨ 境界突破！';
+      return msg;
+    }
+  },
+  {
+    id: 'inner_demon', name: '心魔考验', chance: 0.04,
+    trigger: 'idle',
+    text: '你的心魔出现了！输入 /战斗心魔 或 /逃跑',
+    apply: (ws, player) => {
+      player.pendingEncounter = 'inner_demon';
+      return '输入 /战斗心魔 或 /逃跑';
+    }
+  },
+  {
+    id: 'traveling_merchant', name: '路遇商人', chance: 0.06,
+    trigger: 'explore',
+    text: '一位行商路过，向你推销丹药...',
+    apply: (ws, player) => {
+      return '商人出售: 回血丹(5灵石), 回灵丹(8灵石), 体力丹(10灵石)。\n输入 /商人购买 <丹药ID> [数量] 以折扣价购买。';
+    }
+  },
+  {
+    id: 'lucky_event', name: '天降福缘', chance: 0.02,
+    trigger: 'both',
+    text: '天上掉下一块灵石砸中了你的头！',
+    apply: (ws, player) => {
+      const { leveled, realmChanged } = addExp(player, 200);
+      player.silver += 100;
+      let msg = '获得 200 经验和 100 灵石！';
+      if (leveled) msg += '\n🎊 恭喜！你升级了！';
+      if (realmChanged) msg += '\n✨ 境界突破！';
+      return msg;
+    }
+  }
+];
+
+// Random encounter check
+function checkEncounter(ws, player, triggerType) {
+  for (const enc of ENCOUNTERS) {
+    if (enc.trigger !== triggerType && enc.trigger !== 'both') continue;
+    if (Math.random() < enc.chance) {
+      const rewardMsg = enc.apply(ws, player);
+      if (!player.encounterLog) player.encounterLog = [];
+      player.encounterLog.unshift({
+        name: enc.name, time: new Date().toISOString(), message: enc.text
+      });
+      if (player.encounterLog.length > 10) player.encounterLog.length = 10;
+      sendToClient(ws, {
+        type: 'encounter',
+        data: { encounter: enc.name, text: enc.text, reward: rewardMsg }
+      });
+      return enc;
+    }
+  }
+  return null;
+}
+
 // ===== QUESTS (任务) SYSTEM =====
 const QUESTS_DATA = {
   q_first_steps: {
@@ -463,7 +564,13 @@ function createPlayer(email, password, name, profession) {
     equipment: { weapon: null, head: null, body: null, feet: null, ring: null },
     equipmentBag: [],
     quests: { active: [], completed: [], dailyCompleted: {}, progress: {} },
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    encounterLog: [],
+    friends: [],
+    pendingFriendRequests: [],
+    lastSignIn: null,
+    channel: 'world',
+    pendingEncounter: null
   };
   
   players[playerId] = newPlayer;
@@ -722,6 +829,12 @@ function handleLogin(ws, data) {
   if (!result.player.equipmentBag) result.player.equipmentBag = [];
   if (!result.player.quests) result.player.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
   if (!result.player.quests.progress) result.player.quests.progress = {};
+  if (!result.player.encounterLog) result.player.encounterLog = [];
+  if (!result.player.friends) result.player.friends = [];
+  if (!result.player.pendingFriendRequests) result.player.pendingFriendRequests = [];
+  if (!result.player.lastSignIn) result.player.lastSignIn = null;
+  if (!result.player.channel) result.player.channel = 'world';
+  if (!result.player.pendingEncounter) result.player.pendingEncounter = null;
   savePlayers(getPlayers());
   
   connectedClients.set(ws, {
@@ -971,6 +1084,8 @@ function handleCommand(ws, data) {
     handlePillListCommand(ws, player);
   } else if (command.startsWith('/购买装备')) {
     handleBuyEquipmentCommand(ws, player, command);
+  } else if (command.startsWith('/购买')) {
+    handleBuyItemCommand(ws, player, command);
   } else if (command.startsWith('/装备栏')) {
     handleEquipmentBagCommand(ws, player);
   } else if (command.startsWith('/穿戴')) {
@@ -985,6 +1100,30 @@ function handleCommand(ws, data) {
     handleAcceptQuestCommand(ws, player, command);
   } else if (command.startsWith('/任务')) {
     handleQuestListCommand(ws, player);
+  } else if (command.startsWith('/商店')) {
+    handleShopCommand(ws, player);
+  } else if (command.startsWith('/出售')) {
+    handleSellItemCommand(ws, player, command);
+  } else if (command.startsWith('/签到')) {
+    handleSignInCommand(ws, player);
+  } else if (command.startsWith('/奇遇')) {
+    handleEncounterLogCommand(ws, player);
+  } else if (command.startsWith('/好友')) {
+    handleFriendsCommand(ws, player);
+  } else if (command.startsWith('/添加好友')) {
+    handleAddFriendCommand(ws, player, command);
+  } else if (command.startsWith('/接受好友')) {
+    handleAcceptFriendCommand(ws, player);
+  } else if (command.startsWith('/删除好友')) {
+    handleRemoveFriendCommand(ws, player, command);
+  } else if (command.startsWith('/私聊')) {
+    handleWhisperCommand(ws, player, command);
+  } else if (command.startsWith('/战斗心魔')) {
+    handleFightDemonCommand(ws, player);
+  } else if (command.startsWith('/逃跑')) {
+    handleFleeCommand(ws, player);
+  } else if (command.startsWith('/商人购买')) {
+    handleMerchantBuyCommand(ws, player, command);
   } else {
     sendToClient(ws, {
       type: 'error',
@@ -1148,6 +1287,14 @@ function handleMoveCommand(ws, player, direction) {
     type: 'system',
     data: { message: `${player.name} 从${getOppositeDirectionName(dir)}方走了过来。` }
   }, ws);
+
+  // Check for encounter on explore
+  const playersAfter = getPlayers();
+  const pAfter = playersAfter[player.id];
+  if (pAfter) {
+    checkEncounter(ws, pAfter, 'explore');
+    savePlayers(playersAfter);
+  }
 }
 
 // Look handler
@@ -1231,10 +1378,30 @@ function handleMove(ws, data) {
 
 // Channel command
 function handleChannelCommand(ws, player, command) {
-  sendToClient(ws, {
-    type: 'system',
-    data: { message: '当前频道: 世界频道。所有在线玩家都可以看到你的消息。' }
-  });
+  const args = command.replace('/频道', '').trim();
+  if (!args) {
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: `当前频道: ${player.channel === 'sect' ? '门派频道' : '世界频道'}。可用: /频道 世界 或 /频道 门派` }
+    });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if (args === '世界') {
+    p.channel = 'world';
+    sendToClient(ws, { type: 'system', data: { message: '已切换到世界频道。' } });
+  } else if (args === '门派') {
+    if (!p.sect) {
+      sendToClient(ws, { type: 'system', data: { message: '你还没有加入门派，无法使用门派频道。' } });
+      return;
+    }
+    p.channel = 'sect';
+    sendToClient(ws, { type: 'system', data: { message: '已切换到门派频道。' } });
+  } else {
+    sendToClient(ws, { type: 'system', data: { message: '可用频道: 世界、门派' } });
+  }
+  savePlayers(players);
 }
 
 // Talk command (local chat)
@@ -1502,8 +1669,29 @@ function handleHelpCommand(ws, player) {
 ║  ❓ 其他:
 ║  /帮助  - 显示此帮助信息
 ║  
+║  🏪 商店交易:
+║  /商店  - 查看商店商品
+║  /购买 <物品ID> [数量] - 购买物品
+║  /出售 <物品ID> - 出售物品(半价)
+║  /商人购买 <丹药ID> [数量] - 行商折扣购买
+║
+║  🎯 签到奇遇:
+║  /签到  - 每日签到(20灵石+随机丹药)
+║  /奇遇  - 查看奇遇记录
+║  /战斗心魔 - 与心魔战斗
+║  /逃跑  - 逃离心魔
+║
+║  👥 社交系统:
+║  /好友  - 查看好友列表
+║  /添加好友 <玩家名> - 发送好友请求
+║  /接受好友 - 接受好友请求
+║  /删除好友 <玩家名> - 删除好友
+║  /私聊 <玩家名> <消息> - 私聊
+║  /频道  - 查看/切换频道
+║
 ║  💡 提示: 打坐修炼每分钟+2经验
 ║  在竹林挂机会自动与怪物战斗
+║  移动时可能触发奇遇事件
 ║  修炼功法可提升功法等级，增强战斗
 ╚══════════════════════════════╝`
     }
@@ -2288,6 +2476,316 @@ function getEquipmentBonuses(player) {
   return { attack, defense, str, speed };
 }
 
+// ===== SHOP COMMANDS =====
+
+function handleShopCommand(ws, player) {
+  let shopList = '';
+  for (const [id, item] of Object.entries(SHOP_ITEMS)) {
+    shopList += `║  【${item.name}】(${id}) - ${item.desc} - ${item.price}灵石\n`;
+  }
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '商店',
+      content: `\n╔══════════════════════════════╗\n║  🏪 商店\n╠══════════════════════════════╣\n${shopList}╠══════════════════════════════╣\n║  购买: /购买 <物品ID> [数量]\n║  出售: /出售 <物品ID>\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+function handleBuyItemCommand(ws, player, command) {
+  const args = command.replace('/购买', '').trim().split(/\s+/);
+  const itemId = args[0];
+  const quantity = parseInt(args[1]) || 1;
+  if (!itemId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /购买 <物品ID> [数量]\n输入 /商店 查看商品。' } });
+    return;
+  }
+  const item = SHOP_ITEMS[itemId];
+  if (!item) {
+    sendToClient(ws, { type: 'system', data: { message: '商店中没有该物品。输入 /商店 查看。' } });
+    return;
+  }
+  if (quantity < 1 || quantity > 99) {
+    sendToClient(ws, { type: 'system', data: { message: '数量需在1-99之间。' } });
+    return;
+  }
+  const totalCost = item.price * quantity;
+  const players = getPlayers();
+  const p = players[player.id];
+  if (p.silver < totalCost) {
+    sendToClient(ws, { type: 'system', data: { message: `灵石不足！需要 ${totalCost}，你只有 ${p.silver}。` } });
+    return;
+  }
+  p.silver -= totalCost;
+  if (item.type === 'pill') {
+    if (!p.pills) p.pills = {};
+    p.pills[itemId] = (p.pills[itemId] || 0) + quantity;
+  } else if (item.type === 'equipment') {
+    for (let i = 0; i < quantity; i++) p.equipmentBag.push({ id: itemId });
+  }
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `🏪 购买了 ${quantity} 个【${item.name}】，花费 ${totalCost} 灵石。` } });
+}
+
+function handleSellItemCommand(ws, player, command) {
+  const itemId = command.replace('/出售', '').trim();
+  if (!itemId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /出售 <物品ID>\n可出售背包中的装备或丹药。' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  // Check pills
+  if (p.pills && p.pills[itemId] && p.pills[itemId] > 0) {
+    const pd = PILLS_DATA[itemId];
+    const sellPrice = Math.floor((pd ? pd.price : 5) / 2);
+    p.pills[itemId]--;
+    if (p.pills[itemId] <= 0) delete p.pills[itemId];
+    p.silver += sellPrice;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `出售了【${pd ? pd.name : itemId}】，获得 ${sellPrice} 灵石。` } });
+    return;
+  }
+  // Check equipment bag
+  const bagIdx = p.equipmentBag.findIndex(e => e.id === itemId);
+  if (bagIdx !== -1) {
+    const ed = EQUIPMENT_DATA[itemId];
+    const sellPrice = Math.floor((ed ? ed.price : 10) / 2);
+    p.equipmentBag.splice(bagIdx, 1);
+    p.silver += sellPrice;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `出售了【${ed ? ed.name : itemId}】，获得 ${sellPrice} 灵石。` } });
+    return;
+  }
+  sendToClient(ws, { type: 'system', data: { message: '你没有该物品可以出售。' } });
+}
+
+// ===== SIGN-IN COMMAND =====
+function handleSignInCommand(ws, player) {
+  const today = new Date().toISOString().slice(0, 10);
+  const players = getPlayers();
+  const p = players[player.id];
+  if (p.lastSignIn === today) {
+    sendToClient(ws, { type: 'system', data: { message: '你今天已经签到过了，明天再来吧！' } });
+    return;
+  }
+  p.lastSignIn = today;
+  p.silver += 20;
+  // Random pill reward
+  const pillIds = Object.keys(PILLS_DATA);
+  const randomPillId = pillIds[Math.floor(Math.random() * pillIds.length)];
+  if (!p.pills) p.pills = {};
+  p.pills[randomPillId] = (p.pills[randomPillId] || 0) + 1;
+  const pd = PILLS_DATA[randomPillId];
+  savePlayers(players);
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `✅ 签到成功！获得 20 灵石和【${pd.name}】x1！` }
+  });
+}
+
+// ===== ENCOUNTER LOG COMMAND =====
+function handleEncounterLogCommand(ws, player) {
+  const log = player.encounterLog || [];
+  if (log.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有遇到过任何奇遇。多探索世界吧！' } });
+    return;
+  }
+  let logText = '📜 最近的奇遇记录:\n';
+  log.slice(0, 5).forEach((entry, i) => {
+    logText += `  ${i + 1}. 【${entry.name}】- ${entry.message}\n`;
+  });
+  sendToClient(ws, { type: 'command_response', data: { title: '奇遇记录', content: `\n╔══════════════════════════════╗\n║  奇遇记录\n╠══════════════════════════════╣\n║  ${logText.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+// ===== SOCIAL COMMANDS =====
+function handleFriendsCommand(ws, player) {
+  const friends = player.friends || [];
+  if (friends.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有好友。使用 /添加好友 <玩家名> 添加好友。' } });
+    return;
+  }
+  let list = '👥 好友列表:\n';
+  friends.forEach((f, i) => { list += `  ${i + 1}. ${f}\n`; });
+  const pending = player.pendingFriendRequests || [];
+  if (pending.length > 0) {
+    list += '\n📩 待处理的好友请求:\n';
+    pending.forEach(r => { list += `  - ${r}\n`; });
+    list += '使用 /接受好友 接受请求。';
+  }
+  sendToClient(ws, { type: 'command_response', data: { title: '好友列表', content: `\n╔══════════════════════════════╗\n║  好友列表\n╠══════════════════════════════╣\n║  ${list.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+function handleAddFriendCommand(ws, player, command) {
+  const targetName = command.replace('/添加好友', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /添加好友 <玩家名>' } });
+    return;
+  }
+  const players = getPlayers();
+  const targetPlayer = Object.values(players).find(p => p.name === targetName);
+  if (!targetPlayer) {
+    sendToClient(ws, { type: 'system', data: { message: `找不到玩家【${targetName}】。` } });
+    return;
+  }
+  if (targetPlayer.id === player.id) {
+    sendToClient(ws, { type: 'system', data: { message: '不能添加自己为好友。' } });
+    return;
+  }
+  if (player.friends && player.friends.includes(targetName)) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】已经是你的好友了。` } });
+    return;
+  }
+  // Add to target's pending requests
+  const tp = players[targetPlayer.id];
+  if (!tp.pendingFriendRequests) tp.pendingFriendRequests = [];
+  if (tp.pendingFriendRequests.includes(player.name)) {
+    sendToClient(ws, { type: 'system', data: { message: `你已经向【${targetName}】发送过好友请求了。` } });
+    return;
+  }
+  tp.pendingFriendRequests.push(player.name);
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已向【${targetName}】发送好友请求。` } });
+  // Notify target if online
+  for (const [clientWs, info] of connectedClients.entries()) {
+    if (info.playerId === targetPlayer.id) {
+      sendToClient(clientWs, { type: 'system', data: { message: `📩 ${player.name} 向你发送了好友请求！使用 /接受好友 接受。` } });
+      break;
+    }
+  }
+}
+
+function handleAcceptFriendCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pendingFriendRequests || p.pendingFriendRequests.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '没有待处理的好友请求。' } });
+    return;
+  }
+  const requesterName = p.pendingFriendRequests.shift();
+  if (!p.friends) p.friends = [];
+  p.friends.push(requesterName);
+  // Add to requester's friend list too
+  const requester = Object.values(players).find(pl => pl.name === requesterName);
+  if (requester) {
+    if (!requester.friends) requester.friends = [];
+    if (!requester.friends.includes(player.name)) requester.friends.push(player.name);
+  }
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 已与【${requesterName}】成为好友！` } });
+}
+
+function handleRemoveFriendCommand(ws, player, command) {
+  const targetName = command.replace('/删除好友', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /删除好友 <玩家名>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.friends || !p.friends.includes(targetName)) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】不在你的好友列表中。` } });
+    return;
+  }
+  p.friends = p.friends.filter(f => f !== targetName);
+  // Remove from target's friend list too
+  const targetPlayer = Object.values(players).find(pl => pl.name === targetName);
+  if (targetPlayer && targetPlayer.friends) {
+    targetPlayer.friends = targetPlayer.friends.filter(f => f !== player.name);
+  }
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已删除好友【${targetName}】。` } });
+}
+
+function handleWhisperCommand(ws, player, command) {
+  const args = command.replace('/私聊', '').trim();
+  const spaceIdx = args.indexOf(' ');
+  if (spaceIdx === -1 || !args) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /私聊 <玩家名> <消息>' } });
+    return;
+  }
+  const targetName = args.slice(0, spaceIdx);
+  const message = args.slice(spaceIdx + 1).trim();
+  if (!message) {
+    sendToClient(ws, { type: 'system', data: { message: '消息不能为空。' } });
+    return;
+  }
+  for (const [clientWs, info] of connectedClients.entries()) {
+    if (info.playerName === targetName) {
+      sendToClient(clientWs, { type: 'whisper', data: { sender: player.name, message } });
+      sendToClient(ws, { type: 'whisper', data: { sender: `→ ${targetName}`, message } });
+      return;
+    }
+  }
+  sendToClient(ws, { type: 'system', data: { message: `玩家【${targetName}】不在线。` } });
+}
+
+// ===== ENCOUNTER COMBAT COMMANDS =====
+function handleFightDemonCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (p.pendingEncounter !== 'inner_demon') {
+    sendToClient(ws, { type: 'system', data: { message: '你现在没有心魔考验。' } });
+    return;
+  }
+  p.pendingEncounter = null;
+  // 60% win chance
+  if (Math.random() < 0.6) {
+    const { leveled, realmChanged } = addExp(p, 80);
+    let msg = '🎉 你战胜了心魔！获得 80 经验！';
+    if (leveled) msg += '\n🎊 恭喜！你升级了！';
+    if (realmChanged) msg += '\n✨ 境界突破！';
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: msg } });
+  } else {
+    const expLoss = Math.min(20, p.exp);
+    p.exp -= expLoss;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `💀 你被心魔击败，损失 ${expLoss} 经验...` } });
+  }
+}
+
+function handleFleeCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (p.pendingEncounter !== 'inner_demon') {
+    sendToClient(ws, { type: 'system', data: { message: '你现在没有需要逃跑的遭遇。' } });
+    return;
+  }
+  p.pendingEncounter = null;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: '你转身逃离了心魔的追击。' } });
+}
+
+function handleMerchantBuyCommand(ws, player, command) {
+  const args = command.replace('/商人购买', '').trim().split(/\s+/);
+  const pillId = args[0];
+  const quantity = parseInt(args[1]) || 1;
+  if (!pillId) {
+    sendToClient(ws, { type: 'system', data: { message: '商人出售: 回血丹(5灵石), 回灵丹(8灵石), 体力丹(10灵石)\n用法: /商人购买 <丹药ID> [数量]' } });
+    return;
+  }
+  const merchantPrices = { hp_pill: 5, spirit_pill: 8, stamina_pill: 10 };
+  if (!merchantPrices[pillId]) {
+    sendToClient(ws, { type: 'system', data: { message: '商人只出售: hp_pill, spirit_pill, stamina_pill' } });
+    return;
+  }
+  const price = merchantPrices[pillId];
+  const totalCost = price * quantity;
+  const players = getPlayers();
+  const p = players[player.id];
+  if (p.silver < totalCost) {
+    sendToClient(ws, { type: 'system', data: { message: `灵石不足！需要 ${totalCost}，你只有 ${p.silver}。` } });
+    return;
+  }
+  p.silver -= totalCost;
+  if (!p.pills) p.pills = {};
+  p.pills[pillId] = (p.pills[pillId] || 0) + quantity;
+  savePlayers(players);
+  const pd = PILLS_DATA[pillId];
+  sendToClient(ws, { type: 'system', data: { message: `🏪 商人处购买了 ${quantity} 个【${pd ? pd.name : pillId}】，花费 ${totalCost} 灵石。` } });
+}
+
 // Helper functions
 function getRoom(mapName, roomName) {
   const map = WORLD_DATA.maps[mapName];
@@ -2638,6 +3136,12 @@ const idleTickInterval = setInterval(() => {
     }
     if (player.stamina < player.maxStamina) {
       player.stamina = Math.min(player.maxStamina, player.stamina + 3);
+      changed = true;
+    }
+
+    // Random idle encounter check
+    if (!player.pendingEncounter) {
+      checkEncounter(ws, player, 'idle');
       changed = true;
     }
     
