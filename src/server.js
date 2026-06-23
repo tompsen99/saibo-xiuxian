@@ -556,6 +556,14 @@ function handleLogin(ws, data) {
   
   const token = createSession(result.player.id);
   
+  // Initialize missing properties for existing players
+  if (!result.player.skills || result.player.skills.length === 0) result.player.skills = [{ id: 'basic_fist', level: 1, exp: 0 }, { id: 'basic_meditation', level: 1, exp: 0 }];
+  if (!result.player.sect) result.player.sect = null;
+  if (!result.player.sectContribution) result.player.sectContribution = 0;
+  if (!result.player.isIdle) result.player.isIdle = false;
+  if (!result.player.idleStartTime) result.player.idleStartTime = null;
+  savePlayers(getPlayers());
+  
   connectedClients.set(ws, {
     playerId: result.player.id,
     playerName: result.player.name
