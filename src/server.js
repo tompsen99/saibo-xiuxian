@@ -171,6 +171,60 @@ const SECTS_DATA = {
     bonusDesc: '经验+10%',
     desc: '奇遇最多，功法杂。逍遥自在，不受拘束，修炼速度更快。',
     minLevel: 3
+  },
+  emei: {
+    id: 'emei',
+    name: '峨眉派',
+    type: '正派',
+    bonus: 'healing+15%',
+    bonusDesc: '治疗+15%',
+    desc: '治疗辅助，剑法/掌法。峨眉弟子精通医术与剑法，攻守兼备。',
+    minLevel: 3
+  },
+  huashan: {
+    id: 'huashan',
+    name: '华山派',
+    type: '正派',
+    bonus: 'attack+10%',
+    bonusDesc: '攻击+10%',
+    desc: '剑法专精，剑气攻击。华山剑法名震天下，攻击力超群。',
+    minLevel: 3
+  },
+  kunlun: {
+    id: 'kunlun',
+    name: '昆仑派',
+    type: '正派',
+    bonus: 'spirit+15%',
+    bonusDesc: '灵力+15%',
+    desc: '远程攻击，内功深厚。昆仑弟子内力雄浑，灵力远超常人。',
+    minLevel: 3
+  },
+  riyue: {
+    id: 'riyue',
+    name: '日月神教',
+    type: '邪派',
+    bonus: 'critRate+10%',
+    bonusDesc: '暴击率+10%',
+    desc: '高爆发，PK强。日月神教行事诡异，招式狠辣，暴击极高。',
+    minLevel: 3
+  },
+  wudu: {
+    id: 'wudu',
+    name: '五毒教',
+    type: '邪派',
+    bonus: 'poisonDmg+15%',
+    bonusDesc: '毒伤+15%',
+    desc: '毒术专精，持续伤害。五毒教精通奇毒，令敌人防不胜防。',
+    minLevel: 3
+  },
+  taohua: {
+    id: 'taohua',
+    name: '桃花岛',
+    type: '中立',
+    bonus: 'luck+10%',
+    bonusDesc: '悟性+10%',
+    desc: '阵法/音律，悟性加成。桃花岛主精通奇门遁甲，弟子悟性极高。',
+    minLevel: 3
   }
 };
 
@@ -606,6 +660,7 @@ function createPlayer(email, password, name, profession) {
     email: email,
     password: hashedPassword,
     name: name,
+    isAdmin: email === 'admin@game.com',
     profession: null,
     stats: null,
     level: 1,
@@ -923,6 +978,7 @@ function handleLogin(ws, data) {
   if (!result.player.mysteryLetters) result.player.mysteryLetters = 0;
   if (!result.player.activeBugs) result.player.activeBugs = {};
   if (!result.player.exploredRooms) result.player.exploredRooms = [];
+  if (result.player.isAdmin === undefined) result.player.isAdmin = result.player.email === 'admin@game.com';
   savePlayers(getPlayers());
   
   connectedClients.set(ws, {
@@ -1223,6 +1279,8 @@ function handleCommand(ws, data) {
     handleUseBugCommand(ws, player, bugId);
   } else if (command.startsWith('/Bug')) {
     handleBugListCommand(ws, player);
+  } else if (command.startsWith('/管理员')) {
+    handleAdminCommand(ws, player, command);
   } else {
     sendToClient(ws, {
       type: 'error',
@@ -1582,11 +1640,25 @@ function handleAttackCommand(ws, player, command) {
     }
   }
   
+  // Check stamina for combat (BUG 3 fix)
+  const activeBugsCheck = player.activeBugs || {};
+  const hasInfiniteStamina = activeBugsCheck.B49 && activeBugsCheck.B49 > Date.now();
+  if (!hasInfiniteStamina && player.stamina < 10) {
+    sendToClient(ws, { type: 'system', data: { message: '体力不足，无法战斗！需要至少10点体力。使用 /使用 stamina_pill 恢复体力。' } });
+    return;
+  }
+  
   const result = executeCombat(ws, player, room);
   
   if (!result.success) {
     sendToClient(ws, { type: 'system', data: { message: result.message } });
     return;
+  }
+  
+  // Deduct stamina after combat (BUG 3 fix)
+  const staminaBugsCheck = player.activeBugs || {};
+  if (!(staminaBugsCheck.B49 && staminaBugsCheck.B49 > Date.now())) {
+    player.stamina = Math.max(0, player.stamina - 10);
   }
   
   // Save player data
@@ -1604,6 +1676,22 @@ function handleAttackCommand(ws, player, command) {
       silver: result.silver,
       hp: player.hp,
       maxHp: player.maxHp
+    }
+  });
+  
+  // Send status update after combat (BUG 2 fix)
+  sendToClient(ws, {
+    type: 'status_update',
+    data: {
+      hp: player.hp,
+      maxHp: player.maxHp,
+      spirit: player.spirit,
+      maxSpirit: player.maxSpirit,
+      stamina: player.stamina,
+      maxStamina: player.maxStamina,
+      exp: player.exp,
+      level: player.level,
+      realm: player.realm
     }
   });
   
@@ -1939,6 +2027,9 @@ function handlePracticeSkillCommand(ws, player, skillId) {
     p.sectContribution = (p.sectContribution || 0) + 1;
   }
   
+  // Update quest progress for practice_skill type
+  updateQuestProgress(p, 'practice_skill', 1);
+  
   savePlayers(players);
   sendToClient(ws, { type: 'system', data: { message: msg } });
 }
@@ -1968,13 +2059,13 @@ function handleSectListCommand(ws, player) {
 // Join a sect
 function handleJoinSectCommand(ws, player, sectId) {
   if (!sectId) {
-    sendToClient(ws, { type: 'system', data: { message: '用法: /加入门派 <门派ID>\n可用门派: shaolin, wudang, xiaoyao\n输入 /门派 查看门派详情。' } });
+    sendToClient(ws, { type: 'system', data: { message: '用法: /加入门派 <门派ID>\n可用门派: shaolin, wudang, xiaoyao, emei, huashan, kunlun, riyue, wudu, taohua\n输入 /门派 查看门派详情。' } });
     return;
   }
   
   const sect = SECTS_DATA[sectId];
   if (!sect) {
-    sendToClient(ws, { type: 'system', data: { message: '不存在该门派。可用: shaolin(少林), wudang(武当), xiaoyao(逍遥)' } });
+    sendToClient(ws, { type: 'system', data: { message: '不存在该门派。输入 /门派 查看所有可用门派。' } });
     return;
   }
   
@@ -1996,6 +2087,10 @@ function handleJoinSectCommand(ws, player, sectId) {
   const p = players[player.id];
   p.sect = sectId;
   p.sectContribution = 0;
+  // Update quest progress for join_sect type
+  if (!p.quests) p.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
+  if (!p.quests.progress) p.quests.progress = {};
+  updateQuestProgress(p, 'join_sect', 1);
   savePlayers(players);
   
   sendToClient(ws, {
@@ -2585,7 +2680,12 @@ function updateQuestProgress(player, type, amount) {
     if (!qd) continue;
     if (qd.requirement.type === type) {
       if (!player.quests.progress) player.quests.progress = {};
-      player.quests.progress[questId] = (player.quests.progress[questId] || 0) + amount;
+      // For 'level' type quests, set progress to current level (not accumulate)
+      if (type === 'level') {
+        player.quests.progress[questId] = player.level;
+      } else {
+        player.quests.progress[questId] = (player.quests.progress[questId] || 0) + amount;
+      }
     }
   }
 }
@@ -3377,6 +3477,8 @@ function addExp(player, amount) {
     player.hp = player.maxHp;
     player.spirit = player.maxSpirit;
     player.stamina = player.maxStamina;
+    // Update quest progress for level-type quests
+    updateQuestProgress(player, 'level', player.level);
   }
   
   // Realm progression check
@@ -3481,9 +3583,13 @@ function executeCombat(ws, player, room) {
   // Check sect bonus
   let sectDefenseBonus = 1;
   let sectExpBonus = 1;
+  let sectAttackBonus = 1;
+  let sectCritBonus = 0;
   if (player.sect) {
     if (player.sect === 'shaolin') sectDefenseBonus = 1.1;
     else if (player.sect === 'xiaoyao') sectExpBonus = 1.1;
+    else if (player.sect === 'huashan') sectAttackBonus = 1.1;
+    else if (player.sect === 'riyue') sectCritBonus += 0.1;
   }
   
   const combatLog = [];
@@ -3516,6 +3622,12 @@ function executeCombat(ws, player, room) {
     if (player.relics && player.relics.includes('Z03') && Math.random() < 0.10) {
       playerDmg = Math.floor(playerDmg * 1.5); // Z03: 10% crit rate
       combatLog.push('  [遗物效果] 暴击！');
+    }
+    // Apply sect bonuses (attack and crit)
+    if (sectAttackBonus > 1) playerDmg = Math.floor(playerDmg * sectAttackBonus);
+    if (sectCritBonus > 0 && Math.random() < sectCritBonus) {
+      playerDmg = Math.floor(playerDmg * 1.5);
+      if (round === 1) combatLog.push('  [门派效果] 暴击！');
     }
     monster.hp -= playerDmg;
     combatLog.push(`第${round}回合: 你攻击 ${monster.name}，造成 ${playerDmg} 点伤害！${monster.name} HP: ${Math.max(0, monster.hp)}/${monsterTemplate.maxHp || monsterTemplate.hp}`);
@@ -3583,7 +3695,32 @@ function executeCombat(ws, player, room) {
     
     // Check for item drop
     if (Math.random() < monster.dropRate) {
-      combatLog.push(`🍀 ${monster.name} 掉落了一件物品！`);
+      // Drop table: pills and basic equipment
+      const dropTable = [
+        { id: 'hp_pill', name: '回血丹', type: 'pill', weight: 40 },
+        { id: 'spirit_pill', name: '回灵丹', type: 'pill', weight: 30 },
+        { id: 'stamina_pill', name: '体力丹', type: 'pill', weight: 15 },
+        { id: 'wooden_sword', name: '木剑', type: 'equipment', weight: 8 },
+        { id: 'cloth_armor', name: '布衣', type: 'equipment', weight: 5 },
+        { id: 'straw_shoes', name: '草鞋', type: 'equipment', weight: 2 }
+      ];
+      // Weighted random selection
+      const totalWeight = dropTable.reduce((sum, item) => sum + item.weight, 0);
+      let roll = Math.random() * totalWeight;
+      let dropItem = dropTable[0];
+      for (const item of dropTable) {
+        roll -= item.weight;
+        if (roll <= 0) { dropItem = item; break; }
+      }
+      // Add item to player inventory
+      if (dropItem.type === 'pill') {
+        if (!player.pills) player.pills = {};
+        player.pills[dropItem.id] = (player.pills[dropItem.id] || 0) + 1;
+      } else if (dropItem.type === 'equipment') {
+        if (!player.equipmentBag) player.equipmentBag = [];
+        player.equipmentBag.push({ id: dropItem.id });
+      }
+      combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！已收入背包。`);
     }
     
     // ===== RELIC DROP CHECK =====
@@ -3671,6 +3808,174 @@ function executeCombat(ws, player, room) {
 
 // Initialize and start server
 initializeDataFiles();
+
+// ===== ADMIN COMMANDS =====
+function handleAdminCommand(ws, player, command) {
+  // Check if player is admin
+  if (!player.isAdmin) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有管理员权限。' } });
+    return;
+  }
+  
+  const args = command.replace('/管理员', '').trim().split(/\s+/);
+  const subCommand = args[0];
+  
+  if (subCommand === '查看在线玩家列表' || subCommand === '在线') {
+    // List online players
+    let onlineList = '';
+    let count = 0;
+    for (const [clientWs, info] of connectedClients.entries()) {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        onlineList += `║  ${info.playerName}\n`;
+        count++;
+      }
+    }
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '在线玩家',
+        content: `\n╔══════════════════════════════╗\n║  在线玩家列表 (${count}人)\n╠══════════════════════════════╣\n${onlineList}╚══════════════════════════════╝`
+      }
+    });
+  } else if (subCommand === '公告') {
+    const message = args.slice(1).join(' ');
+    if (!message) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 公告 <消息>' } });
+      return;
+    }
+    broadcast({
+      type: 'system',
+      data: { message: `📢 [管理员公告] ${message}` }
+    });
+    sendToClient(ws, { type: 'system', data: { message: '公告已发送。' } });
+  } else if (subCommand === '给予') {
+    const targetName = args[1];
+    const itemId = args[2];
+    const qty = parseInt(args[3]) || 1;
+    if (!targetName || !itemId) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 给予 <玩家名> <物品ID> [数量]' } });
+      return;
+    }
+    const players = getPlayers();
+    const target = Object.values(players).find(p => p.name === targetName);
+    if (!target) {
+      sendToClient(ws, { type: 'system', data: { message: `找不到玩家: ${targetName}` } });
+      return;
+    }
+    // Try pills first, then equipment
+    if (PILLS_DATA[itemId]) {
+      if (!target.pills) target.pills = {};
+      target.pills[itemId] = (target.pills[itemId] || 0) + qty;
+      savePlayers(players);
+      const pd = PILLS_DATA[itemId];
+      sendToClient(ws, { type: 'system', data: { message: `已给予 ${targetName} ${qty}个【${pd.name}】` } });
+    } else if (EQUIPMENT_DATA[itemId]) {
+      if (!target.equipmentBag) target.equipmentBag = [];
+      for (let i = 0; i < qty; i++) target.equipmentBag.push({ id: itemId });
+      savePlayers(players);
+      const ed = EQUIPMENT_DATA[itemId];
+      sendToClient(ws, { type: 'system', data: { message: `已给予 ${targetName} ${qty}个【${ed.name}】` } });
+    } else {
+      sendToClient(ws, { type: 'system', data: { message: `未知物品ID: ${itemId}` } });
+    }
+  } else if (subCommand === '等级') {
+    const targetName = args[1];
+    const level = parseInt(args[2]);
+    if (!targetName || !level || level < 1) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 等级 <玩家名> <等级>' } });
+      return;
+    }
+    const players = getPlayers();
+    const target = Object.values(players).find(p => p.name === targetName);
+    if (!target) {
+      sendToClient(ws, { type: 'system', data: { message: `找不到玩家: ${targetName}` } });
+      return;
+    }
+    target.level = level;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `已将 ${targetName} 的等级设置为 ${level}` } });
+  } else if (subCommand === '灵石') {
+    const targetName = args[1];
+    const amount = parseInt(args[2]);
+    if (!targetName || !amount) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 灵石 <玩家名> <数量>' } });
+      return;
+    }
+    const players = getPlayers();
+    const target = Object.values(players).find(p => p.name === targetName);
+    if (!target) {
+      sendToClient(ws, { type: 'system', data: { message: `找不到玩家: ${targetName}` } });
+      return;
+    }
+    target.silver = (target.silver || 0) + amount;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `已给予 ${targetName} ${amount} 灵石` } });
+  } else if (subCommand === '遗物') {
+    const targetName = args[1];
+    const relicId = args[2];
+    if (!targetName || !relicId) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 遗物 <玩家名> <遗物ID>' } });
+      return;
+    }
+    if (!RELICS_DATA[relicId]) {
+      sendToClient(ws, { type: 'system', data: { message: `未知遗物ID: ${relicId}` } });
+      return;
+    }
+    const players = getPlayers();
+    const target = Object.values(players).find(p => p.name === targetName);
+    if (!target) {
+      sendToClient(ws, { type: 'system', data: { message: `找不到玩家: ${targetName}` } });
+      return;
+    }
+    if (!target.relics) target.relics = [];
+    if (!target.relics.includes(relicId)) {
+      target.relics.push(relicId);
+    }
+    savePlayers(players);
+    const relic = RELICS_DATA[relicId];
+    sendToClient(ws, { type: 'system', data: { message: `已给予 ${targetName} 遗物【${relic.name}】` } });
+  } else if (subCommand === '传送') {
+    const mapName = args[1];
+    const roomName = args[2];
+    if (!mapName || !roomName) {
+      sendToClient(ws, { type: 'system', data: { message: '用法: /管理员 传送 <地图> <房间>' } });
+      return;
+    }
+    const map = WORLD_DATA.maps[mapName];
+    if (!map) {
+      sendToClient(ws, { type: 'system', data: { message: `未知地图: ${mapName}` } });
+      return;
+    }
+    if (!map.rooms[roomName]) {
+      sendToClient(ws, { type: 'system', data: { message: `未知房间: ${roomName}` } });
+      return;
+    }
+    const players = getPlayers();
+    const p = players[player.id];
+    p.currentMap = mapName;
+    p.currentRoom = roomName;
+    savePlayers(players);
+    const room = map.rooms[roomName];
+    sendToClient(ws, { type: 'system', data: { message: `已传送到 ${mapName} - ${roomName}` } });
+    sendToClient(ws, {
+      type: 'room',
+      data: {
+        name: room.name,
+        description: room.description,
+        exits: room.exits,
+        players: getPlayersInRoom(mapName, roomName, ws)
+      }
+    });
+  } else {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '管理员命令',
+        content: `\n╔══════════════════════════════╗\n║  管理员命令列表\n╠══════════════════════════════╣\n║  /管理员 在线 - 查看在线玩家\n║  /管理员 公告 <消息> - 发送公告\n║  /管理员 给予 <玩家> <物品ID> [数量]\n║  /管理员 等级 <玩家> <等级>\n║  /管理员 灵石 <玩家> <数量>\n║  /管理员 遗物 <玩家> <遗物ID>\n║  /管理员 传送 <地图> <房间>\n╚══════════════════════════════╝`
+      }
+    });
+  }
+}
 
 // ===== IDLE TICK INTERVAL =====
 // Every 60 seconds, process all connected idle players
@@ -3827,6 +4132,125 @@ const idleTickInterval = setInterval(() => {
     }
   }
 }, 60000); // Every 60 seconds
+
+// ===== ADMIN PANEL =====
+app.get('/admin', (req, res) => {
+  const players = getPlayers();
+  const playerList = Object.values(players);
+  const totalPlayers = playerList.length;
+  
+  // Get online players
+  const onlinePlayers = [];
+  for (const [ws, info] of connectedClients.entries()) {
+    if (ws.readyState === WebSocket.OPEN) {
+      const p = players[info.playerId];
+      onlinePlayers.push({
+        name: info.playerName,
+        level: p ? p.level : '?',
+        realm: p ? p.realm : '?',
+        map: p ? p.currentMap : '?'
+      });
+    }
+  }
+  
+  // Recent logins (sort by last login, take top 10)
+  const recentLogins = playerList
+    .filter(p => p.lastSignIn)
+    .sort((a, b) => new Date(b.lastSignIn) - new Date(a.lastSignIn))
+    .slice(0, 10)
+    .map(p => ({ name: p.name, level: p.level, lastSignIn: p.lastSignIn }));
+  
+  const html = `<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>管理员面板 - 赛博修仙</title>
+  <style>
+    body { font-family: 'Microsoft YaHei', sans-serif; background: #1a1a2e; color: #eee; margin: 0; padding: 20px; }
+    h1 { color: #e94560; text-align: center; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .stat-card { background: #16213e; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #0f3460; }
+    .stat-card h3 { color: #e94560; margin: 0 0 10px 0; }
+    .stat-card .value { font-size: 2em; color: #53d8fb; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #16213e; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #0f3460; }
+    th { background: #0f3460; color: #53d8fb; }
+    tr:hover { background: #1a1a40; }
+    .search-box { margin: 20px 0; }
+    .search-box input { padding: 10px; width: 300px; background: #16213e; border: 1px solid #0f3460; color: #eee; border-radius: 4px; }
+    .search-box button { padding: 10px 20px; background: #e94560; border: none; color: #fff; border-radius: 4px; cursor: pointer; }
+    .section { background: #16213e; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #0f3460; }
+    .section h2 { color: #53d8fb; border-bottom: 1px solid #0f3460; padding-bottom: 10px; }
+    .online-dot { display: inline-block; width: 10px; height: 10px; background: #4ecca3; border-radius: 50%; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 赛博修仙 - 管理员面板</h1>
+    
+    <div class="stats">
+      <div class="stat-card">
+        <h3>总玩家数</h3>
+        <div class="value">${totalPlayers}</div>
+      </div>
+      <div class="stat-card">
+        <h3>在线玩家</h3>
+        <div class="value">${onlinePlayers.length}</div>
+      </div>
+      <div class="stat-card">
+        <h3>服务器时间</h3>
+        <div class="value" style="font-size:1em;">${new Date().toLocaleString('zh-CN')}</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2><span class="online-dot"></span>在线玩家</h2>
+      ${onlinePlayers.length > 0 ? `
+      <table>
+        <tr><th>角色名</th><th>等级</th><th>境界</th><th>所在地图</th></tr>
+        ${onlinePlayers.map(p => `<tr><td>${p.name}</td><td>${p.level}</td><td>${p.realm}</td><td>${p.map}</td></tr>`).join('')}
+      </table>
+      ` : '<p>暂无在线玩家</p>'}
+    </div>
+    
+    <div class="section">
+      <h2>最近登录</h2>
+      ${recentLogins.length > 0 ? `
+      <table>
+        <tr><th>角色名</th><th>等级</th><th>最后登录</th></tr>
+        ${recentLogins.map(p => `<tr><td>${p.name}</td><td>${p.level}</td><td>${new Date(p.lastSignIn).toLocaleString('zh-CN')}</td></tr>`).join('')}
+      </table>
+      ` : '<p>暂无登录记录</p>'}
+    </div>
+    
+    <div class="section">
+      <h2>玩家搜索</h2>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="输入玩家名搜索...">
+        <button onclick="searchPlayer()">搜索</button>
+      </div>
+      <div id="searchResult"></div>
+      <script>
+        const allPlayers = ${JSON.stringify(playerList.map(p => ({ name: p.name, level: p.level, realm: p.realm, silver: p.silver, sect: p.sect, email: p.email, isAdmin: p.isAdmin })))};
+        function searchPlayer() {
+          const query = document.getElementById('searchInput').value.trim().toLowerCase();
+          const result = document.getElementById('searchResult');
+          if (!query) { result.innerHTML = ''; return; }
+          const found = allPlayers.filter(p => p.name.toLowerCase().includes(query));
+          if (found.length === 0) { result.innerHTML = '<p>未找到匹配的玩家</p>'; return; }
+          result.innerHTML = '<table><tr><th>角色名</th><th>等级</th><th>境界</th><th>灵石</th><th>门派</th><th>管理员</th></tr>' +
+            found.map(p => '<tr><td>'+p.name+'</td><td>'+p.level+'</td><td>'+p.realm+'</td><td>'+p.silver+'</td><td>'+(p.sect||'无')+'</td><td>'+(p.isAdmin?'是':'否')+'</td></tr>').join('') +
+            '</table>';
+        }
+      </script>
+    </div>
+  </div>
+</body>
+</html>`;
+  
+  res.send(html);
+});
 
 server.listen(PORT, () => {
   console.log(`赛博修仙服务器已启动，端口: ${PORT}`);
