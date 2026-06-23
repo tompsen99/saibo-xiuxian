@@ -6,6 +6,7 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const professions = require('./data/professions');
+const realms = require('./data/realms');
 
 // Configuration
 const PORT = process.env.PORT || 3000;
@@ -53,7 +54,16 @@ const WORLD_DATA = {
         '村口': {
           name: '村口',
           description: '村庄的入口处，一块石碑上刻着"新手村"三个大字。微风拂过，带来远处花草的清香。',
-          exits: { north: '村广场', east: '集市', west: '修炼场' }
+          exits: { north: '村广场', east: '集市', west: '修炼场', south: '竹林' }
+        },
+        '竹林': {
+          name: '竹林',
+          description: '翠竹成林，遮天蔽日。林间小径蜿蜒曲折，脚下落叶沙沙。阳光透过竹叶洒下斑驳光影，偶有飞鸟掠过。此地远离村落，常有野兔、野鸡出没。',
+          exits: { north: '村口' },
+          monsters: [
+            { name: '野兔', hp: 30, maxHp: 30, attack: 5, defense: 2, exp: 10, silver: 3, dropRate: 0.15 },
+            { name: '野鸡', hp: 45, maxHp: 45, attack: 8, defense: 3, exp: 15, silver: 5, dropRate: 0.12 }
+          ]
         },
         '村广场': {
           name: '村广场',
@@ -194,6 +204,8 @@ function createPlayer(email, password, name, profession) {
     currentMap: null,
     currentRoom: null,
     needsProfession: true,
+    isIdle: false,
+    idleStartTime: null,
     createdAt: new Date().toISOString()
   };
   
@@ -260,6 +272,15 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     const clientInfo = connectedClients.get(ws);
     if (clientInfo) {
+      // Clear idle state on disconnect
+      const players = getPlayers();
+      const player = players[clientInfo.playerId];
+      if (player && player.isIdle) {
+        player.isIdle = false;
+        player.idleStartTime = null;
+        savePlayers(players);
+      }
+      
       connectedClients.delete(ws);
       broadcast({
         type: 'system',
@@ -285,6 +306,7 @@ const heartbeatInterval = setInterval(() => {
 
 wss.on('close', () => {
   clearInterval(heartbeatInterval);
+  clearInterval(idleTickInterval);
 });
 
 // Message handler
@@ -646,10 +668,18 @@ function handleCommand(ws, data) {
     handleAttackCommand(ws, player, command);
   } else if (command.startsWith('/挂机')) {
     handleIdleCommand(ws, player);
+  } else if (command.startsWith('/打坐')) {
+    handleIdleCommand(ws, player);
+  } else if (command.startsWith('/停止挂机')) {
+    handleStopIdleCommand(ws, player);
+  } else if (command.startsWith('/境界')) {
+    handleRealmCommand(ws, player);
+  } else if (command.startsWith('/帮助')) {
+    handleHelpCommand(ws, player);
   } else {
     sendToClient(ws, {
       type: 'error',
-      data: { message: '未知命令。可用命令: /属性, /背包, /地图, /移动, /频道, /交谈, /攻击, /挂机' }
+      data: { message: '未知命令。输入 /帮助 查看所有可用命令。' }
     });
   }
 }
@@ -657,6 +687,10 @@ function handleCommand(ws, data) {
 // Stats command
 function handleStatsCommand(ws, player) {
   const expToNextLevel = player.level * 100;
+  const realmInfo = getRealmInfo(player);
+  const idleStatus = player.isIdle ? '🧘 打坐中' : '活跃';
+  const realmProgress = realmInfo && realmInfo.subLevel ? 
+    `${player.exp}/${realmInfo.subLevel.expRequired} (${Math.floor(player.exp / realmInfo.subLevel.expRequired * 100)}%)` : '-';
   
   sendToClient(ws, {
     type: 'command_response',
@@ -667,7 +701,9 @@ function handleStatsCommand(ws, player) {
 ║  ${player.name} - ${player.profession}
 ╠══════════════════════════════╣
 ║  境界: ${player.realm}
+║  境界进度: ${realmProgress}
 ║  等级: ${player.level} (经验: ${player.exp}/${expToNextLevel})
+║  状态: ${idleStatus}
 ╠══════════════════════════════╣
 ║  生命: ${player.hp}/${player.maxHp}
 ║  灵力: ${player.spirit}/${player.maxSpirit}
@@ -929,40 +965,196 @@ function handleTalkCommand(ws, player, command) {
 
 // Attack command
 function handleAttackCommand(ws, player, command) {
+  // Get current room
+  const room = getRoom(player.currentMap, player.currentRoom);
+  if (!room) {
+    sendToClient(ws, { type: 'system', data: { message: '你不知道自己在哪里。' } });
+    return;
+  }
+  
+  // Stop idle mode if attacking
+  if (player.isIdle) {
+    const players = getPlayers();
+    const p = players[player.id];
+    if (p) {
+      p.isIdle = false;
+      p.idleStartTime = null;
+      savePlayers(players);
+    }
+  }
+  
+  const result = executeCombat(ws, player, room);
+  
+  if (!result.success) {
+    sendToClient(ws, { type: 'system', data: { message: result.message } });
+    return;
+  }
+  
+  // Save player data
+  const players = getPlayers();
+  players[player.id] = player;
+  savePlayers(players);
+  
+  // Send combat log as combat type message
   sendToClient(ws, {
-    type: 'system',
-    data: { message: '你四下张望，但没有发现可以攻击的目标。' }
+    type: 'combat',
+    data: {
+      log: result.combatLog,
+      victory: result.victory,
+      exp: result.exp,
+      silver: result.silver,
+      hp: player.hp,
+      maxHp: player.maxHp
+    }
   });
+  
+  // If player died and respawned, send new room
+  if (result.respawn) {
+    const newRoom = getRoom(player.currentMap, player.currentRoom);
+    if (newRoom) {
+      sendToClient(ws, {
+        type: 'room',
+        data: {
+          name: newRoom.name,
+          description: newRoom.description,
+          exits: newRoom.exits,
+          players: getPlayersInRoom(player.currentMap, player.currentRoom, ws)
+        }
+      });
+    }
+  }
 }
 
 // Idle command
 function handleIdleCommand(ws, player) {
-  sendToClient(ws, {
-    type: 'system',
-    data: { message: '你盘膝而坐，开始打坐修炼。灵力缓缓恢复中...' }
-  });
-  
-  // Simulate spirit recovery
   const players = getPlayers();
   const p = players[player.id];
-  if (p && p.spirit < p.maxSpirit) {
-    p.spirit = Math.min(p.maxSpirit, p.spirit + 10);
-    savePlayers(players);
-    
-    setTimeout(() => {
-      sendToClient(ws, {
-        type: 'status_update',
-        data: {
-          spirit: p.spirit,
-          maxSpirit: p.maxSpirit
-        }
-      });
-      sendToClient(ws, {
-        type: 'system',
-        data: { message: `打坐完毕，灵力恢复至 ${p.spirit}/${p.maxSpirit}` }
-      });
-    }, 3000);
+  if (!p) return;
+  
+  if (p.isIdle) {
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: '你已经在打坐修炼中了。输入 /停止挂机 结束打坐。' }
+    });
+    return;
   }
+  
+  p.isIdle = true;
+  p.idleStartTime = Date.now();
+  savePlayers(players);
+  
+  const room = getRoom(p.currentMap, p.currentRoom);
+  const roomName = room ? room.name : '未知地点';
+  
+  let msg = `🧘 你盘膝而坐，开始打坐修炼。每分钟获得 2 经验，灵力和体力缓慢恢复。`;
+  if (p.currentRoom === '竹林') {
+    msg += `\n🌿 你在竹林中修炼，将自动与野兽战斗获取经验。`;
+  }
+  msg += `\n输入 /停止挂机 结束打坐。`;
+  
+  sendToClient(ws, { type: 'system', data: { message: msg } });
+}
+
+// Stop idle command
+function handleStopIdleCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p) return;
+  
+  if (!p.isIdle) {
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: '你现在没有在打坐。输入 /挂机 或 /打坐 开始修炼。' }
+    });
+    return;
+  }
+  
+  p.isIdle = false;
+  p.idleStartTime = null;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: '🧘 你缓缓收功，停止了打坐修炼。' }
+  });
+}
+
+// Realm command
+function handleRealmCommand(ws, player) {
+  const realmInfo = getRealmInfo(player);
+  if (!realmInfo) {
+    sendToClient(ws, { type: 'system', data: { message: '无法获取境界信息。' } });
+    return;
+  }
+  
+  const { realm, subLevel, subLevelName } = realmInfo;
+  const progress = subLevel ? `${player.exp}/${subLevel.expRequired}` : '-';
+  const percent = subLevel ? Math.floor(player.exp / subLevel.expRequired * 100) : 0;
+  const desc = subLevel ? subLevel.description : '';
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '境界信息',
+      content: `
+╔══════════════════════════════╗
+║  境界详情
+╠══════════════════════════════╣
+║  当前境界: ${player.realm}
+║  阶段: ${subLevelName}
+║  进度: ${progress} (${percent}%)
+║  
+║  境界说明: ${realm.description}
+║  阶段描述: ${desc}
+║  
+║  境界列表:
+║  练气 → 筑基 → 金丹 → 元婴
+║  化神 → 炼虚 → 合体 → 大乘
+║  渡劫 → 飞升 → 仙人 → 神尊
+║  
+║  每个境界分: 初期/中期/后期/巅峰
+╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Help command
+function handleHelpCommand(ws, player) {
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '帮助 - 所有命令',
+      content: `
+╔══════════════════════════════╗
+║  🎮 游戏命令列表
+╠══════════════════════════════╣
+║  
+║  📊 角色信息:
+║  /属性  - 查看角色属性详情
+║  /境界  - 查看境界信息和进度
+║  /背包  - 查看背包物品
+║  
+║  🗺️ 移动探索:
+║  /地图  - 查看当前地图
+║  /移动 <方向> - 移动 (北/南/东/西)
+║  
+║  ⚔️ 战斗修炼:
+║  /攻击  - 攻击当前房间的怪物
+║  /挂机  - 开始挂机修炼 (也可用 /打坐)
+║  /停止挂机 - 停止挂机修炼
+║  
+║  💬 社交:
+║  /频道  - 查看当前频道信息
+║  /交谈 <内容> - 在当前房间说话
+║  
+║  ❓ 其他:
+║  /帮助  - 显示此帮助信息
+║  
+║  💡 提示: 打坐修炼每分钟+2经验
+║  在竹林挂机会自动与怪物战斗
+╚══════════════════════════════╝`
+    }
+  });
 }
 
 // Helper functions
@@ -1017,8 +1209,304 @@ function getOppositeDirectionName(dir) {
   return opposites[dir] || dir;
 }
 
+// ===== REALM/CULTIVATION SYSTEM =====
+
+// Get current realm info for a player
+function getRealmInfo(player) {
+  const realmName = player.realm;
+  const parts = realmName.split('期');
+  const mainRealmName = parts[0].replace(/初期|中期|后期|巅峰/, '');
+  
+  // Find the realm data
+  const realmData = realms.find(r => mainRealmName.includes(r.name));
+  if (!realmData) return null;
+  
+  // Find the sub-level
+  let subLevel = '初期';
+  if (realmName.includes('中期')) subLevel = '中期';
+  else if (realmName.includes('后期')) subLevel = '后期';
+  else if (realmName.includes('巅峰')) subLevel = '巅峰';
+  
+  const subLevelData = realmData.subLevels.find(s => s.name === subLevel);
+  
+  return {
+    realm: realmData,
+    subLevel: subLevelData,
+    subLevelName: subLevel,
+    fullName: realmData.name + subLevel
+  };
+}
+
+// Calculate exp needed for next level
+function expToLevel(level) {
+  return level * 100;
+}
+
+// Add exp to player and handle level up and realm progression
+function addExp(player, amount) {
+  player.exp += amount;
+  let leveled = false;
+  let realmChanged = false;
+  
+  // Level up check
+  while (player.exp >= expToLevel(player.level)) {
+    player.exp -= expToLevel(player.level);
+    player.level++;
+    leveled = true;
+    // Increase stats on level up
+    player.maxHp += 5;
+    player.maxSpirit += 3;
+    player.maxStamina += 4;
+    player.hp = player.maxHp;
+    player.spirit = player.maxSpirit;
+    player.stamina = player.maxStamina;
+  }
+  
+  // Realm progression check
+  realmChanged = checkRealmProgression(player);
+  
+  return { leveled, realmChanged };
+}
+
+// Check and advance realm
+function checkRealmProgression(player) {
+  const realmInfo = getRealmInfo(player);
+  if (!realmInfo || !realmInfo.subLevel) return false;
+  
+  // Check if exp meets the requirement for next sub-level
+  if (player.exp >= realmInfo.subLevel.expRequired) {
+    const currentRealmOrder = realmInfo.realm.order;
+    const currentSubIndex = realmInfo.realm.subLevels.indexOf(realmInfo.subLevel);
+    
+    let nextRealm, nextSubLevel;
+    
+    if (currentSubIndex < 3) {
+      // Next sub-level in same realm
+      nextRealm = realmInfo.realm;
+      nextSubLevel = realmInfo.realm.subLevels[currentSubIndex + 1];
+    } else if (currentRealmOrder < 12) {
+      // Next realm, first sub-level
+      nextRealm = realms.find(r => r.order === currentRealmOrder + 1);
+      nextSubLevel = nextRealm.subLevels[0];
+    } else {
+      return false; // Already at max realm
+    }
+    
+    player.realm = nextRealm.name + nextSubLevel.name;
+    player.exp -= realmInfo.subLevel.expRequired;
+    
+    // Stat bonuses for realm breakthrough
+    player.maxHp += nextSubLevel.expRequired > 1000 ? 20 : 10;
+    player.maxSpirit += nextSubLevel.expRequired > 1000 ? 10 : 5;
+    player.hp = player.maxHp;
+    player.spirit = player.maxSpirit;
+    
+    return true;
+  }
+  return false;
+}
+
+// ===== COMBAT SYSTEM =====
+
+// Execute a full combat encounter
+function executeCombat(ws, player, room) {
+  if (!room.monsters || room.monsters.length === 0) {
+    return { success: false, message: '这里没有可攻击的怪物。' };
+  }
+  
+  // Pick a random monster and deep copy it
+  const monsterTemplate = room.monsters[Math.floor(Math.random() * room.monsters.length)];
+  const monster = { ...monsterTemplate, hp: monsterTemplate.maxHp || monsterTemplate.hp };
+  
+  // Player stats
+  const playerAttack = player.stats.str * 2 + player.level * 3;
+  const playerDefense = player.stats.con * 1.5 + player.level * 2;
+  
+  const combatLog = [];
+  combatLog.push(`⚔️ 战斗开始！你遭遇了 ${monster.name}！`);
+  combatLog.push(`${monster.name}: HP ${monster.hp}/${monster.maxHp || monster.hp} | 攻击 ${monster.attack} | 防御 ${monster.defense}`);
+  combatLog.push('');
+  
+  let round = 0;
+  const maxRounds = 50; // Safety limit
+  
+  while (player.hp > 0 && monster.hp > 0 && round < maxRounds) {
+    round++;
+    
+    // Player attacks monster
+    const playerDmg = Math.max(1, Math.floor(playerAttack - monster.defense / 2 + Math.floor(Math.random() * 5) - 2));
+    monster.hp -= playerDmg;
+    combatLog.push(`第${round}回合: 你攻击 ${monster.name}，造成 ${playerDmg} 点伤害！${monster.name} HP: ${Math.max(0, monster.hp)}/${monsterTemplate.maxHp || monsterTemplate.hp}`);
+    
+    if (monster.hp <= 0) break;
+    
+    // Monster attacks player
+    const monsterDmg = Math.max(1, Math.floor(monster.attack - playerDefense / 2 + Math.floor(Math.random() * 5) - 2));
+    player.hp -= monsterDmg;
+    combatLog.push(`        ${monster.name} 攻击你，造成 ${monsterDmg} 点伤害！你的 HP: ${Math.max(0, player.hp)}/${player.maxHp}`);
+  }
+  
+  combatLog.push('');
+  
+  let result = {};
+  
+  if (monster.hp <= 0) {
+    // Player wins
+    combatLog.push(`🎉 你击败了 ${monster.name}！`);
+    
+    const expGain = monster.exp;
+    const silverGain = monster.silver;
+    player.silver += silverGain;
+    combatLog.push(`获得 ${expGain} 经验，${silverGain} 灵石`);
+    
+    // Check for item drop
+    if (Math.random() < monster.dropRate) {
+      combatLog.push(`🍀 ${monster.name} 掉落了一件物品！`);
+    }
+    
+    // Check level up and realm progression
+    const { leveled, realmChanged } = addExp(player, expGain);
+    if (leveled) combatLog.push(`🎊 恭喜！你升级了！当前等级: ${player.level}`);
+    if (realmChanged) combatLog.push(`✨ 突破成功！你的境界提升为: ${player.realm}`);
+    
+    result = { success: true, victory: true, exp: expGain, silver: silverGain };
+  } else if (player.hp <= 0) {
+    // Player dies
+    combatLog.push(`💀 你被 ${monster.name} 击败了！`);
+    
+    // Lose 10% exp
+    const expLoss = Math.floor(player.exp * 0.1);
+    player.exp = Math.max(0, player.exp - expLoss);
+    combatLog.push(`损失 ${expLoss} 经验...`);
+    
+    // Respawn at 村口
+    player.currentRoom = '村口';
+    player.hp = Math.floor(player.maxHp * 0.5);
+    player.spirit = Math.floor(player.maxSpirit * 0.5);
+    combatLog.push(`你被传送到 村口，恢复了一半状态。`);
+    
+    result = { success: true, victory: false, expLoss: expLoss, respawn: '村口' };
+  } else {
+    combatLog.push(`战斗超时，你逃离了战斗。`);
+    result = { success: true, victory: false, timeout: true };
+  }
+  
+  result.combatLog = combatLog;
+  return result;
+}
+
 // Initialize and start server
 initializeDataFiles();
+
+// ===== IDLE TICK INTERVAL =====
+// Every 60 seconds, process all connected idle players
+const idleTickInterval = setInterval(() => {
+  for (const [ws, clientInfo] of connectedClients.entries()) {
+    if (ws.readyState !== WebSocket.OPEN) continue;
+    
+    const players = getPlayers();
+    const player = players[clientInfo.playerId];
+    if (!player || !player.isIdle) continue;
+    
+    let changed = false;
+    
+    // Gain 2 exp per minute (doubled rate during idle)
+    const { leveled, realmChanged } = addExp(player, 2);
+    changed = true;
+    
+    // Recover spirit and stamina
+    if (player.spirit < player.maxSpirit) {
+      player.spirit = Math.min(player.maxSpirit, player.spirit + 5);
+      changed = true;
+    }
+    if (player.stamina < player.maxStamina) {
+      player.stamina = Math.min(player.maxStamina, player.stamina + 3);
+      changed = true;
+    }
+    
+    // Auto-combat in bamboo forest
+    if (player.currentRoom === '竹林' && player.currentMap === '新手村') {
+      const room = getRoom(player.currentMap, player.currentRoom);
+      if (room && room.monsters && room.monsters.length > 0) {
+        const result = executeCombat(ws, player, room);
+        if (result.success) {
+          // Send combat notification
+          sendToClient(ws, {
+            type: 'idle_combat',
+            data: {
+              log: result.combatLog.slice(0, 5), // Show first few lines
+              victory: result.victory,
+              exp: result.exp,
+              silver: result.silver,
+              hp: player.hp,
+              maxHp: player.maxHp
+            }
+          });
+          
+          // If player died, stop idle mode
+          if (!result.victory && result.respawn) {
+            player.isIdle = false;
+            player.idleStartTime = null;
+            sendToClient(ws, {
+              type: 'system',
+              data: { message: '你在战斗中倒下了，自动停止打坐。' }
+            });
+            
+            // Send new room
+            const newRoom = getRoom(player.currentMap, player.currentRoom);
+            if (newRoom) {
+              sendToClient(ws, {
+                type: 'room',
+                data: {
+                  name: newRoom.name,
+                  description: newRoom.description,
+                  exits: newRoom.exits,
+                  players: getPlayersInRoom(player.currentMap, player.currentRoom, ws)
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Notify level up
+    if (leveled) {
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `🎊 打坐修炼中，你突破了！当前等级: ${player.level}` }
+      });
+    }
+    
+    // Notify realm breakthrough
+    if (realmChanged) {
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `✨ 修炼有成！你的境界突破为: ${player.realm}` }
+      });
+    }
+    
+    // Send status update
+    sendToClient(ws, {
+      type: 'status_update',
+      data: {
+        hp: player.hp,
+        maxHp: player.maxHp,
+        spirit: player.spirit,
+        maxSpirit: player.maxSpirit,
+        stamina: player.stamina,
+        maxStamina: player.maxStamina,
+        exp: player.exp,
+        level: player.level,
+        realm: player.realm
+      }
+    });
+    
+    if (changed) {
+      savePlayers(players);
+    }
+  }
+}, 60000); // Every 60 seconds
 
 server.listen(PORT, () => {
   console.log(`赛博修仙服务器已启动，端口: ${PORT}`);

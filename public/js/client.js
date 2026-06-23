@@ -91,6 +91,8 @@
   let pendingPlayerId = null;
   let messageCount = 0;
   const MAX_MESSAGES = 500;
+  let isIdling = false;
+  let originalPlaceholder = '输入命令或聊天内容...';
 
   // ─── DOM Refs ───
   const $gameText = document.getElementById('game-text');
@@ -169,7 +171,16 @@
     switch (type) {
       case 'system':
       case 'message':
-        appendMessage(data.text || data.message || JSON.stringify(data), 'system');
+        var sysText = data.text || data.message || JSON.stringify(data);
+        // Detect idle state changes in system messages
+        if (sysText.includes('打坐') || sysText.includes('挂机') || sysText.includes('修炼中') || sysText.includes('进入了修炼状态')) {
+          isIdling = true;
+          $chatInput.placeholder = '🧘 修炼中... 输入任意内容退出打坐';
+        } else if (sysText.includes('退出打坐') || sysText.includes('停止修炼') || sysText.includes('结束了修炼')) {
+          isIdling = false;
+          $chatInput.placeholder = originalPlaceholder;
+        }
+        appendMessage(sysText, 'system');
         break;
 
       case 'chat':
@@ -181,7 +192,31 @@
         break;
 
       case 'combat':
-        appendMessage(data.text || data.message || '', 'combat');
+        var combatLog = data.log || data.lines || [];
+        if (Array.isArray(combatLog) && combatLog.length > 0) {
+          combatLog.forEach(function(line) { appendMessage(line, 'combat'); });
+        } else {
+          var combatText = data.text || data.message || '';
+          if (combatText) appendMessage(combatText, 'combat');
+        }
+        // Update HP display after combat
+        if (data.hp !== undefined) {
+          $statHp.textContent = data.hp + '/' + (data.maxHp || data.hp);
+        }
+        break;
+
+      case 'idle_combat':
+        var idleLog = data.log || [];
+        if (Array.isArray(idleLog)) {
+          idleLog.forEach(function(line) { appendMessage('[挂机] ' + line, 'combat'); });
+        }
+        if (data.hp !== undefined) {
+          $statHp.textContent = data.hp + '/' + (data.maxHp || data.hp);
+        }
+        break;
+
+      case 'status_update':
+        updateStatus(data);
         break;
 
       case 'npc':
@@ -255,7 +290,19 @@
 
       // Command response
       case 'command_response':
-        appendMessage(data.content || data.message || '', 'room');
+        var respText = data.content || data.message || '';
+        // Detect idle/idle-related messages
+        if (respText.includes('打坐') || respText.includes('挂机') || respText.includes('修炼中') || respText.includes('进入了修炼状态')) {
+          isIdling = true;
+          $chatInput.placeholder = '🧘 修炼中... 输入任意内容退出打坐';
+          appendMessage(respText, 'system');
+        } else if (respText.includes('退出打坐') || respText.includes('停止修炼') || respText.includes('结束了修炼')) {
+          isIdling = false;
+          $chatInput.placeholder = originalPlaceholder;
+          appendMessage(respText, 'system');
+        } else {
+          appendMessage(respText, 'room');
+        }
         break;
 
       // Status
@@ -314,6 +361,12 @@
     var text = $chatInput.value.trim();
     if (!text) return;
     $chatInput.value = '';
+
+    // Exit idle mode on any user input
+    if (isIdling) {
+      isIdling = false;
+      $chatInput.placeholder = originalPlaceholder;
+    }
 
     if (gameState !== 'game') {
       appendMessage('[系统] 尚未进入游戏', 'error');
