@@ -54,7 +54,7 @@ const WORLD_DATA = {
         '村口': {
           name: '村口',
           description: '村庄的入口处，一块石碑上刻着"新手村"三个大字。微风拂过，带来远处花草的清香。',
-          exits: { north: '村广场', east: '集市', west: '修炼场', south: '竹林' }
+          exits: { north: '村广场', east: '集市', west: '修炼场', south: '竹林', southeast: '铁匠铺' }
         },
         '竹林': {
           name: '竹林',
@@ -90,6 +90,11 @@ const WORLD_DATA = {
           description: '药铺内摆满了各种药材，空气中弥漫着草药的清香。掌柜正在研磨草药。',
           exits: { east: '村广场' }
         },
+        '铁匠铺': {
+          name: '铁匠铺',
+          description: '铁匠铺内炉火熊熊，铁匠正在敲打一块烧红的铁锭。墙上挂满了各种兵器和防具。',
+          exits: { west: '村口' }
+        },
         '修炼场': {
           name: '修炼场',
           description: '开阔的修炼场，地面平整。几位修士正在打坐修炼，空气中隐约有灵气流动。',
@@ -97,6 +102,97 @@ const WORLD_DATA = {
         }
       }
     }
+  }
+};
+
+// ===== SKILLS (功法) SYSTEM =====
+const SKILLS_DATA = {
+  basic_fist: {
+    id: 'basic_fist',
+    name: '基础拳法',
+    type: 'active',
+    damage: 15,
+    spiritCost: 5,
+    level: '凡阶下品',
+    description: '最基础的拳法，朴实无华但胜在稳固。'
+  },
+  basic_sword: {
+    id: 'basic_sword',
+    name: '基础剑法',
+    type: 'active',
+    damage: 20,
+    spiritCost: 8,
+    level: '凡阶下品',
+    description: '入门剑法，剑走轻灵，攻守兼备。'
+  },
+  basic_meditation: {
+    id: 'basic_meditation',
+    name: '吐纳术',
+    type: 'passive',
+    effect: 'spiritRecovery+2',
+    level: '凡阶下品',
+    description: '修仙入门功法，通过调息吐纳恢复灵力。'
+  },
+  basic_movement: {
+    id: 'basic_movement',
+    name: '轻功入门',
+    type: 'passive',
+    effect: 'dodge+5%',
+    level: '凡阶下品',
+    description: '基础轻功，提升身法闪避能力。'
+  }
+};
+
+// ===== SECTS (门派) SYSTEM =====
+const SECTS_DATA = {
+  shaolin: {
+    id: 'shaolin',
+    name: '少林派',
+    type: '正派',
+    bonus: 'defense+10%',
+    bonusDesc: '防御+10%',
+    desc: '防御专精，拳法/棍法。天下武功出少林，以刚猛厚重见长。',
+    minLevel: 3
+  },
+  wudang: {
+    id: 'wudang',
+    name: '武当派',
+    type: '正派',
+    bonus: 'spiritRecovery+15%',
+    bonusDesc: '灵力恢复+15%',
+    desc: '内功专精，剑法/太极。以柔克刚，内力绵长不绝。',
+    minLevel: 3
+  },
+  xiaoyao: {
+    id: 'xiaoyao',
+    name: '逍遥派',
+    type: '中立',
+    bonus: 'exp+10%',
+    bonusDesc: '经验+10%',
+    desc: '奇遇最多，功法杂。逍遥自在，不受拘束，修炼速度更快。',
+    minLevel: 3
+  }
+};
+
+// NPC data
+const NPCS = {
+  '村长': {
+    name: '村长',
+    location: '村长屋',
+    dialogues: [
+      '年轻人，你可知道这世间有三大门派？少林防御坚固，武当内力深厚，逍遥则奇遇多多。到了3级，便可去寻访门派了。',
+      '修仙之路漫漫，先在竹林练练手，打打野兔野鸡。等实力够了，自然能拜入名门。',
+      '功法也很重要！在修炼场多练练功法，功法等级越高，战斗时越厉害。'
+    ]
+  },
+  '铁匠': {
+    name: '铁匠',
+    location: '铁匠铺',
+    dialogues: [
+      '嘿！要打造装备的话，你还得再等等。这铺子正在筹备中，以后会有好兵器卖的！',
+      '好的兵器能大大提升战斗力。等铺子开业了，记得常来看看。',
+      '听说高级副本里能打出稀有材料，拿来打造神兵利器再好不过了。'
+    ]
   }
 };
 
@@ -206,6 +302,12 @@ function createPlayer(email, password, name, profession) {
     needsProfession: true,
     isIdle: false,
     idleStartTime: null,
+    skills: [
+      { id: 'basic_fist', level: 1, exp: 0 },
+      { id: 'basic_meditation', level: 1, exp: 0 }
+    ],
+    sect: null,
+    sectContribution: 0,
     createdAt: new Date().toISOString()
   };
   
@@ -676,6 +778,21 @@ function handleCommand(ws, data) {
     handleRealmCommand(ws, player);
   } else if (command.startsWith('/帮助')) {
     handleHelpCommand(ws, player);
+  } else if (command.startsWith('/功法')) {
+    handleSkillListCommand(ws, player);
+  } else if (command.startsWith('/学习')) {
+    const skillId = command.replace('/学习', '').trim();
+    handleLearnSkillCommand(ws, player, skillId);
+  } else if (command.startsWith('/修炼')) {
+    const skillId = command.replace('/修炼', '').trim();
+    handlePracticeSkillCommand(ws, player, skillId);
+  } else if (command.startsWith('/加入门派')) {
+    const sectId = command.replace('/加入门派', '').trim();
+    handleJoinSectCommand(ws, player, sectId);
+  } else if (command.startsWith('/门派信息')) {
+    handleSectInfoCommand(ws, player);
+  } else if (command.startsWith('/门派')) {
+    handleSectListCommand(ws, player);
   } else {
     sendToClient(ws, {
       type: 'error',
@@ -783,7 +900,7 @@ function handleMoveCommand(ws, player, direction) {
   // Map Chinese directions to English
   const directionMap = {
     '北': 'north', '南': 'south', '东': 'east', '西': 'west',
-    '上': 'up', '下': 'down',
+    '上': 'up', '下': 'down', '东南': 'southeast', '东北': 'northeast', '西南': 'southwest', '西北': 'northwest',
     'north': 'north', 'south': 'south', 'east': 'east', 'west': 'west'
   };
   
@@ -935,6 +1052,20 @@ function handleTalkCommand(ws, player, command) {
     sendToClient(ws, {
       type: 'system',
       data: { message: '请输入要说的话。用法: /交谈 <内容>' }
+    });
+    return;
+  }
+  
+  // Check for NPC interaction
+  const npc = NPCS[message];
+  if (npc && npc.location === player.currentRoom) {
+    const dialogue = npc.dialogues[Math.floor(Math.random() * npc.dialogues.length)];
+    sendToClient(ws, {
+      type: 'npc_talk',
+      data: {
+        npc: npc.name,
+        message: dialogue
+      }
     });
     return;
   }
@@ -1143,16 +1274,234 @@ function handleHelpCommand(ws, player) {
 ║  /挂机  - 开始挂机修炼 (也可用 /打坐)
 ║  /停止挂机 - 停止挂机修炼
 ║  
+║  📜 功法系统:
+║  /功法  - 查看已学功法列表
+║  /学习 <功法ID> - 学习新功法
+║  /修炼 <功法ID> - 修炼功法 (消耗体力)
+║  
+║  🏯 门派系统:
+║  /门派  - 查看可加入门派
+║  /加入门派 <门派ID> - 加入门派
+║  /门派信息 - 查看当前门派详情
+║  
 ║  💬 社交:
 ║  /频道  - 查看当前频道信息
 ║  /交谈 <内容> - 在当前房间说话
+║  /交谈 <NPC名> - 与NPC对话
 ║  
 ║  ❓ 其他:
 ║  /帮助  - 显示此帮助信息
 ║  
 ║  💡 提示: 打坐修炼每分钟+2经验
 ║  在竹林挂机会自动与怪物战斗
+║  修炼功法可提升功法等级，增强战斗
 ╚══════════════════════════════╝`
+    }
+  });
+}
+
+// ===== SKILL COMMANDS =====
+
+// Show learned skills
+function handleSkillListCommand(ws, player) {
+  if (!player.skills || player.skills.length === 0) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '功法列表',
+        content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n║  你还没有学会任何功法。\n║\n║  可学习的功法:\n║  /学习 basic_fist    - 基础拳法\n║  /学习 basic_sword   - 基础剑法\n║  /学习 basic_meditation - 吐纳术\n║  /学习 basic_movement - 轻功入门\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+  
+  let skillList = '';
+  for (const ps of player.skills) {
+    const sd = SKILLS_DATA[ps.id];
+    if (!sd) continue;
+    const typeStr = sd.type === 'active' ? '主动' : '被动';
+    const effectStr = sd.type === 'active' ? `伤害+${sd.damage + (ps.level-1)*3}` : sd.effect;
+    const expToNext = ps.level * 50;
+    const progress = ps.level >= 10 ? '已满级' : `${ps.exp}/${expToNext}`;
+    skillList += `║  【${sd.name}】${typeStr} Lv${ps.level}\n║    ${sd.level} | ${effectStr}\n║    经验: ${progress}\n`;
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '功法列表',
+      content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n${skillList}╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Learn a skill
+function handleLearnSkillCommand(ws, player, skillId) {
+  if (!skillId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /学习 <功法ID>\n可用功法: basic_fist, basic_sword, basic_meditation, basic_movement' } });
+    return;
+  }
+  
+  const skillData = SKILLS_DATA[skillId];
+  if (!skillData) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该功法。可用: basic_fist, basic_sword, basic_meditation, basic_movement' } });
+    return;
+  }
+  
+  // Initialize skills array if needed
+  if (!player.skills) player.skills = [];
+  
+  // Check if already learned
+  if (player.skills.some(s => s.id === skillId)) {
+    sendToClient(ws, { type: 'system', data: { message: `你已经学会了【${skillData.name}】。` } });
+    return;
+  }
+  
+  // Add skill
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.skills) p.skills = [];
+  p.skills.push({ id: skillId, level: 1, exp: 0 });
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `📜 你学会了新功法【${skillData.name}】！\n${skillData.description}` }
+  });
+}
+
+// Practice a skill
+function handlePracticeSkillCommand(ws, player, skillId) {
+  if (!skillId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /修炼 <功法ID>' } });
+    return;
+  }
+  
+  if (!player.skills || !player.skills.some(s => s.id === skillId)) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有学会这个功法。用 /学习 <功法ID> 来学习。' } });
+    return;
+  }
+  
+  // Check stamina
+  if (player.stamina < 10) {
+    sendToClient(ws, { type: 'system', data: { message: '体力不足，无法修炼功法。需要至少10点体力。' } });
+    return;
+  }
+  
+  const skillData = SKILLS_DATA[skillId];
+  const players = getPlayers();
+  const p = players[player.id];
+  const ps = p.skills.find(s => s.id === skillId);
+  
+  // Stop idle if active
+  if (p.isIdle) {
+    p.isIdle = false;
+    p.idleStartTime = null;
+  }
+  
+  // Use stamina
+  p.stamina -= 10;
+  
+  // Gain skill exp
+  ps.exp += 5;
+  const needed = ps.level * 50;
+  let msg = `🧘 你修炼【${skillData.name}】，功法经验+5（${ps.exp}/${needed}）`;
+  
+  if (ps.exp >= needed && ps.level < 10) {
+    ps.exp -= needed;
+    ps.level++;
+    msg += `\n📜 功法突破！【${skillData.name}】等级提升至 Lv${ps.level}！`;
+  }
+  
+  // Sect contribution if in sect
+  if (p.sect) {
+    p.sectContribution = (p.sectContribution || 0) + 1;
+  }
+  
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: msg } });
+}
+
+// ===== SECT COMMANDS =====
+
+// Show available sects
+function handleSectListCommand(ws, player) {
+  let sectList = '';
+  for (const [id, sect] of Object.entries(SECTS_DATA)) {
+    const joined = player.sect === id ? ' ✅ 当前门派' : '';
+    sectList += `║  【${sect.name}】(${sect.type})${joined}\n║    ${sect.desc}\n║    门派加成: ${sect.bonusDesc}\n║    加入要求: 等级${sect.minLevel}+\n║    加入命令: /加入门派 ${id}\n`;
+  }
+  
+  const currentSect = player.sect ? SECTS_DATA[player.sect] : null;
+  const statusText = currentSect ? `当前门派: ${currentSect.name}` : '你还没有加入任何门派';
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '门派列表',
+      content: `\n╔══════════════════════════════╗\n║  门派列表\n╠══════════════════════════════╣\n║  ${statusText}\n╠══════════════════════════════╣\n${sectList}╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Join a sect
+function handleJoinSectCommand(ws, player, sectId) {
+  if (!sectId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /加入门派 <门派ID>\n可用门派: shaolin, wudang, xiaoyao\n输入 /门派 查看门派详情。' } });
+    return;
+  }
+  
+  const sect = SECTS_DATA[sectId];
+  if (!sect) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该门派。可用: shaolin(少林), wudang(武当), xiaoyao(逍遥)' } });
+    return;
+  }
+  
+  // Already in a sect
+  if (player.sect) {
+    const currentSect = SECTS_DATA[player.sect];
+    sendToClient(ws, { type: 'system', data: { message: `你已经是【${currentSect.name}】的弟子了，不能加入其他门派。` } });
+    return;
+  }
+  
+  // Level requirement
+  if (player.level < sect.minLevel) {
+    sendToClient(ws, { type: 'system', data: { message: `加入【${sect.name}】需要等级${sect.minLevel}，你当前等级${player.level}。` } });
+    return;
+  }
+  
+  // Join sect
+  const players = getPlayers();
+  const p = players[player.id];
+  p.sect = sectId;
+  p.sectContribution = 0;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `🎉 恭喜！你成功加入了【${sect.name}】！\n${sect.desc}\n门派加成: ${sect.bonusDesc}\n使用 /门派信息 查看门派详情。` }
+  });
+  
+  broadcast({
+    type: 'system',
+    data: { message: `${player.name} 拜入了【${sect.name}】！` }
+  }, ws);
+}
+
+// Show sect info
+function handleSectInfoCommand(ws, player) {
+  if (!player.sect) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有加入任何门派。输入 /门派 查看可加入的门派。' } });
+    return;
+  }
+  
+  const sect = SECTS_DATA[player.sect];
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '门派信息',
+      content: `\n╔══════════════════════════════╗\n║  门派信息\n╠══════════════════════════════╣\n║  门派: ${sect.name}\n║  类型: ${sect.type}\n║  门派加成: ${sect.bonusDesc}\n║  门派贡献: ${player.sectContribution || 0}\n╠══════════════════════════════╣\n║  门派介绍:\n║  ${sect.desc}\n╠══════════════════════════════╣\n║  💡 提示:\n║  - 修炼功法可增加门派贡献\n║  - 门派专属功法即将开放\n║  - 门派日常任务即将开放\n╚══════════════════════════════╝`
     }
   });
 }
@@ -1196,7 +1545,8 @@ function sanitizePlayer(player) {
 function getDirectionName(dir) {
   const names = {
     north: '北', south: '南', east: '东', west: '西',
-    up: '上', down: '下'
+    up: '上', down: '下',
+    southeast: '东南', northeast: '东北', southwest: '西南', northwest: '西北'
   };
   return names[dir] || dir;
 }
@@ -1204,7 +1554,8 @@ function getDirectionName(dir) {
 function getOppositeDirectionName(dir) {
   const opposites = {
     north: '南', south: '北', east: '西', west: '东',
-    up: '下', down: '上'
+    up: '下', down: '上',
+    southeast: '西北', northeast: '西南', southwest: '东北', northwest: '东南'
   };
   return opposites[dir] || dir;
 }
@@ -1322,6 +1673,43 @@ function executeCombat(ws, player, room) {
   const playerAttack = player.stats.str * 2 + player.level * 3;
   const playerDefense = player.stats.con * 1.5 + player.level * 2;
   
+  // Find best active skill for bonus damage
+  let activeSkillBonus = 0;
+  let activeSkillName = null;
+  if (player.skills && player.skills.length > 0) {
+    for (const ps of player.skills) {
+      const skillData = SKILLS_DATA[ps.id];
+      if (skillData && skillData.type === 'active') {
+        const bonus = skillData.damage + (ps.level - 1) * 3; // +3 damage per skill level
+        if (bonus > activeSkillBonus) {
+          activeSkillBonus = bonus;
+          activeSkillName = skillData.name + ' Lv' + ps.level;
+        }
+      }
+    }
+  }
+  
+  // Check passive skills
+  let dodgeChance = 0;
+  let extraSpiritRecovery = 0;
+  if (player.skills) {
+    for (const ps of player.skills) {
+      const skillData = SKILLS_DATA[ps.id];
+      if (skillData && skillData.type === 'passive') {
+        if (skillData.id === 'basic_movement') dodgeChance += 0.05 + (ps.level - 1) * 0.01;
+        if (skillData.id === 'basic_meditation') extraSpiritRecovery += 2 + (ps.level - 1);
+      }
+    }
+  }
+  
+  // Check sect bonus
+  let sectDefenseBonus = 1;
+  let sectExpBonus = 1;
+  if (player.sect) {
+    if (player.sect === 'shaolin') sectDefenseBonus = 1.1;
+    else if (player.sect === 'xiaoyao') sectExpBonus = 1.1;
+  }
+  
   const combatLog = [];
   combatLog.push(`⚔️ 战斗开始！你遭遇了 ${monster.name}！`);
   combatLog.push(`${monster.name}: HP ${monster.hp}/${monster.maxHp || monster.hp} | 攻击 ${monster.attack} | 防御 ${monster.defense}`);
@@ -1334,16 +1722,25 @@ function executeCombat(ws, player, room) {
     round++;
     
     // Player attacks monster
-    const playerDmg = Math.max(1, Math.floor(playerAttack - monster.defense / 2 + Math.floor(Math.random() * 5) - 2));
+    let playerDmg = Math.max(1, Math.floor(playerAttack - monster.defense / 2 + Math.floor(Math.random() * 5) - 2));
+    // Apply active skill bonus
+    if (activeSkillBonus > 0) {
+      playerDmg += activeSkillBonus;
+      if (round === 1) combatLog.push(`⚔️ 发动功法【${activeSkillName}】，额外造成 ${activeSkillBonus} 点伤害！`);
+    }
     monster.hp -= playerDmg;
     combatLog.push(`第${round}回合: 你攻击 ${monster.name}，造成 ${playerDmg} 点伤害！${monster.name} HP: ${Math.max(0, monster.hp)}/${monsterTemplate.maxHp || monsterTemplate.hp}`);
     
     if (monster.hp <= 0) break;
     
-    // Monster attacks player
-    const monsterDmg = Math.max(1, Math.floor(monster.attack - playerDefense / 2 + Math.floor(Math.random() * 5) - 2));
-    player.hp -= monsterDmg;
-    combatLog.push(`        ${monster.name} 攻击你，造成 ${monsterDmg} 点伤害！你的 HP: ${Math.max(0, player.hp)}/${player.maxHp}`);
+    // Monster attacks player (check dodge)
+    if (dodgeChance > 0 && Math.random() < dodgeChance) {
+      combatLog.push(`        ${monster.name} 攻击你，但你身法灵动闪避了！`);
+    } else {
+      const monsterDmg = Math.max(1, Math.floor(monster.attack - playerDefense * sectDefenseBonus / 2 + Math.floor(Math.random() * 5) - 2));
+      player.hp -= monsterDmg;
+      combatLog.push(`        ${monster.name} 攻击你，造成 ${monsterDmg} 点伤害！你的 HP: ${Math.max(0, player.hp)}/${player.maxHp}`);
+    }
   }
   
   combatLog.push('');
@@ -1354,10 +1751,24 @@ function executeCombat(ws, player, room) {
     // Player wins
     combatLog.push(`🎉 你击败了 ${monster.name}！`);
     
-    const expGain = monster.exp;
+    const expGain = Math.floor(monster.exp * sectExpBonus);
     const silverGain = monster.silver;
     player.silver += silverGain;
     combatLog.push(`获得 ${expGain} 经验，${silverGain} 灵石`);
+    
+    // Skill exp gain from combat
+    if (player.skills) {
+      for (const ps of player.skills) {
+        ps.exp += 2;
+        const needed = ps.level * 50;
+        if (ps.exp >= needed && ps.level < 10) {
+          ps.exp -= needed;
+          ps.level++;
+          const sd = SKILLS_DATA[ps.id];
+          combatLog.push(`📜 功法【${sd.name}】突破！等级: ${ps.level}`);
+        }
+      }
+    }
     
     // Check for item drop
     if (Math.random() < monster.dropRate) {
@@ -1413,6 +1824,23 @@ const idleTickInterval = setInterval(() => {
     // Gain 2 exp per minute (doubled rate during idle)
     const { leveled, realmChanged } = addExp(player, 2);
     changed = true;
+    
+    // Skill exp gain during idle (1 per minute per skill)
+    if (player.skills && player.skills.length > 0) {
+      for (const ps of player.skills) {
+        ps.exp += 1;
+        const needed = ps.level * 50;
+        if (ps.exp >= needed && ps.level < 10) {
+          ps.exp -= needed;
+          ps.level++;
+          const sd = SKILLS_DATA[ps.id];
+          sendToClient(ws, {
+            type: 'system',
+            data: { message: `📜 打坐修炼中，功法【${sd.name}】突破！等级: ${ps.level}` }
+          });
+        }
+      }
+    }
     
     // Recover spirit and stamina
     if (player.spirit < player.maxSpirit) {
