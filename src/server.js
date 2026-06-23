@@ -144,87 +144,482 @@ const SKILLS_DATA = {
 };
 
 // ===== SECTS (门派) SYSTEM =====
+// 门派职位系统
+const SECT_POSITIONS = [
+  { name: '记名弟子', threshold: 0, damageBonus: 0 },
+  { name: '内门弟子', threshold: 100, damageBonus: 0.05 },
+  { name: '核心弟子', threshold: 300, damageBonus: 0.10 },
+  { name: '长老', threshold: 800, damageBonus: 0.20 },
+  { name: '掌门', threshold: 2000, damageBonus: 0.30 }
+];
+
+// 门派每日任务
+const SECT_DAILY_QUESTS = {
+  sq_cultivate: { id: 'sq_cultivate', name: '门派修炼', desc: '修炼功法3次', type: 'practice_skill', target: 3, reward: 20 },
+  sq_trial: { id: 'sq_trial', name: '门派历练', desc: '击杀5只怪物', type: 'kill_any', target: 5, reward: 30 },
+  sq_patrol: { id: 'sq_patrol', name: '门派巡山', desc: '移动到3个不同房间', type: 'move_rooms', target: 3, reward: 15 }
+};
+
+// 获取门派职位
+function getSectPosition(contribution) {
+  for (let i = SECT_POSITIONS.length - 1; i >= 0; i--) {
+    if (contribution >= SECT_POSITIONS[i].threshold) return SECT_POSITIONS[i];
+  }
+  return SECT_POSITIONS[0];
+}
+
+// 获取门派职位伤害加成
+function getSectPositionBonus(contribution) {
+  const pos = getSectPosition(contribution);
+  return pos.damageBonus;
+}
+
+// 门派团战时间计算（每周六20:00）
+function getNextSectWarTime() {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+  const daysUntilSat = (6 - dayOfWeek + 7) % 7;
+  const nextSat = new Date(now);
+  nextSat.setDate(now.getDate() + (daysUntilSat === 0 && now.getHours() >= 20 ? 7 : daysUntilSat));
+  nextSat.setHours(20, 0, 0, 0);
+  if (nextSat <= now) nextSat.setDate(nextSat.getDate() + 7);
+  return nextSat;
+}
+
 const SECTS_DATA = {
+  // ===== 正派 (15) =====
   shaolin: {
-    id: 'shaolin',
-    name: '少林派',
-    type: '正派',
-    bonus: 'defense+10%',
-    bonusDesc: '防御+10%',
+    id: 'shaolin', name: '少林派', type: '正派',
+    bonus: { type: 'defense', value: 0.10 }, bonusDesc: '防御+10%',
     desc: '防御专精，拳法/棍法。天下武功出少林，以刚猛厚重见长。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'shaolin_pill', name: '少林大力丸', type: 'pill', cost: 20, desc: '恢复80HP', effect: { hp: 80 } },
+      { id: 'shaolin_skill', name: '罗汉拳法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 25, spiritCost: 12 },
+      { id: 'shaolin_equip', name: '金刚护腕', type: 'equipment', cost: 100, desc: '防御+15', defense: 15, slot: 'ring' }
+    ]
   },
   wudang: {
-    id: 'wudang',
-    name: '武当派',
-    type: '正派',
-    bonus: 'spiritRecovery+15%',
-    bonusDesc: '灵力恢复+15%',
+    id: 'wudang', name: '武当派', type: '正派',
+    bonus: { type: 'spiritRecovery', value: 0.15 }, bonusDesc: '灵力恢复+15%',
     desc: '内功专精，剑法/太极。以柔克刚，内力绵长不绝。',
-    minLevel: 3
-  },
-  xiaoyao: {
-    id: 'xiaoyao',
-    name: '逍遥派',
-    type: '中立',
-    bonus: 'exp+10%',
-    bonusDesc: '经验+10%',
-    desc: '奇遇最多，功法杂。逍遥自在，不受拘束，修炼速度更快。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'wudang_pill', name: '太极回灵丹', type: 'pill', cost: 20, desc: '恢复50灵力', effect: { spirit: 50 } },
+      { id: 'wudang_skill', name: '太极剑法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'wudang_equip', name: '太极道袍', type: 'equipment', cost: 100, desc: '灵力+20', spirit: 20, slot: 'body' }
+    ]
   },
   emei: {
-    id: 'emei',
-    name: '峨眉派',
-    type: '正派',
-    bonus: 'healing+15%',
-    bonusDesc: '治疗+15%',
+    id: 'emei', name: '峨眉派', type: '正派',
+    bonus: { type: 'healing', value: 0.15 }, bonusDesc: '治疗+15%',
     desc: '治疗辅助，剑法/掌法。峨眉弟子精通医术与剑法，攻守兼备。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'emei_pill', name: '九转还魂丹', type: 'pill', cost: 20, desc: '恢复120HP', effect: { hp: 120 } },
+      { id: 'emei_skill', name: '慈航普度', type: 'skill', cost: 50, desc: '门派专属功法', damage: 18, spiritCost: 8, healing: 30 },
+      { id: 'emei_equip', name: '佛光护符', type: 'equipment', cost: 100, desc: 'HP+30', hp: 30, slot: 'ring' }
+    ]
   },
   huashan: {
-    id: 'huashan',
-    name: '华山派',
-    type: '正派',
-    bonus: 'attack+10%',
-    bonusDesc: '攻击+10%',
+    id: 'huashan', name: '华山派', type: '正派',
+    bonus: { type: 'attack', value: 0.10 }, bonusDesc: '攻击+10%',
     desc: '剑法专精，剑气攻击。华山剑法名震天下，攻击力超群。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'huashan_pill', name: '华山聚气丹', type: 'pill', cost: 20, desc: '临时攻击+5持续3次战斗', effect: { tempAttack: 5 } },
+      { id: 'huashan_skill', name: '独孤九剑', type: 'skill', cost: 50, desc: '门派专属功法', damage: 28, spiritCost: 15 },
+      { id: 'huashan_equip', name: '紫霞宝剑', type: 'equipment', cost: 100, desc: '攻击+18', attack: 18, slot: 'weapon' }
+    ]
   },
   kunlun: {
-    id: 'kunlun',
-    name: '昆仑派',
-    type: '正派',
-    bonus: 'spirit+15%',
-    bonusDesc: '灵力+15%',
+    id: 'kunlun', name: '昆仑派', type: '正派',
+    bonus: { type: 'spirit', value: 0.15 }, bonusDesc: '灵力+15%',
     desc: '远程攻击，内功深厚。昆仑弟子内力雄浑，灵力远超常人。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'kunlun_pill', name: '昆仑养气丹', type: 'pill', cost: 20, desc: '恢复40灵力', effect: { spirit: 40 } },
+      { id: 'kunlun_skill', name: '昆仑心法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 20, spiritCost: 8 },
+      { id: 'kunlun_equip', name: '昆仑玉佩', type: 'equipment', cost: 100, desc: '灵力+25', spirit: 25, slot: 'ring' }
+    ]
   },
+  kongtong: {
+    id: 'kongtong', name: '崆峒派', type: '正派',
+    bonus: { type: '暗器伤害', value: 0.10 }, bonusDesc: '暗器伤害+10%',
+    desc: '暗器专精，飞蝗石、铁莲子。崆峒弟子暗器手法精妙绝伦。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'kongtong_pill', name: '飞蝗石', type: 'pill', cost: 20, desc: '下次攻击附带暗器伤害+10', effect: { tempDart: 10 } },
+      { id: 'kongtong_skill', name: '天罗地网', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'kongtong_equip', name: '飞蝗石袋', type: 'equipment', cost: 100, desc: '暗器伤害+12', attack: 12, slot: 'weapon' }
+    ]
+  },
+  quanzhen: {
+    id: 'quanzhen', name: '全真教', type: '正派',
+    bonus: { type: '境界突破', value: 0.10 }, bonusDesc: '境界突破+10%',
+    desc: '修仙正统，道法精深。全真弟子内丹修炼突破更快。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'quanzhen_pill', name: '全真培元丹', type: 'pill', cost: 20, desc: '获得80经验', effect: { exp: 80 } },
+      { id: 'quanzhen_skill', name: '先天功', type: 'skill', cost: 50, desc: '门派专属功法', damage: 20, spiritCost: 10 },
+      { id: 'quanzhen_equip', name: '全真道冠', type: 'equipment', cost: 100, desc: '悟性+10', wis: 10, slot: 'head' }
+    ]
+  },
+  gaibang: {
+    id: 'gaibang', name: '丐帮', type: '正派',
+    bonus: { type: '群攻伤害', value: 0.10 }, bonusDesc: '群攻伤害+10%',
+    desc: '群攻专精，降龙十八掌。丐帮弟子群战实力超群。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'gaibang_pill', name: '叫花鸡', type: 'pill', cost: 20, desc: '恢复60HP和20体力', effect: { hp: 60, stamina: 20 } },
+      { id: 'gaibang_skill', name: '降龙十八掌', type: 'skill', cost: 50, desc: '门派专属功法', damage: 30, spiritCost: 18 },
+      { id: 'gaibang_equip', name: '打狗棒', type: 'equipment', cost: 100, desc: '攻击+14速度+5', attack: 14, speed: 5, slot: 'weapon' }
+    ]
+  },
+  dali: {
+    id: 'dali', name: '大理段氏', type: '正派',
+    bonus: { type: '力道', value: 0.10 }, bonusDesc: '力道+10%',
+    desc: '指法专精，一阳指。大理段氏指力惊人，一指点出破万法。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'dali_pill', name: '六脉神丹', type: 'pill', cost: 20, desc: '临时力道+8持续3次战斗', effect: { tempStr: 8 } },
+      { id: 'dali_skill', name: '一阳指', type: 'skill', cost: 50, desc: '门派专属功法', damage: 26, spiritCost: 14 },
+      { id: 'dali_equip', name: '六脉神剑谱', type: 'equipment', cost: 100, desc: '力道+12', str: 12, slot: 'weapon' }
+    ]
+  },
+  tianshan: {
+    id: 'tianshan', name: '天山灵鹫宫', type: '正派',
+    bonus: { type: '控制成功率', value: 0.10 }, bonusDesc: '控制成功率+10%',
+    desc: '控制专精，天山折梅手。灵鹫宫弟子控制手段层出不穷。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'tianshan_pill', name: '生死符解药', type: 'pill', cost: 20, desc: '清除所有负面状态', effect: { cleanse: true } },
+      { id: 'tianshan_skill', name: '天山折梅手', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'tianshan_equip', name: '天山冰蚕丝甲', type: 'equipment', cost: 100, desc: '防御+12体质+5', defense: 12, con: 5, slot: 'body' }
+    ]
+  },
+  hengshan: {
+    id: 'hengshan', name: '恒山派', type: '正派',
+    bonus: { type: '治疗效果', value: 0.10 }, bonusDesc: '治疗效果+10%',
+    desc: '防御治疗，剑阵合击。恒山弟子擅长防御与治疗，是团队的坚实后盾。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'hengshan_pill', name: '恒山续命丹', type: 'pill', cost: 20, desc: '恢复100HP', effect: { hp: 100 } },
+      { id: 'hengshan_skill', name: '恒山剑阵', type: 'skill', cost: 50, desc: '门派专属功法', damage: 16, spiritCost: 8, healing: 40 },
+      { id: 'hengshan_equip', name: '恒山佛珠', type: 'equipment', cost: 100, desc: 'HP+40', hp: 40, slot: 'ring' }
+    ]
+  },
+  mingjiao: {
+    id: 'mingjiao', name: '明教', type: '正派',
+    bonus: { type: 'attack', value: 0.10 }, bonusDesc: '攻击+10%',
+    desc: '火系功法，圣火令。明教弟子修炼圣火功法，攻击力极强。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'mingjiao_pill', name: '圣火丹', type: 'pill', cost: 20, desc: '临时攻击+8持续3次战斗', effect: { tempAttack: 8 } },
+      { id: 'mingjiao_skill', name: '乾坤大挪移', type: 'skill', cost: 50, desc: '门派专属功法', damage: 28, spiritCost: 16 },
+      { id: 'mingjiao_equip', name: '圣火令', type: 'equipment', cost: 100, desc: '攻击+16暴击+5%', attack: 16, slot: 'weapon' }
+    ]
+  },
+  biaoju: {
+    id: 'biaoju', name: '镖局联盟', type: '正派',
+    bonus: { type: '交易税', value: -0.10 }, bonusDesc: '交易税-10%',
+    desc: '防御交易，走镖护送。镖局弟子善于交易，交易成本更低。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'biaoju_pill', name: '镖局大力丸', type: 'pill', cost: 20, desc: '恢复50HP和30体力', effect: { hp: 50, stamina: 30 } },
+      { id: 'biaoju_skill', name: '铁砂掌', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'biaoju_equip', name: '镖旗', type: 'equipment', cost: 100, desc: '防御+10交易税-5%', defense: 10, slot: 'ring' }
+    ]
+  },
+  shenhou: {
+    id: 'shenhou', name: '神侯府', type: '正派',
+    bonus: { type: '先手', value: 0.10 }, bonusDesc: '先手+10%',
+    desc: '情报控制，追击审判。神侯府弟子情报灵通，出手更快。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'shenhou_pill', name: '情报令牌', type: 'pill', cost: 20, desc: '下次战斗先手+20%', effect: { tempInit: 20 } },
+      { id: 'shenhou_skill', name: '天眼通', type: 'skill', cost: 50, desc: '门派专属功法', damage: 20, spiritCost: 10 },
+      { id: 'shenhou_equip', name: '神侯令牌', type: 'equipment', cost: 100, desc: '速度+12', speed: 12, slot: 'ring' }
+    ]
+  },
+  liushanmen: {
+    id: 'liushanmen', name: '六扇门', type: '正派',
+    bonus: { type: '追击伤害', value: 0.10 }, bonusDesc: '追击伤害+10%',
+    desc: '追击审判，捕快武功。六扇门弟子追击逃犯，伤害更高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'liushanmen_pill', name: '追击令', type: 'pill', cost: 20, desc: '临时追击伤害+15%持续3次战斗', effect: { tempChase: 15 } },
+      { id: 'liushanmen_skill', name: '锁链擒拿', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'liushanmen_equip', name: '六扇门令牌', type: 'equipment', cost: 100, desc: '攻击+10速度+8', attack: 10, speed: 8, slot: 'ring' }
+    ]
+  },
+
+  // ===== 邪派 (13) =====
   riyue: {
-    id: 'riyue',
-    name: '日月神教',
-    type: '邪派',
-    bonus: 'critRate+10%',
-    bonusDesc: '暴击率+10%',
+    id: 'riyue', name: '日月神教', type: '邪派',
+    bonus: { type: 'critRate', value: 0.10 }, bonusDesc: '暴击率+10%',
     desc: '高爆发，PK强。日月神教行事诡异，招式狠辣，暴击极高。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'riyue_pill', name: '三尸脑神丹', type: 'pill', cost: 20, desc: '临时暴击率+15%持续3次战斗', effect: { tempCrit: 15 } },
+      { id: 'riyue_skill', name: '吸星大法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 26, spiritCost: 14, lifesteal: 0.2 },
+      { id: 'riyue_equip', name: '日月双刃', type: 'equipment', cost: 100, desc: '攻击+14暴击+8%', attack: 14, slot: 'weapon' }
+    ]
   },
   wudu: {
-    id: 'wudu',
-    name: '五毒教',
-    type: '邪派',
-    bonus: 'poisonDmg+15%',
-    bonusDesc: '毒伤+15%',
+    id: 'wudu', name: '五毒教', type: '邪派',
+    bonus: { type: 'poisonDmg', value: 0.15 }, bonusDesc: '毒伤+15%',
     desc: '毒术专精，持续伤害。五毒教精通奇毒，令敌人防不胜防。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'wudu_pill', name: '五毒化尸粉', type: 'pill', cost: 20, desc: '下次攻击附带毒伤+20', effect: { tempPoison: 20 } },
+      { id: 'wudu_skill', name: '万毒噬心', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 12, poison: 15 },
+      { id: 'wudu_equip', name: '五毒珠', type: 'equipment', cost: 100, desc: '攻击+10毒伤+12', attack: 10, slot: 'ring' }
+    ]
   },
   taohua: {
-    id: 'taohua',
-    name: '桃花岛',
-    type: '中立',
-    bonus: 'luck+10%',
-    bonusDesc: '悟性+10%',
+    id: 'taohua', name: '桃花岛', type: '中立',
+    bonus: { type: 'luck', value: 0.10 }, bonusDesc: '悟性+10%',
     desc: '阵法/音律，悟性加成。桃花岛主精通奇门遁甲，弟子悟性极高。',
-    minLevel: 3
+    minLevel: 3,
+    shopItems: [
+      { id: 'taohua_pill', name: '九花玉露丸', type: 'pill', cost: 20, desc: '恢复60HP和40灵力', effect: { hp: 60, spirit: 40 } },
+      { id: 'taohua_skill', name: '落英神剑掌', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'taohua_equip', name: '碧海潮生箫', type: 'equipment', cost: 100, desc: '悟性+12', wis: 12, slot: 'weapon' }
+    ]
+  },
+  xingxiu: {
+    id: 'xingxiu', name: '星宿派', type: '邪派',
+    bonus: { type: '毒伤害', value: 0.15 }, bonusDesc: '毒伤害+15%',
+    desc: '毒术专精，化功大法。星宿派以毒功闻名江湖，令人闻风丧胆。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'xingxiu_pill', name: '腐尸毒丹', type: 'pill', cost: 20, desc: '下次攻击附带剧毒+25', effect: { tempPoison: 25 } },
+      { id: 'xingxiu_skill', name: '化功大法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 14, poison: 20 },
+      { id: 'xingxiu_equip', name: '星宿毒针', type: 'equipment', cost: 100, desc: '毒伤害+15', attack: 15, slot: 'weapon' }
+    ]
+  },
+  xuedao: {
+    id: 'xuedao', name: '血刀门', type: '邪派',
+    bonus: { type: '暴击率', value: 0.10 }, bonusDesc: '暴击率+10%',
+    desc: '暴击专精，血刀大法。血刀门弟子出手狠辣，暴击率极高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'xuedao_pill', name: '血刀狂暴丹', type: 'pill', cost: 20, desc: '临时暴击率+20%持续2次战斗', effect: { tempCrit: 20 } },
+      { id: 'xuedao_skill', name: '血刀大法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 30, spiritCost: 16 },
+      { id: 'xuedao_equip', name: '血刀', type: 'equipment', cost: 100, desc: '攻击+16暴击+10%', attack: 16, slot: 'weapon' }
+    ]
+  },
+  qingcheng: {
+    id: 'qingcheng', name: '青城派', type: '邪派',
+    bonus: { type: '偷袭伤害', value: 0.15 }, bonusDesc: '偷袭伤害+15%',
+    desc: '偷袭加成，暗杀武功。青城弟子擅长偷袭暗杀，先手伤害极高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'qingcheng_pill', name: '隐身丹', type: 'pill', cost: 20, desc: '下次战斗先手+30%', effect: { tempInit: 30 } },
+      { id: 'qingcheng_skill', name: '松风剑法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'qingcheng_equip', name: '青城飞剑', type: 'equipment', cost: 100, desc: '攻击+12速度+10', attack: 12, speed: 10, slot: 'weapon' }
+    ]
+  },
+  youming: {
+    id: 'youming', name: '幽冥谷', type: '邪派',
+    bonus: { type: '吸血', value: 0.10 }, bonusDesc: '吸血+10%',
+    desc: '吸血控制，幽冥功。幽冥谷弟子战斗中可吸取敌人生命。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'youming_pill', name: '幽冥血珠', type: 'pill', cost: 20, desc: '恢复60HP(吸血效果)', effect: { hp: 60 } },
+      { id: 'youming_skill', name: '幽冥吸血功', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 12, lifesteal: 0.25 },
+      { id: 'youming_equip', name: '幽冥鬼爪', type: 'equipment', cost: 100, desc: '攻击+12吸血+8%', attack: 12, slot: 'weapon' }
+    ]
+  },
+  baituo: {
+    id: 'baituo', name: '白驼山', type: '邪派',
+    bonus: { type: '中毒概率', value: 0.10 }, bonusDesc: '中毒概率+10%',
+    desc: '蛇毒蛤蟆，驭兽毒功。白驼山弟子善用蛇毒，中毒概率大增。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'baituo_pill', name: '蛇胆解毒丸', type: 'pill', cost: 20, desc: '清除中毒状态并恢复40HP', effect: { hp: 40, cleanse: true } },
+      { id: 'baituo_skill', name: '蛤蟆功', type: 'skill', cost: 50, desc: '门派专属功法', damage: 26, spiritCost: 14, poison: 18 },
+      { id: 'baituo_equip', name: '白驼蛇杖', type: 'equipment', cost: 100, desc: '攻击+10中毒+12%', attack: 10, slot: 'weapon' }
+    ]
+  },
+  jinshe: {
+    id: 'jinshe', name: '金蛇营', type: '邪派',
+    bonus: { type: '群攻', value: 0.10 }, bonusDesc: '群攻+10%',
+    desc: '群战专精，金蛇剑法。金蛇营弟子群战能力极强。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'jinshe_pill', name: '金蛇胆', type: 'pill', cost: 20, desc: '临时群攻+15%持续3次战斗', effect: { tempAoE: 15 } },
+      { id: 'jinshe_skill', name: '金蛇剑法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'jinshe_equip', name: '金蛇剑', type: 'equipment', cost: 100, desc: '攻击+14群攻+8%', attack: 14, slot: 'weapon' }
+    ]
+  },
+  tianying: {
+    id: 'tianying', name: '天鹰教', type: '邪派',
+    bonus: { type: '闪避', value: 0.10 }, bonusDesc: '闪避+10%',
+    desc: '高闪避，身法诡异。天鹰教弟子身法灵动，闪避率极高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'tianying_pill', name: '天鹰疾风丹', type: 'pill', cost: 20, desc: '临时闪避+15%持续3次战斗', effect: { tempDodge: 15 } },
+      { id: 'tianying_skill', name: '天鹰十三式', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'tianying_equip', name: '天鹰翼', type: 'equipment', cost: 100, desc: '速度+14闪避+8%', speed: 14, slot: 'feet' }
+    ]
+  },
+  mojiao: {
+    id: 'mojiao', name: '魔教', type: '邪派',
+    bonus: { type: '全属性', value: 0.08 }, bonusDesc: '全属性+8%',
+    desc: '终极邪派，魔功盖世。魔教弟子修炼魔功，全属性提升。',
+    minLevel: 5,
+    shopItems: [
+      { id: 'mojiao_pill', name: '魔心丹', type: 'pill', cost: 20, desc: '临时全属性+10%持续3次战斗', effect: { tempAll: 10 } },
+      { id: 'mojiao_skill', name: '天魔解体大法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 35, spiritCost: 20 },
+      { id: 'mojiao_equip', name: '天魔甲', type: 'equipment', cost: 100, desc: '防御+18攻击+10', defense: 18, attack: 10, slot: 'body' }
+    ]
+  },
+  shikui: {
+    id: 'shikui', name: '尸傀宗', type: '邪派',
+    bonus: { type: '召唤伤害', value: 0.15 }, bonusDesc: '召唤伤害+15%',
+    desc: '召唤尸体，傀儡术。尸傀宗弟子可召唤尸傀助战。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'shikui_pill', name: '尸傀符', type: 'pill', cost: 20, desc: '召唤尸傀助战1次', effect: { summon: true } },
+      { id: 'shikui_skill', name: '万尸朝宗', type: 'skill', cost: 50, desc: '门派专属功法', damage: 26, spiritCost: 14, summon: 20 },
+      { id: 'shikui_equip', name: '尸傀符咒', type: 'equipment', cost: 100, desc: '召唤伤害+15', attack: 15, slot: 'ring' }
+    ]
+  },
+  wanshou: {
+    id: 'wanshou', name: '万兽山庄', type: '邪派',
+    bonus: { type: '召唤兽灵', value: 0.15 }, bonusDesc: '召唤兽灵+15%',
+    desc: '控制野兽，驭兽术。万兽山庄弟子可驱使猛兽助战。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'wanshou_pill', name: '兽灵丹', type: 'pill', cost: 20, desc: '召唤兽灵助战1次', effect: { summon: true } },
+      { id: 'wanshou_skill', name: '万兽奔腾', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12, summon: 18 },
+      { id: 'wanshou_equip', name: '兽灵号角', type: 'equipment', cost: 100, desc: '召唤兽灵+15', attack: 15, slot: 'ring' }
+    ]
+  },
+  tianji: {
+    id: 'tianji', name: '天机阁', type: '邪派',
+    bonus: { type: '暗器伤害', value: 0.10 }, bonusDesc: '暗器伤害+10%',
+    desc: '机关暗器，天机术。天机阁弟子精通机关暗器之术。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'tianji_pill', name: '天机雷火弹', type: 'pill', cost: 20, desc: '下次攻击附带暗器伤害+18', effect: { tempDart: 18 } },
+      { id: 'tianji_skill', name: '天机百变', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'tianji_equip', name: '天机匣', type: 'equipment', cost: 100, desc: '暗器伤害+14', attack: 14, slot: 'weapon' }
+    ]
+  },
+
+  // ===== 中立 (11) =====
+  xiaoyao: {
+    id: 'xiaoyao', name: '逍遥派', type: '中立',
+    bonus: { type: 'exp', value: 0.10 }, bonusDesc: '经验+10%',
+    desc: '奇遇最多，功法杂。逍遥自在，不受拘束，修炼速度更快。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'xiaoyao_pill', name: '逍遥培元丹', type: 'pill', cost: 20, desc: '获得100经验', effect: { exp: 100 } },
+      { id: 'xiaoyao_skill', name: '北冥神功', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12, lifesteal: 0.15 },
+      { id: 'xiaoyao_equip', name: '逍遥扇', type: 'equipment', cost: 100, desc: '攻击+12悟性+8', attack: 12, wis: 8, slot: 'weapon' }
+    ]
+  },
+  gumu: {
+    id: 'gumu', name: '古墓派', type: '中立',
+    bonus: { type: '身法', value: 0.10 }, bonusDesc: '身法+10%',
+    desc: '轻功暗器，玉女心经。古墓派弟子身法灵动，暗器精妙。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'gumu_pill', name: '玉蜂蜂蜜', type: 'pill', cost: 20, desc: '恢复80HP和30体力', effect: { hp: 80, stamina: 30 } },
+      { id: 'gumu_skill', name: '玉女心经', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'gumu_equip', name: '玉女素心剑', type: 'equipment', cost: 100, desc: '攻击+12速度+10', attack: 12, speed: 10, slot: 'weapon' }
+    ]
+  },
+  tangmen: {
+    id: 'tangmen', name: '唐门', type: '中立',
+    bonus: { type: '暗器伤害', value: 0.10 }, bonusDesc: '暗器伤害+10%',
+    desc: '暗器机关，毒术。唐门暗器天下闻名，机关术登峰造极。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'tangmen_pill', name: '暴雨梨花针', type: 'pill', cost: 20, desc: '下次攻击附带暗器伤害+15', effect: { tempDart: 15 } },
+      { id: 'tangmen_skill', name: '暴雨梨花针法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 26, spiritCost: 14 },
+      { id: 'tangmen_equip', name: '唐门暗器匣', type: 'equipment', cost: 100, desc: '暗器伤害+14', attack: 14, slot: 'weapon' }
+    ]
+  },
+  shenlong: {
+    id: 'shenlong', name: '神龙教', type: '中立',
+    bonus: { type: '魅惑', value: 0.10 }, bonusDesc: '魅惑+10%',
+    desc: '媚术毒术，神龙教义。神龙教弟子善于魅惑控制敌人。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'shenlong_pill', name: '神龙化尸粉', type: 'pill', cost: 20, desc: '下次攻击附带毒伤+12', effect: { tempPoison: 12 } },
+      { id: 'shenlong_skill', name: '神龙摆尾', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'shenlong_equip', name: '神龙令', type: 'equipment', cost: 100, desc: '攻击+10魅惑+8%', attack: 10, slot: 'ring' }
+    ]
+  },
+  honghua: {
+    id: 'honghua', name: '红花会', type: '中立',
+    bonus: { type: '社交', value: 0.10 }, bonusDesc: '社交+10%',
+    desc: '江湖义气，反清复明。红花会弟子重情重义，社交能力出众。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'honghua_pill', name: '红花续命丹', type: 'pill', cost: 20, desc: '恢复80HP', effect: { hp: 80 } },
+      { id: 'honghua_skill', name: '红花掌', type: 'skill', cost: 50, desc: '门派专属功法', damage: 20, spiritCost: 10 },
+      { id: 'honghua_equip', name: '红花令', type: 'equipment', cost: 100, desc: 'HP+20社交+10%', hp: 20, slot: 'ring' }
+    ]
+  },
+  tiandi: {
+    id: 'tiandi', name: '天地会', type: '中立',
+    bonus: { type: '任务奖励', value: 0.10 }, bonusDesc: '任务奖励+10%',
+    desc: '反抗势力，陈近南。天地会弟子完成任务可获得更多奖励。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'tiandi_pill', name: '天地会信物', type: 'pill', cost: 20, desc: '获得50经验', effect: { exp: 50 } },
+      { id: 'tiandi_skill', name: '凝血神爪', type: 'skill', cost: 50, desc: '门派专属功法', damage: 24, spiritCost: 12 },
+      { id: 'tiandi_equip', name: '天地会令牌', type: 'equipment', cost: 100, desc: '任务奖励+10%', slot: 'ring' }
+    ]
+  },
+  miaojang: {
+    id: 'miaojang', name: '苗疆蛊族', type: '中立',
+    bonus: { type: '炼丹', value: 0.10 }, bonusDesc: '炼丹+10%',
+    desc: '蛊术草药，苗疆秘术。苗疆蛊族精通炼丹蛊术，丹药效果更强。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'miaojang_pill', name: '蛊虫丹', type: 'pill', cost: 20, desc: '下次攻击附带蛊毒+15', effect: { tempPoison: 15 } },
+      { id: 'miaojang_skill', name: '万蛊噬天', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 12, poison: 16 },
+      { id: 'miaojang_equip', name: '蛊虫蛊', type: 'equipment', cost: 100, desc: '毒伤+12', attack: 12, slot: 'ring' }
+    ]
+  },
+  mojia: {
+    id: 'mojia', name: '墨家机关城', type: '中立',
+    bonus: { type: '制作', value: 0.10 }, bonusDesc: '制作+10%',
+    desc: '机关术，墨家学说。墨家弟子精通机关术，制作能力出众。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'mojia_pill', name: '机关傀儡', type: 'pill', cost: 20, desc: '召唤机关傀儡助战1次', effect: { summon: true } },
+      { id: 'mojia_skill', name: '机关百变', type: 'skill', cost: 50, desc: '门派专属功法', damage: 22, spiritCost: 10 },
+      { id: 'mojia_equip', name: '墨家机关臂', type: 'equipment', cost: 100, desc: '攻击+14防御+8', attack: 14, defense: 8, slot: 'weapon' }
+    ]
+  },
+  shuyuan: {
+    id: 'shuyuan', name: '书院', type: '中立',
+    bonus: { type: '悟性', value: 0.10 }, bonusDesc: '悟性+10%',
+    desc: '文人侠客，儒雅武功。书院弟子文武双全，悟性极高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'shuyuan_pill', name: '培元丹', type: 'pill', cost: 20, desc: '获得60经验', effect: { exp: 60 } },
+      { id: 'shuyuan_skill', name: '浩然正气', type: 'skill', cost: 50, desc: '门派专属功法', damage: 20, spiritCost: 10 },
+      { id: 'shuyuan_equip', name: '文房四宝', type: 'equipment', cost: 100, desc: '悟性+14', wis: 14, slot: 'ring' }
+    ]
+  },
+  baicaogu: {
+    id: 'baicaogu', name: '百草谷', type: '中立',
+    bonus: { type: '药材采集', value: 0.10 }, bonusDesc: '药材采集+10%',
+    desc: '药师炼丹，百草入药。百草谷弟子精通药理，炼丹采集效率极高。',
+    minLevel: 3,
+    shopItems: [
+      { id: 'baicaogu_pill', name: '百草还魂丹', type: 'pill', cost: 20, desc: '恢复100HP', effect: { hp: 100 } },
+      { id: 'baicaogu_skill', name: '百草心法', type: 'skill', cost: 50, desc: '门派专属功法', damage: 18, spiritCost: 8, healing: 35 },
+      { id: 'baicaogu_equip', name: '百草药篓', type: 'equipment', cost: 100, desc: 'HP+25体质+8', hp: 25, con: 8, slot: 'ring' }
+    ]
   }
 };
 
@@ -691,6 +1086,13 @@ function createPlayer(email, password, name, profession) {
     ],
     sect: null,
     sectContribution: 0,
+    sectPosition: '记名弟子',
+    sectBetrayal: null,
+    sectBetrayalSect: null,
+    sectDailyQuests: {},
+    sectDailyProgress: {},
+    sectDailyDate: null,
+    sectWeeklyWarDate: null,
     pills: { hp_pill: 3, spirit_pill: 2 },
     equipment: { weapon: null, head: null, body: null, feet: null, ring: null },
     equipmentBag: [],
@@ -973,6 +1375,13 @@ function handleLogin(ws, data) {
   if (!result.player.skills || result.player.skills.length === 0) result.player.skills = [{ id: 'basic_fist', level: 1, exp: 0 }, { id: 'basic_meditation', level: 1, exp: 0 }];
   if (!result.player.sect) result.player.sect = null;
   if (!result.player.sectContribution) result.player.sectContribution = 0;
+  if (!result.player.sectPosition) result.player.sectPosition = '记名弟子';
+  if (!result.player.sectBetrayal) result.player.sectBetrayal = null;
+  if (!result.player.sectBetrayalSect) result.player.sectBetrayalSect = null;
+  if (!result.player.sectDailyQuests) result.player.sectDailyQuests = {};
+  if (!result.player.sectDailyProgress) result.player.sectDailyProgress = {};
+  if (!result.player.sectDailyDate) result.player.sectDailyDate = null;
+  if (!result.player.sectWeeklyWarDate) result.player.sectWeeklyWarDate = null;
   if (!result.player.isIdle) result.player.isIdle = false;
   if (!result.player.idleStartTime) result.player.idleStartTime = null;
   if (!result.player.pills) result.player.pills = { hp_pill: 3, spirit_pill: 2 };
@@ -1262,6 +1671,15 @@ function handleCommand(ws, data) {
   } else if (command.startsWith('/加入门派')) {
     const sectId = command.replace('/加入门派', '').trim();
     handleJoinSectCommand(ws, player, sectId);
+  } else if (command.startsWith('/叛门')) {
+    handleBetraySectCommand(ws, player);
+  } else if (command.startsWith('/门派商店')) {
+    handleSectShopCommand(ws, player);
+  } else if (command.startsWith('/兑换贡献')) {
+    const itemId = command.replace('/兑换贡献', '').trim();
+    handleExchangeContributionCommand(ws, player, itemId);
+  } else if (command.startsWith('/门派战')) {
+    handleSectWarCommand(ws, player);
   } else if (command.startsWith('/门派信息')) {
     handleSectInfoCommand(ws, player);
   } else if (command.startsWith('/门派')) {
@@ -1547,6 +1965,33 @@ function handleMoveCommand(ws, player, direction) {
     if (newRoomName === '竹林') {
       updateQuestProgress(pAfter, 'explore_bamboo', 1);
     }
+    
+    // Sect daily quest tracking for patrol (move to different rooms)
+    if (pAfter.sect) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (pAfter.sectDailyDate !== today) {
+        pAfter.sectDailyDate = today;
+        pAfter.sectDailyProgress = {};
+      }
+      if (!pAfter.sectDailyProgress) pAfter.sectDailyProgress = {};
+      if (!pAfter.sectDailyProgress._visitedRooms) pAfter.sectDailyProgress._visitedRooms = [];
+      if (!pAfter.sectDailyProgress._visitedRooms.includes(newRoomName)) {
+        pAfter.sectDailyProgress._visitedRooms.push(newRoomName);
+        pAfter.sectDailyProgress.sq_patrol = pAfter.sectDailyProgress._visitedRooms.length;
+        // Auto-complete and reward
+        if (pAfter.sectDailyProgress.sq_patrol === 3) {
+          pAfter.sectContribution = (pAfter.sectContribution || 0) + SECT_DAILY_QUESTS.sq_patrol.reward;
+          sendToClient(ws, { type: 'system', data: { message: `📋 门派任务完成: 门派巡山！获得 ${SECT_DAILY_QUESTS.sq_patrol.reward} 贡献` } });
+          // Update position
+          const newPos = getSectPosition(pAfter.sectContribution);
+          if (newPos.name !== pAfter.sectPosition) {
+            pAfter.sectPosition = newPos.name;
+            sendToClient(ws, { type: 'system', data: { message: `🎉 门派职位晋升！你现在是【${newPos.name}】！` } });
+          }
+        }
+      }
+    }
+    
     savePlayers(playersAfter);
   }
 }
@@ -1934,9 +2379,13 @@ function handleHelpCommand(ws, player) {
 ║  /修炼 <功法ID> - 修炼功法 (消耗体力)
 ║  
 ║  🏯 门派系统:
-║  /门派  - 查看可加入门派
+║  /门派  - 查看可加入门派(39个)
 ║  /加入门派 <门派ID> - 加入门派
 ║  /门派信息 - 查看当前门派详情
+║  /门派商店 - 查看门派专属商品
+║  /兑换贡献 <物品ID> - 用贡献换物品
+║  /叛门  - 叛离门派(有惩罚)
+║  /门派战 - 查看门派团战信息
 ║  
 ║  💊 丹药系统:
 ║  /丹药  - 查看丹药背包
@@ -2187,6 +2636,25 @@ function handlePracticeSkillCommand(ws, player, skillId) {
   // Sect contribution if in sect
   if (p.sect) {
     p.sectContribution = (p.sectContribution || 0) + 1;
+    // Track sect daily quest progress
+    const today = new Date().toISOString().slice(0, 10);
+    if (p.sectDailyDate !== today) {
+      p.sectDailyDate = today;
+      p.sectDailyProgress = {};
+    }
+    if (!p.sectDailyProgress) p.sectDailyProgress = {};
+    p.sectDailyProgress.sq_cultivate = (p.sectDailyProgress.sq_cultivate || 0) + 1;
+    // Auto-complete and reward
+    if (p.sectDailyProgress.sq_cultivate === 3) {
+      p.sectContribution += SECT_DAILY_QUESTS.sq_cultivate.reward;
+      sendToClient(ws, { type: 'system', data: { message: `📋 门派任务完成: 门派修炼！获得 ${SECT_DAILY_QUESTS.sq_cultivate.reward} 贡献` } });
+    }
+    // Update position
+    const newPos = getSectPosition(p.sectContribution);
+    if (newPos.name !== p.sectPosition) {
+      p.sectPosition = newPos.name;
+      sendToClient(ws, { type: 'system', data: { message: `🎉 门派职位晋升！你现在是【${newPos.name}】！伤害加成: +${Math.floor(newPos.damageBonus * 100)}%` } });
+    }
   }
   
   // Update quest progress for practice_skill type
@@ -2200,10 +2668,39 @@ function handlePracticeSkillCommand(ws, player, skillId) {
 
 // Show available sects
 function handleSectListCommand(ws, player) {
-  let sectList = '';
+  // Group sects by type
+  const zhengpai = [];
+  const xiepai = [];
+  const zhongli = [];
+  
   for (const [id, sect] of Object.entries(SECTS_DATA)) {
-    const joined = player.sect === id ? ' ✅ 当前门派' : '';
-    sectList += `║  【${sect.name}】(${sect.type})${joined}\n║    ${sect.desc}\n║    门派加成: ${sect.bonusDesc}\n║    加入要求: 等级${sect.minLevel}+\n║    加入命令: /加入门派 ${id}\n`;
+    const entry = { id, ...sect };
+    if (sect.type === '正派') zhengpai.push(entry);
+    else if (sect.type === '邪派') xiepai.push(entry);
+    else zhongli.push(entry);
+  }
+  
+  let sectList = '';
+  
+  // 正派
+  sectList += '║  【正派】\\n';
+  for (const sect of zhengpai) {
+    const joined = player.sect === sect.id ? ' ✅' : '';
+    sectList += `║  ${sect.name}(${sect.id})${joined} - ${sect.bonusDesc}\\n`;
+  }
+  
+  // 邪派
+  sectList += '║  \\n║  【邪派】\\n';
+  for (const sect of xiepai) {
+    const joined = player.sect === sect.id ? ' ✅' : '';
+    sectList += `║  ${sect.name}(${sect.id})${joined} - ${sect.bonusDesc}\\n`;
+  }
+  
+  // 中立
+  sectList += '║  \\n║  【中立】\\n';
+  for (const sect of zhongli) {
+    const joined = player.sect === sect.id ? ' ✅' : '';
+    sectList += `║  ${sect.name}(${sect.id})${joined} - ${sect.bonusDesc}\\n`;
   }
   
   const currentSect = player.sect ? SECTS_DATA[player.sect] : null;
@@ -2213,7 +2710,7 @@ function handleSectListCommand(ws, player) {
     type: 'command_response',
     data: {
       title: '门派列表',
-      content: `\n╔══════════════════════════════╗\n║  门派列表\n╠══════════════════════════════╣\n║  ${statusText}\n╠══════════════════════════════╣\n${sectList}╚══════════════════════════════╝`
+      content: `\\n╔══════════════════════════════╗\\n║  门派列表 (共${Object.keys(SECTS_DATA).length}个)\\n╠══════════════════════════════╣\\n║  ${statusText}\\n╠══════════════════════════════╣\\n${sectList}╠══════════════════════════════╣\\n║  加入: /加入门派 <门派ID>\\n║  详情: /门派信息\\n║  正派不可入邪派，邪派不可入正派\\n║  中立门派自由加入\\n╚══════════════════════════════╝`
     }
   });
 }
@@ -2221,7 +2718,7 @@ function handleSectListCommand(ws, player) {
 // Join a sect
 function handleJoinSectCommand(ws, player, sectId) {
   if (!sectId) {
-    sendToClient(ws, { type: 'system', data: { message: '用法: /加入门派 <门派ID>\n可用门派: shaolin, wudang, xiaoyao, emei, huashan, kunlun, riyue, wudu, taohua\n输入 /门派 查看门派详情。' } });
+    sendToClient(ws, { type: 'system', data: { message: '用法: /加入门派 <门派ID>\n输入 /门派 查看所有可用门派。' } });
     return;
   }
   
@@ -2234,8 +2731,18 @@ function handleJoinSectCommand(ws, player, sectId) {
   // Already in a sect
   if (player.sect) {
     const currentSect = SECTS_DATA[player.sect];
-    sendToClient(ws, { type: 'system', data: { message: `你已经是【${currentSect.name}】的弟子了，不能加入其他门派。` } });
+    sendToClient(ws, { type: 'system', data: { message: `你已经是【${currentSect.name}】的弟子了，不能加入其他门派。使用 /叛门 可以叛离当前门派。` } });
     return;
+  }
+  
+  // Check betrayal cooldown (7 days)
+  if (player.sectBetrayal && player.sectBetrayalSect === sectId) {
+    const cooldownEnd = player.sectBetrayal + 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() < cooldownEnd) {
+      const remaining = Math.ceil((cooldownEnd - Date.now()) / (24 * 60 * 60 * 1000));
+      sendToClient(ws, { type: 'system', data: { message: `你刚叛离了【${sect.name}】，${remaining}天内不能重新加入。` } });
+      return;
+    }
   }
   
   // Level requirement
@@ -2249,6 +2756,11 @@ function handleJoinSectCommand(ws, player, sectId) {
   const p = players[player.id];
   p.sect = sectId;
   p.sectContribution = 0;
+  p.sectPosition = '记名弟子';
+  p.sectDailyQuests = {};
+  p.sectDailyProgress = {};
+  p.sectDailyDate = null;
+  
   // Update quest progress for join_sect type
   if (!p.quests) p.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
   if (!p.quests.progress) p.quests.progress = {};
@@ -2257,7 +2769,7 @@ function handleJoinSectCommand(ws, player, sectId) {
   
   sendToClient(ws, {
     type: 'system',
-    data: { message: `🎉 恭喜！你成功加入了【${sect.name}】！\n${sect.desc}\n门派加成: ${sect.bonusDesc}\n使用 /门派信息 查看门派详情。` }
+    data: { message: `🎉 恭喜！你成功加入了【${sect.name}】！\n${sect.desc}\n门派加成: ${sect.bonusDesc}\n职位: 记名弟子\n使用 /门派信息 查看门派详情。\n使用 /门派商店 查看门派专属商品。` }
   });
   
   broadcast({
@@ -2274,12 +2786,212 @@ function handleSectInfoCommand(ws, player) {
   }
   
   const sect = SECTS_DATA[player.sect];
+  const position = getSectPosition(player.sectContribution || 0);
+  const today = new Date().toISOString().slice(0, 10);
+  
+  // Daily quest info
+  let dailyQuestInfo = '';
+  const sectDailyDate = player.sectDailyDate;
+  const dailyProgress = player.sectDailyProgress || {};
+  
+  if (sectDailyDate === today) {
+    dailyQuestInfo = '║  今日门派任务:\\n';
+    for (const [qid, qd] of Object.entries(SECT_DAILY_QUESTS)) {
+      const progress = dailyProgress[qid] || 0;
+      const completed = progress >= qd.target;
+      dailyQuestInfo += `║    ${completed ? '✅' : '⏳'} ${qd.name}: ${progress}/${qd.target} (+${qd.reward}贡献)\\n`;
+    }
+  } else {
+    dailyQuestInfo = '║  今日门派任务: 输入 /门派商店 查看\\n';
+  }
+  
+  // Position progression
+  let posInfo = '║  职位晋升:\\n';
+  for (const pos of SECT_POSITIONS) {
+    const marker = pos.name === position.name ? ' ◀ 当前' : '';
+    posInfo += `║    ${pos.name} (${pos.threshold}贡献)${marker}\\n`;
+  }
   
   sendToClient(ws, {
     type: 'command_response',
     data: {
       title: '门派信息',
-      content: `\n╔══════════════════════════════╗\n║  门派信息\n╠══════════════════════════════╣\n║  门派: ${sect.name}\n║  类型: ${sect.type}\n║  门派加成: ${sect.bonusDesc}\n║  门派贡献: ${player.sectContribution || 0}\n╠══════════════════════════════╣\n║  门派介绍:\n║  ${sect.desc}\n╠══════════════════════════════╣\n║  💡 提示:\n║  - 修炼功法可增加门派贡献\n║  - 门派专属功法即将开放\n║  - 门派日常任务即将开放\n╚══════════════════════════════╝`
+      content: `\\n╔══════════════════════════════╗\\n║  门派信息\\n╠══════════════════════════════╣\\n║  门派: ${sect.name}\\n║  类型: ${sect.type}\\n║  职位: ${position.name}\\n║  门派加成: ${sect.bonusDesc}\\n║  门派贡献: ${player.sectContribution || 0}\\n╠══════════════════════════════╣\\n║  门派介绍:\\n║  ${sect.desc}\\n╠══════════════════════════════╣\\n${dailyQuestInfo}╠══════════════════════════════╣\\n${posInfo}╠══════════════════════════════╣\\n║  💡 提示:\\n║  - 修炼功法可增加门派贡献(1点/次)\\n║  - 击杀怪物可增加门派贡献\\n║  - /门派商店 查看门派专属商品\\n║  - /叛门 叛离门派(有惩罚)\\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Betray sect command
+function handleBetraySectCommand(ws, player) {
+  if (!player.sect) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有加入任何门派。' } });
+    return;
+  }
+  
+  const sect = SECTS_DATA[player.sect];
+  const players = getPlayers();
+  const p = players[player.id];
+  
+  // Penalty: -30% exp
+  const expLoss = Math.floor(p.exp * 0.3);
+  p.exp = Math.max(0, p.exp - expLoss);
+  
+  // Record betrayal
+  p.sectBetrayal = Date.now();
+  p.sectBetrayalSect = p.sect;
+  
+  // Remove sect-specific skills
+  if (p.skills) {
+    const sectSkillPrefix = p.sect + '_';
+    p.skills = p.skills.filter(s => !s.id.startsWith(sectSkillPrefix));
+  }
+  
+  // Clear sect data
+  const oldSectName = sect.name;
+  p.sect = null;
+  p.sectContribution = 0;
+  p.sectPosition = '记名弟子';
+  p.sectDailyQuests = {};
+  p.sectDailyProgress = {};
+  p.sectDailyDate = null;
+  
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `⚡ 你叛离了【${oldSectName}】！\\n\\n惩罚:\\n- 损失 ${expLoss} 经验(30%)\\n- 丧失门派专属功法\\n- 7天内不能重新加入该门派\\n\\n江湖路远，好自为之。` }
+  });
+  
+  broadcast({
+    type: 'system',
+    data: { message: `${player.name} 叛离了【${oldSectName}】！` }
+  }, ws);
+}
+
+// Sect shop command
+function handleSectShopCommand(ws, player) {
+  if (!player.sect) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有加入任何门派。输入 /门派 查看可加入的门派。' } });
+    return;
+  }
+  
+  const sect = SECTS_DATA[player.sect];
+  const contribution = player.sectContribution || 0;
+  const today = new Date().toISOString().slice(0, 10);
+  
+  // Daily quest info
+  let dailyQuestText = '';
+  const sectDailyDate = player.sectDailyDate;
+  if (sectDailyDate !== today) {
+    dailyQuestText = '║  📋 今日门派任务(自动接取):\\n';
+    for (const [qid, qd] of Object.entries(SECT_DAILY_QUESTS)) {
+      dailyQuestText += `║    ${qd.name}: ${qd.desc} → +${qd.reward}贡献\\n`;
+    }
+  }
+  
+  // Shop items
+  let shopText = '';
+  if (sect.shopItems) {
+    for (const item of sect.shopItems) {
+      const canAfford = contribution >= item.cost ? '✅' : '❌';
+      shopText += `║  ${canAfford} 【${item.name}】(${item.id})\\n║    ${item.desc} | 贡献: ${item.cost}\\n`;
+    }
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '门派商店',
+      content: `\\n╔══════════════════════════════╗\\n║  ${sect.name} 商店\\n╠══════════════════════════════╣\\n║  当前贡献: ${contribution}\\n╠══════════════════════════════╣\\n${dailyQuestText}╠══════════════════════════════╣\\n║  门派商品:\\n${shopText}╠══════════════════════════════╣\\n║  兑换: /兑换贡献 <物品ID>\\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// Exchange contribution command
+function handleExchangeContributionCommand(ws, player, itemId) {
+  if (!player.sect) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有加入任何门派。' } });
+    return;
+  }
+  
+  if (!itemId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /兑换贡献 <物品ID>\\n输入 /门派商店 查看可用商品。' } });
+    return;
+  }
+  
+  const sect = SECTS_DATA[player.sect];
+  if (!sect.shopItems) {
+    sendToClient(ws, { type: 'system', data: { message: '该门派暂无商品。' } });
+    return;
+  }
+  
+  const item = sect.shopItems.find(i => i.id === itemId);
+  if (!item) {
+    sendToClient(ws, { type: 'system', data: { message: `门派商店中没有【${itemId}】。输入 /门派商店 查看商品。` } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  const contribution = p.sectContribution || 0;
+  
+  if (contribution < item.cost) {
+    sendToClient(ws, { type: 'system', data: { message: `门派贡献不足！需要 ${item.cost} 贡献，你只有 ${contribution}。` } });
+    return;
+  }
+  
+  p.sectContribution -= item.cost;
+  
+  // Apply item effect
+  if (item.type === 'pill') {
+    if (!p.pills) p.pills = {};
+    p.pills[itemId] = (p.pills[itemId] || 0) + 1;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `🏪 兑换了【${item.name}】，消耗 ${item.cost} 贡献。剩余贡献: ${p.sectContribution}` } });
+  } else if (item.type === 'equipment') {
+    if (!p.equipmentBag) p.equipmentBag = [];
+    p.equipmentBag.push({ id: itemId, name: item.name, ...item });
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `🏪 兑换了【${item.name}】，消耗 ${item.cost} 贡献。\\n使用 /穿戴 ${itemId} 装备。剩余贡献: ${p.sectContribution}` } });
+  } else if (item.type === 'skill') {
+    // Add skill to player
+    if (!p.skills) p.skills = [];
+    if (p.skills.some(s => s.id === itemId)) {
+      // Already learned, refund contribution
+      p.sectContribution += item.cost;
+      savePlayers(players);
+      sendToClient(ws, { type: 'system', data: { message: `你已经学会了【${item.name}】。` } });
+      return;
+    }
+    // Add to SKILLS_DATA temporarily for this skill
+    SKILLS_DATA[itemId] = {
+      id: itemId,
+      name: item.name,
+      type: 'active',
+      damage: item.damage || 20,
+      spiritCost: item.spiritCost || 10,
+      level: '门派功法',
+      description: `${sect.name}专属功法`
+    };
+    p.skills.push({ id: itemId, level: 1, exp: 0 });
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `📜 学会了门派专属功法【${item.name}】！消耗 ${item.cost} 贡献。\\n使用 /修炼 ${itemId} 修炼功法。` } });
+  }
+}
+
+// Sect war command (placeholder)
+function handleSectWarCommand(ws, player) {
+  const nextWar = getNextSectWarTime();
+  const warTimeStr = nextWar.toLocaleString('zh-CN', { 
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit' 
+  });
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '门派团战',
+      content: `\\n╔══════════════════════════════╗\\n║  ⚔️ 门派团战\\n╠══════════════════════════════╣\\n║  下次门派战时间:\\n║  ${warTimeStr}\\n║\\n║  门派战规则:\\n║  - 每周六20:00开启\\n║  - 正派 vs 邪派 大战\\n║  - 中立门派可自由选择阵营\\n║  - 获胜方全员获得大量贡献\\n║\\n║  状态: 即将开放...\\n╚══════════════════════════════╝`
     }
   });
 }
@@ -3866,16 +4578,30 @@ function executeCombat(ws, player, room) {
   // Relic dodge bonus (T02)
   if (player.relics && player.relics.includes('T02')) dodgeChance += 0.10;
   
-  // Check sect bonus
+  // Check sect bonus (updated to use object-based bonus)
   let sectDefenseBonus = 1;
   let sectExpBonus = 1;
   let sectAttackBonus = 1;
   let sectCritBonus = 0;
+  let sectPoisonBonus = 0;
+  let sectLifesteal = 0;
   if (player.sect) {
-    if (player.sect === 'shaolin') sectDefenseBonus = 1.1;
-    else if (player.sect === 'xiaoyao') sectExpBonus = 1.1;
-    else if (player.sect === 'huashan') sectAttackBonus = 1.1;
-    else if (player.sect === 'riyue') sectCritBonus += 0.1;
+    const sectData = SECTS_DATA[player.sect];
+    if (sectData && sectData.bonus) {
+      const bonus = sectData.bonus;
+      switch (bonus.type) {
+        case 'defense': sectDefenseBonus = 1 + bonus.value; break;
+        case 'attack': sectAttackBonus = 1 + bonus.value; break;
+        case 'exp': sectExpBonus = 1 + bonus.value; break;
+        case 'critRate': sectCritBonus += bonus.value; break;
+        case 'poisonDmg': sectPoisonBonus += bonus.value; break;
+        case 'spiritRecovery': extraSpiritRecovery += bonus.value * 10; break;
+        // Other bonus types are passive and apply elsewhere
+      }
+    }
+    // Position damage bonus
+    const posBonus = getSectPositionBonus(player.sectContribution || 0);
+    if (posBonus > 0) sectAttackBonus += posBonus;
   }
   
   const combatLog = [];
@@ -4096,6 +4822,30 @@ function executeCombat(ws, player, room) {
       updateQuestProgress(player, 'kill_bamboo', 1);
     }
     updateQuestProgress(player, 'kill_any', 1);
+    
+    // Sect daily quest tracking for kills
+    if (player.sect) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (player.sectDailyDate !== today) {
+        player.sectDailyDate = today;
+        player.sectDailyProgress = {};
+      }
+      if (!player.sectDailyProgress) player.sectDailyProgress = {};
+      player.sectDailyProgress.sq_trial = (player.sectDailyProgress.sq_trial || 0) + 1;
+      // Auto-complete and reward
+      if (player.sectDailyProgress.sq_trial === 5) {
+        player.sectContribution = (player.sectContribution || 0) + SECT_DAILY_QUESTS.sq_trial.reward;
+        combatLog.push(`📋 门派任务完成: 门派历练！获得 ${SECT_DAILY_QUESTS.sq_trial.reward} 贡献`);
+      }
+      // Add base contribution for killing
+      player.sectContribution = (player.sectContribution || 0) + 1;
+      // Update position
+      const newPos = getSectPosition(player.sectContribution);
+      if (newPos.name !== player.sectPosition) {
+        player.sectPosition = newPos.name;
+        combatLog.push(`🎉 门派职位晋升！你现在是【${newPos.name}】！伤害加成: +${Math.floor(newPos.damageBonus * 100)}%`);
+      }
+    }
     
     // Check level up and realm progression
     const { leveled, realmChanged } = addExp(player, finalExpGain);
