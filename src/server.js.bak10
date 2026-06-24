@@ -178,70 +178,6 @@ const WORLD_DATA = {
         '程序遗物殿': { name: '程序遗物殿', description: '金色的大殿中，程序遗物散发着光芒。', exits: { south: 'Bug走廊', north: '源码之心' } },
         '源码之心': { name: '源码之心', description: '代码空间的核心。', exits: { south: '程序遗物殿' }, monsters: [{ name: '源码守护者', hp: 10000, maxHp: 10000, attack: 500, defense: 250, exp: 20000, silver: 10000, dropRate: 0.01 }] }
       }
-    },
-    '江南水乡': {
-      name: '江南水乡', realmRequirement: '筑基',
-      description: '水乡泽国，鱼米之乡。小桥流水，烟雨朦胧。',
-      rooms: {
-        '水乡入口': { name: '水乡入口', description: '石桥横跨小河，两岸垂柳依依。', exits: { north: '渔村', east: '药田', south: '竹林' } },
-        '渔村': { name: '渔村', description: '渔民们正在河边捕鱼，炊烟袅袅。', exits: { south: '水乡入口', north: '湖心岛' }, monsters: [{ name: '河蟹', hp: 80, maxHp: 80, attack: 15, defense: 8, exp: 35, silver: 12, dropRate: 0.2 }, { name: '水蛇', hp: 100, maxHp: 100, attack: 20, defense: 10, exp: 45, silver: 15, dropRate: 0.18 }] },
-        '湖心岛': { name: '湖心岛', description: '湖中小岛，灵气浓郁。', exits: { south: '渔村' }, monsters: [{ name: '湖妖', hp: 200, maxHp: 200, attack: 35, defense: 18, exp: 80, silver: 30, dropRate: 0.15 }] },
-        '药田': { name: '药田', description: '药田遍地，灵草丛生。采集灵草的绝佳之地。', exits: { west: '水乡入口', north: '绣坊' } },
-        '绣坊': { name: '绣坊', description: '绣娘们正在刺绣，丝线闪烁灵光。', exits: { south: '药田' } }
-      }
-    },
-    '沙漠戈壁': {
-      name: '沙漠戈壁', realmRequirement: '金丹',
-      description: '茫茫大漠，绿洲点缀。风沙漫天，烈日灼心。',
-      rooms: {
-        '沙漠入口': { name: '沙漠入口', description: '黄沙漫漫，远处可见绿洲的影子。', exits: { north: '绿洲', east: '风蚀石林' } },
-        '绿洲': { name: '绿洲', description: '沙漠中的绿洲，泉水清澈。', exits: { south: '沙漠入口', north: '古城遗迹' }, monsters: [{ name: '沙蝎', hp: 250, maxHp: 250, attack: 45, defense: 20, exp: 120, silver: 40, dropRate: 0.15 }, { name: '沙暴虫', hp: 300, maxHp: 300, attack: 55, defense: 25, exp: 150, silver: 50, dropRate: 0.12 }] },
-        '风蚀石林': { name: '风蚀石林', description: '奇石嶙峋，风声呼啸如鬼哭。', exits: { west: '沙漠入口', north: '古城遗迹' }, monsters: [{ name: '石灵', hp: 350, maxHp: 350, attack: 60, defense: 35, exp: 180, silver: 60, dropRate: 0.1 }] },
-        '古城遗迹': { name: '古城遗迹', description: '被黄沙掩埋的古城，依稀可见昔日辉煌。', exits: { south: '绿洲', east: '地下密室' } },
-        '地下密室': { name: '地下密室', description: '古城地下密室，墙壁刻满古老文字。', exits: { west: '古城遗迹' }, monsters: [{ name: '守墓傀儡', hp: 500, maxHp: 500, attack: 80, defense: 40, exp: 300, silver: 100, dropRate: 0.08 }] }
-      }
-    },
-    '北境冰原': {
-      name: '北境冰原', realmRequirement: '化神',
-      description: '冰天雪地，极光闪烁。寒风刺骨，万物冰封。',
-      rooms: {
-        '冰原入口': { name: '冰原入口', description: '白雪皑皑，寒风凛冽。', exits: { north: '冰湖', east: '冰川' } },
-        '冰湖': { name: '冰湖', description: '冰封的湖面，冰层下隐约有生物游动。', exits: { south: '冰原入口', north: '雪山之巅' }, monsters: [{ name: '冰狼', hp: 600, maxHp: 600, attack: 100, defense: 50, exp: 350, silver: 120, dropRate: 0.12 }, { name: '冰晶巨人', hp: 800, maxHp: 800, attack: 120, defense: 70, exp: 500, silver: 180, dropRate: 0.08 }] },
-        '冰川': { name: '冰川', description: '千年冰川，冰层中封印着远古生物。', exits: { west: '冰原入口' }, monsters: [{ name: '冰龙', hp: 1000, maxHp: 1000, attack: 150, defense: 80, exp: 600, silver: 250, dropRate: 0.05 }] },
-        '雪山之巅': { name: '雪山之巅', description: '雪山绝顶，极光在天空中舞动。', exits: { south: '冰湖' }, monsters: [{ name: '雪域冰凤', hp: 1500, maxHp: 1500, attack: 200, defense: 100, exp: 800, silver: 400, dropRate: 0.03 }] }
-      }
-    },
-    '南疆密林': {
-      name: '南疆密林', realmRequirement: '化神',
-      description: '热带雨林，瘴气弥漫。毒虫遍地，危机四伏。',
-      rooms: {
-        '密林入口': { name: '密林入口', description: '热带雨林入口，潮湿闷热。', exits: { north: '毒沼', east: '藤蔓迷宫' } },
-        '毒沼': { name: '毒沼', description: '沼泽地散发毒气，脚下泥泞不堪。', exits: { south: '密林入口', north: '蛊虫巢穴' }, monsters: [{ name: '毒蛙', hp: 400, maxHp: 400, attack: 70, defense: 30, exp: 200, silver: 70, dropRate: 0.18 }, { name: '沼泽蟒', hp: 500, maxHp: 500, attack: 90, defense: 40, exp: 280, silver: 90, dropRate: 0.12 }] },
-        '藤蔓迷宫': { name: '藤蔓迷宫', description: '藤蔓交织成迷宫，方向难辨。', exits: { west: '密林入口' }, monsters: [{ name: '藤妖', hp: 450, maxHp: 450, attack: 80, defense: 35, exp: 250, silver: 80, dropRate: 0.15 }] },
-        '蛊虫巢穴': { name: '蛊虫巢穴', description: '蛊虫的巢穴，到处是虫卵。', exits: { south: '毒沼', north: '巫蛊祭坛' }, monsters: [{ name: '蛊王', hp: 700, maxHp: 700, attack: 110, defense: 50, exp: 400, silver: 150, dropRate: 0.1 }] },
-        '巫蛊祭坛': { name: '巫蛊祭坛', description: '古老的巫蛊祭坛，神秘力量涌动。', exits: { south: '蛊虫巢穴' }, monsters: [{ name: '巫蛊之主', hp: 1200, maxHp: 1200, attack: 180, defense: 90, exp: 700, silver: 350, dropRate: 0.05 }] }
-      }
-    },
-    '海底龙宫': {
-      name: '海底龙宫', realmRequirement: '合体',
-      description: '海底世界，龙族居所。珊瑚林立，宝光闪烁。',
-      rooms: {
-        '浅海区': { name: '浅海区', description: '浅海珊瑚礁，鱼群穿梭。', exits: { north: '深海区' } },
-        '深海区': { name: '深海区', description: '深海幽暗，巨大生物的影子掠过。', exits: { south: '浅海区', north: '龙宫大门' }, monsters: [{ name: '深海巨鲸', hp: 3000, maxHp: 3000, attack: 250, defense: 120, exp: 2000, silver: 800, dropRate: 0.08 }, { name: '海妖', hp: 2500, maxHp: 2500, attack: 200, defense: 100, exp: 1500, silver: 600, dropRate: 0.1 }] },
-        '龙宫大门': { name: '龙宫大门', description: '金碧辉煌的龙宫大门，两条石龙盘旋。', exits: { south: '深海区', north: '龙宫大殿' } },
-        '龙宫大殿': { name: '龙宫大殿', description: '龙宫大殿，珊瑚为柱，珍珠为灯。', exits: { south: '龙宫大门', north: '龙王宝库' }, monsters: [{ name: '龙宫守卫', hp: 4000, maxHp: 4000, attack: 300, defense: 150, exp: 3000, silver: 1200, dropRate: 0.05 }] },
-        '龙王宝库': { name: '龙王宝库', description: '龙王的宝库，金银珠宝堆积如山。', exits: { south: '龙宫大殿' }, monsters: [{ name: '龙王', hp: 8000, maxHp: 8000, attack: 500, defense: 250, exp: 8000, silver: 5000, dropRate: 0.02 }] }
-      }
-    },
-    '虚空裂缝': {
-      name: '虚空裂缝', realmRequirement: '渡劫',
-      description: '次元裂缝，时空扭曲。现实与虚无交织。',
-      rooms: {
-        '裂缝入口': { name: '裂缝入口', description: '空间裂缝，扭曲的光线令人眩晕。', exits: { north: '时空走廊' } },
-        '时空走廊': { name: '时空走廊', description: '时空错乱的走廊，过去与未来交织。', exits: { south: '裂缝入口', north: '虚无之海' }, monsters: [{ name: '时空裂隙兽', hp: 5000, maxHp: 5000, attack: 400, defense: 200, exp: 5000, silver: 2000, dropRate: 0.05 }, { name: '虚空游荡者', hp: 4000, maxHp: 4000, attack: 350, defense: 180, exp: 4000, silver: 1500, dropRate: 0.08 }] },
-        '虚无之海': { name: '虚无之海', description: '无尽的虚无，偶尔有数据碎片飘过。', exits: { south: '时空走廊', north: '虚空王座' }, monsters: [{ name: '虚无之主', hp: 10000, maxHp: 10000, attack: 600, defense: 300, exp: 10000, silver: 5000, dropRate: 0.02 }] },
-        '虚空王座': { name: '虚空王座', description: '虚空的中心，一个巨大的王座漂浮在虚无中。', exits: { south: '虚无之海' }, monsters: [{ name: '虚空帝王', hp: 20000, maxHp: 20000, attack: 1000, defense: 500, exp: 25000, silver: 15000, dropRate: 0.01 }] }
-      }
     }
   }
 };
@@ -1682,91 +1618,7 @@ const QUESTS_DATA = {
   dm_s02: { id: 'dm_s02', name: '遗物排列', type: 'side', description: '完成遗物排列解谜', requirement: { type: 'level', target: 70 }, reward: { exp: 15000 }, prereq: 'dm_01' },
   dm_s03: { id: 'dm_s03', name: '源码解读', type: 'side', description: '解读源码之心的代码', requirement: { type: 'level', target: 75 }, reward: { exp: 12000 }, prereq: 'dm_02' },
   dm_s04: { id: 'dm_s04', name: '代码空间探索', type: 'side', description: '探索代码空间所有区域', requirement: { type: 'level', target: 72 }, reward: { exp: 10000 }, prereq: 'dm_01' },
-  dm_s05: { id: 'dm_s05', name: '创世者的真相', type: 'side', description: '发现创世者的全部秘密', requirement: { type: 'level', target: 80 }, reward: { exp: 25000 }, prereq: 'dm_02' },
-  // ===== 【补全】新手村隐藏任务 =====
-  xc_h01: { id: 'xc_h01', name: '闪烁的秘密', type: 'hidden', description: '调查空气中的闪烁文字', requirement: { type: 'level', target: 5 }, reward: { exp: 500 }, prereq: null },
-  xc_h02: { id: 'xc_h02', name: '石碑的真相', type: 'hidden', description: '解读石碑上的二进制', requirement: { type: 'level', target: 8 }, reward: { exp: 300 }, prereq: 'xc_10' },
-  xc_h03: { id: 'xc_h03', name: '村长的秘密', type: 'hidden', description: '发现村长知道真相', requirement: { type: 'level', target: 10 }, reward: { exp: 400 }, prereq: 'xc_01' },
-  xc_h04: { id: 'xc_h04', name: 'NPC的重复', type: 'hidden', description: '记录NPC重复对话', requirement: { type: 'level', target: 3 }, reward: { exp: 200 }, prereq: null },
-  xc_h05: { id: 'xc_h05', name: '空气墙', type: 'hidden', description: '探索村庄边界', requirement: { type: 'level', target: 4 }, reward: { exp: 150 }, prereq: null },
-  // ===== 【补全】中原隐藏任务 =====
-  zy_h01: { id: 'zy_h01', name: '老玩家的秘密', type: 'hidden', description: '了解老玩家的来历', requirement: { type: 'level', target: 18 }, reward: { exp: 800 }, prereq: 'zy_01' },
-  zy_h02: { id: 'zy_h02', name: '黑市商人的真面目', type: 'hidden', description: '发现黑市商人能感知代码', requirement: { type: 'level', target: 20 }, reward: { exp: 1000 }, prereq: 'zy_03' },
-  zy_h03: { id: 'zy_h03', name: 'NPC的暂停', type: 'hidden', description: '记录NPC暂停现象', requirement: { type: 'level', target: 15 }, reward: { exp: 500 }, prereq: null },
-  zy_h04: { id: 'zy_h04', name: '代码墙', type: 'hidden', description: '发现长安街的代码闪烁', requirement: { type: 'level', target: 16 }, reward: { exp: 600 }, prereq: 'zy_01' },
-  zy_h05: { id: 'zy_h05', name: '洛阳城的边界', type: 'hidden', description: '探索洛阳城的空气墙', requirement: { type: 'level', target: 14 }, reward: { exp: 400 }, prereq: 'zy_01' },
-  zy_h06: { id: 'zy_h06', name: '酒楼老板的秘密', type: 'hidden', description: '发现酒楼老板知道真相', requirement: { type: 'level', target: 20 }, reward: { exp: 700 }, prereq: 'zy_02' },
-  zy_h07: { id: 'zy_h07', name: '传送的山贼', type: 'hidden', description: '记录山贼传送现象', requirement: { type: 'level', target: 15 }, reward: { exp: 500 }, prereq: 'zy_04' },
-  zy_h08: { id: 'zy_h08', name: '洛阳城的传说', type: 'hidden', description: '听闻洛阳城的古老传说', requirement: { type: 'level', target: 18 }, reward: { exp: 600 }, prereq: 'zy_01' },
-  // ===== 【补全】门派隐藏任务 =====
-  mp_h01: { id: 'mp_h01', name: '掌门的秘密', type: 'hidden', description: '发现掌门知道创世者', requirement: { type: 'level', target: 30 }, reward: { exp: 2000 }, prereq: 'mp_01' },
-  mp_h02: { id: 'mp_h02', name: 'NPC版本号', type: 'hidden', description: '发现NPC背后的衣服编号', requirement: { type: 'level', target: 28 }, reward: { exp: 1000 }, prereq: 'mp_01' },
-  mp_h03: { id: 'mp_h03', name: '藏书阁密室', type: 'hidden', description: '发现藏书阁的隐藏房间', requirement: { type: 'level', target: 32 }, reward: { exp: 1500 }, prereq: 'mp_02' },
-  mp_h04: { id: 'mp_h04', name: '正派的真相', type: 'hidden', description: '发现正邪NPC的AI相同', requirement: { type: 'level', target: 35 }, reward: { exp: 1200 }, prereq: 'mp_01' },
-  mp_h05: { id: 'mp_h05', name: '门派创始人', type: 'hidden', description: '发现门派创始人是创世者分身', requirement: { type: 'level', target: 35 }, reward: { exp: 2000 }, prereq: 'mp_02' },
-  mp_h06: { id: 'mp_h06', name: '手表的来源', type: 'hidden', description: '了解手表的真正来历', requirement: { type: 'level', target: 35 }, reward: { exp: 1500 }, prereq: 'mp_05' },
-  mp_h07: { id: 'mp_h07', name: '前穿越者的痕迹', type: 'hidden', description: '发现前穿越者的遗物', requirement: { type: 'level', target: 38 }, reward: { exp: 2000 }, prereq: 'mp_05' },
-  // ===== 【补全】秘境隐藏任务 =====
-  mj_h01: { id: 'mj_h01', name: '代码墙的秘密', type: 'hidden', description: '深入研究代码墙', requirement: { type: 'level', target: 45 }, reward: { exp: 3000 }, prereq: 'mj_04' },
-  mj_h02: { id: 'mj_h02', name: '幻境真相', type: 'hidden', description: '发现幻境是代码构建的', requirement: { type: 'level', target: 43 }, reward: { exp: 2500 }, prereq: 'mj_03' },
-  mj_h03: { id: 'mj_h03', name: '灵脉的来源', type: 'hidden', description: '发现灵脉是世界核心的能量', requirement: { type: 'level', target: 42 }, reward: { exp: 2000 }, prereq: 'mj_02' },
-  mj_h04: { id: 'mj_h04', name: '秘境NPC', type: 'hidden', description: '发现秘境中的隐藏NPC', requirement: { type: 'level', target: 44 }, reward: { exp: 2500 }, prereq: 'mj_01' },
-  mj_h05: { id: 'mj_h05', name: '前穿越者的遗物', type: 'hidden', description: '发现前穿越者在秘境的遗物', requirement: { type: 'level', target: 46 }, reward: { exp: 3000 }, prereq: 'mj_04' },
-  mj_h06: { id: 'mj_h06', name: '秘境的代码', type: 'hidden', description: '发现秘境的底层代码', requirement: { type: 'level', target: 45 }, reward: { exp: 2500 }, prereq: 'mj_04' },
-  mj_h07: { id: 'mj_h07', name: '创世者的实验', type: 'hidden', description: '发现秘境是创世者的实验场', requirement: { type: 'level', target: 47 }, reward: { exp: 3000 }, prereq: 'mj_04' },
-  // ===== 【补全】遗迹隐藏任务 =====
-  yj_h01: { id: 'yj_h01', name: '创世者的日记', type: 'hidden', description: '收集所有103篇日记', requirement: { type: 'level', target: 55 }, reward: { exp: 10000 }, prereq: 'yj_03' },
-  yj_h02: { id: 'yj_h02', name: '远古大战的真相', type: 'hidden', description: '发现远古大战是代码冲突', requirement: { type: 'level', target: 53 }, reward: { exp: 5000 }, prereq: 'yj_02' },
-  yj_h03: { id: 'yj_h03', name: '仙人的身份', type: 'hidden', description: '发现仙人是创世者的分身', requirement: { type: 'level', target: 54 }, reward: { exp: 6000 }, prereq: 'yj_02' },
-  yj_h04: { id: 'yj_h04', name: '神兽的来源', type: 'hidden', description: '发现神兽是守护程序', requirement: { type: 'level', target: 55 }, reward: { exp: 4000 }, prereq: 'yj_02' },
-  yj_h05: { id: 'yj_h05', name: '遗迹的核心', type: 'hidden', description: '发现遗迹的核心代码', requirement: { type: 'level', target: 56 }, reward: { exp: 8000 }, prereq: 'yj_03' },
-  yj_h06: { id: 'yj_h06', name: '前穿越者的失败', type: 'hidden', description: '了解前穿越者失败的原因', requirement: { type: 'level', target: 55 }, reward: { exp: 6000 }, prereq: 'yj_03' },
-  yj_h07: { id: 'yj_h07', name: '创世者的意识', type: 'hidden', description: '发现创世者的意识还在运转', requirement: { type: 'level', target: 58 }, reward: { exp: 10000 }, prereq: 'yj_03' },
-  yj_h08: { id: 'yj_h08', name: '遗迹的终极秘密', type: 'hidden', description: '发现遗迹是世界核心的入口', requirement: { type: 'level', target: 57 }, reward: { exp: 8000 }, prereq: 'yj_03' },
-  // ===== 【补全】渡劫隐藏任务 =====
-  dj_h01: { id: 'dj_h01', name: '天劫的本质', type: 'hidden', description: '发现天劫是系统检查', requirement: { type: 'level', target: 63 }, reward: { exp: 12000 }, prereq: 'dj_01' },
-  dj_h02: { id: 'dj_h02', name: '飞升通道的代码', type: 'hidden', description: '发现飞升通道的底层代码', requirement: { type: 'level', target: 64 }, reward: { exp: 10000 }, prereq: 'dj_02' },
-  dj_h03: { id: 'dj_h03', name: '仙界边缘的真相', type: 'hidden', description: '发现仙界是世界边界', requirement: { type: 'level', target: 65 }, reward: { exp: 8000 }, prereq: 'dj_02' },
-  dj_h04: { id: 'dj_h04', name: '源码守护者的秘密', type: 'hidden', description: '发现守护者是创世者的AI', requirement: { type: 'level', target: 65 }, reward: { exp: 15000 }, prereq: 'dj_02' },
-  dj_h05: { id: 'dj_h05', name: '前穿越者的日记', type: 'hidden', description: '发现前穿越者的日记', requirement: { type: 'level', target: 64 }, reward: { exp: 12000 }, prereq: 'dj_02' },
-  dj_h06: { id: 'dj_h06', name: '创世者的最后留言', type: 'hidden', description: '发现创世者的最后留言', requirement: { type: 'level', target: 66 }, reward: { exp: 20000 }, prereq: 'dj_02' },
-  dj_h07: { id: 'dj_h07', name: '世界的真相', type: 'hidden', description: '发现世界的全部真相', requirement: { type: 'level', target: 67 }, reward: { exp: 15000 }, prereq: 'dj_02' },
-  dj_h08: { id: 'dj_h08', name: '代码空间的钥匙', type: 'hidden', description: '获得代码空间的钥匙', requirement: { type: 'level', target: 68 }, reward: { exp: 10000 }, prereq: 'dj_02' },
-  // ===== 【补全】代码空间隐藏任务 =====
-  dm_h01: { id: 'dm_h01', name: 'Bug的真相', type: 'hidden', description: '发现Bug是创世者意识衰弱', requirement: { type: 'level', target: 72 }, reward: { exp: 12000 }, prereq: 'dm_01' },
-  dm_h02: { id: 'dm_h02', name: '遗物的真相', type: 'hidden', description: '发现遗物是创世者的记忆', requirement: { type: 'level', target: 73 }, reward: { exp: 15000 }, prereq: 'dm_01' },
-  dm_h03: { id: 'dm_h03', name: '源码的真相', type: 'hidden', description: '发现源码是世界的核心', requirement: { type: 'level', target: 75 }, reward: { exp: 20000 }, prereq: 'dm_02' },
-  dm_h04: { id: 'dm_h04', name: '创世者的真相', type: 'hidden', description: '发现创世者的全部秘密', requirement: { type: 'level', target: 78 }, reward: { exp: 25000 }, prereq: 'dm_02' },
-  dm_h05: { id: 'dm_h05', name: '世界的真相', type: 'hidden', description: '发现世界的全部真相', requirement: { type: 'level', target: 80 }, reward: { exp: 20000 }, prereq: 'dm_02' },
-  dm_h06: { id: 'dm_h06', name: '代码的永恒', type: 'hidden', description: '理解代码的永恒本质', requirement: { type: 'level', target: 80 }, reward: { exp: 15000 }, prereq: 'dm_02' },
-  dm_h07: { id: 'dm_h07', name: '继承者的选择', type: 'hidden', description: '选择成为新的创世者', requirement: { type: 'level', target: 80 }, reward: { exp: 30000 }, prereq: 'dm_03' },
-  dm_h08: { id: 'dm_h08', name: '回归的选择', type: 'hidden', description: '选择回到现实世界', requirement: { type: 'level', target: 80 }, reward: { exp: 30000 }, prereq: 'dm_03' },
-  dm_h09: { id: 'dm_h09', name: '代码的最终秘密', type: 'hidden', description: '发现代码的最终秘密', requirement: { type: 'level', target: 80 }, reward: { exp: 50000 }, prereq: 'dm_03' },
-  // ===== 【补全】新地图任务 =====
-  jn_01: { id: 'jn_01', name: '水乡初探', type: 'main', description: '到达江南水乡', requirement: { type: 'level', target: 18 }, reward: { exp: 600 }, prereq: 'xc_12' },
-  jn_02: { id: 'jn_02', name: '渔村帮忙', type: 'side', description: '帮渔民捕鱼', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 400, silver: 150 }, prereq: 'jn_01' },
-  jn_03: { id: 'jn_03', name: '药田采集', type: 'side', description: '在药田采集灵草', requirement: { type: 'gather', target: 10 }, reward: { exp: 500, silver: 200 }, prereq: 'jn_01' },
-  jn_04: { id: 'jn_04', name: '湖妖猎杀', type: 'side', description: '击杀湖妖', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 800, silver: 300 }, prereq: 'jn_01' },
-  sm_01: { id: 'sm_01', name: '沙漠探险', type: 'main', description: '到达沙漠戈壁', requirement: { type: 'level', target: 30 }, reward: { exp: 1500 }, prereq: 'mp_01' },
-  sm_02: { id: 'sm_02', name: '绿洲生存', type: 'side', description: '在绿洲击败怪物', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1200, silver: 400 }, prereq: 'sm_01' },
-  sm_03: { id: 'sm_03', name: '古城探索', type: 'side', description: '探索古城遗迹', requirement: { type: 'level', target: 32 }, reward: { exp: 1500 }, prereq: 'sm_01' },
-  sm_04: { id: 'sm_04', name: '密室解谜', type: 'side', description: '解开地下密室谜题', requirement: { type: 'level', target: 35 }, reward: { exp: 2000 }, prereq: 'sm_03' },
-  bj_01: { id: 'bj_01', name: '冰原探索', type: 'main', description: '到达北境冰原', requirement: { type: 'level', target: 40 }, reward: { exp: 2000 }, prereq: 'mj_01' },
-  bj_02: { id: 'bj_02', name: '冰狼猎杀', type: 'side', description: '击杀冰狼', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1800, silver: 600 }, prereq: 'bj_01' },
-  bj_03: { id: 'bj_03', name: '冰龙挑战', type: 'side', description: '挑战冰龙', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 3000, silver: 1000 }, prereq: 'bj_01' },
-  bj_04: { id: 'bj_04', name: '雪山之巅', type: 'side', description: '到达雪山之巅', requirement: { type: 'level', target: 42 }, reward: { exp: 2500 }, prereq: 'bj_01' },
-  nj_01: { id: 'nj_01', name: '密林探索', type: 'main', description: '到达南疆密林', requirement: { type: 'level', target: 40 }, reward: { exp: 2000 }, prereq: 'mj_01' },
-  nj_02: { id: 'nj_02', name: '毒蛙猎杀', type: 'side', description: '击杀毒蛙', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1500, silver: 500 }, prereq: 'nj_01' },
-  nj_03: { id: 'nj_03', name: '蛊王挑战', type: 'side', description: '挑战蛊王', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 2500, silver: 800 }, prereq: 'nj_01' },
-  nj_04: { id: 'nj_04', name: '巫蛊祭坛', type: 'side', description: '到达巫蛊祭坛', requirement: { type: 'level', target: 42 }, reward: { exp: 2000 }, prereq: 'nj_01' },
-  ht_01: { id: 'ht_01', name: '海底探索', type: 'main', description: '到达海底龙宫', requirement: { type: 'level', target: 50 }, reward: { exp: 5000 }, prereq: 'yj_01' },
-  ht_02: { id: 'ht_02', name: '深海猎杀', type: 'side', description: '击杀深海巨鲸', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 4000, silver: 1500 }, prereq: 'ht_01' },
-  ht_03: { id: 'ht_03', name: '龙宫探索', type: 'side', description: '探索龙宫大殿', requirement: { type: 'level', target: 52 }, reward: { exp: 5000 }, prereq: 'ht_01' },
-  ht_04: { id: 'ht_04', name: '龙王挑战', type: 'side', description: '挑战龙王', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 8000, silver: 3000 }, prereq: 'ht_01' },
-  xk_01: { id: 'xk_01', name: '虚空探索', type: 'main', description: '到达虚空裂缝', requirement: { type: 'level', target: 60 }, reward: { exp: 10000 }, prereq: 'dj_01' },
-  xk_02: { id: 'xk_02', name: '时空走廊', type: 'side', description: '穿越时空走廊', requirement: { type: 'level', target: 62 }, reward: { exp: 8000 }, prereq: 'xk_01' },
-  xk_03: { id: 'xk_03', name: '虚无之海', type: 'side', description: '探索虚无之海', requirement: { type: 'level', target: 64 }, reward: { exp: 10000 }, prereq: 'xk_01' },
-  xk_04: { id: 'xk_04', name: '虚空帝王', type: 'side', description: '挑战虚空帝王', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 15000, silver: 5000 }, prereq: 'xk_01' }
+  dm_s05: { id: 'dm_s05', name: '创世者的真相', type: 'side', description: '发现创世者的全部秘密', requirement: { type: 'level', target: 80 }, reward: { exp: 25000 }, prereq: 'dm_02' }
 };
 
 // NPC data
@@ -9593,38 +9445,6 @@ const NPC_DIALOGS = {
     topics: { '遗物': '这些遗物...是创世者的记忆碎片。', '日记': '创世者写了103篇日记。找到它们，你就能了解一切。', '守护': '我守护这里已经很久了。久到记不清时间。', '离开': '如果你想离开，去源码之心吧。那里有答案。' }
   }
 };
-
-// ===== NPC好感度系统 =====
-const NPC_FAVOR = {
-  '村长': { maxFavor: 100, rewards: { 3: '隐藏任务', 5: '遗物线索', 10: '真结局线索' } },
-  '药铺老板': { maxFavor: 100, rewards: { 3: '折扣10%', 5: '稀有配方', 10: '仙丹配方' } },
-  '铁匠': { maxFavor: 100, rewards: { 3: '折扣10%', 5: '强化成功率+10%', 10: '仙品锻造' } },
-  '酒楼老板': { maxFavor: 100, rewards: { 3: '免费休息', 5: '隐藏任务', 10: '绝密情报' } },
-  '黑市商人': { maxFavor: 100, rewards: { 3: '稀有物品', 5: '遗物交易', 10: '禁品' } },
-  '行商': { maxFavor: 100, rewards: { 3: '折扣15%', 5: '稀有物品', 10: '传说物品' } },
-  '神秘老者': { maxFavor: 100, rewards: { 3: '修炼心得', 5: '遗物线索', 10: '创世者秘密' } }
-};
-
-function handleNpcFavorCommand(ws, player, npcName) {
-  if (!player.npcFavor) player.npcFavor = {};
-  const favor = player.npcFavor[npcName] || 0;
-  const config = NPC_FAVOR[npcName];
-  if (!config) return;
-  
-  let rewardText = '';
-  for (const [threshold, reward] of Object.entries(config.rewards)) {
-    const unlocked = favor >= parseInt(threshold);
-    rewardText += `║  ${unlocked ? '✅' : '🔒'} 好感${threshold}: ${reward}\n`;
-  }
-  
-  sendToClient(ws, {
-    type: 'command_response',
-    data: {
-      title: `${npcName} 好感度`,
-      content: `\n╔══════════════════════════════════╗\n║  ${npcName} 好感度\n╠══════════════════════════════════╣\n║  当前好感: ${favor}/${config.maxFavor}\n║  \n${rewardText}╚══════════════════════════════════╝`
-    }
-  });
-}
 
 function handleNpcDialogCommand(ws, player, command) {
   const arg = command.replace('/对话', '').trim();
