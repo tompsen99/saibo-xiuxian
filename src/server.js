@@ -107,39 +107,192 @@ const WORLD_DATA = {
 
 // ===== SKILLS (功法) SYSTEM =====
 const SKILLS_DATA = {
+  // ===== 凡阶下品 =====
   basic_fist: {
-    id: 'basic_fist',
-    name: '基础拳法',
-    type: 'active',
-    damage: 15,
-    spiritCost: 5,
-    level: '凡阶下品',
+    id: 'basic_fist', name: '基础拳法', type: 'active',
+    damage: 15, spiritCost: 5, grade: '凡阶下品', level: '凡阶下品',
+    alignment: 'neutral', weaponType: 'fist',
+    counters: ['basic_sword'], countersDesc: '克制基础剑法',
     description: '最基础的拳法，朴实无华但胜在稳固。'
   },
   basic_sword: {
-    id: 'basic_sword',
-    name: '基础剑法',
-    type: 'active',
-    damage: 20,
-    spiritCost: 8,
-    level: '凡阶下品',
+    id: 'basic_sword', name: '基础剑法', type: 'active',
+    damage: 20, spiritCost: 8, grade: '凡阶下品', level: '凡阶下品',
+    alignment: 'neutral', weaponType: 'sword',
+    counters: ['basic_movement'], countersDesc: '克制轻功入门',
     description: '入门剑法，剑走轻灵，攻守兼备。'
   },
   basic_meditation: {
-    id: 'basic_meditation',
-    name: '吐纳术',
-    type: 'passive',
-    effect: 'spiritRecovery+2',
-    level: '凡阶下品',
+    id: 'basic_meditation', name: '吐纳术', type: 'passive',
+    effect: 'spiritRecovery+2', grade: '凡阶下品', level: '凡阶下品',
+    alignment: 'neutral',
     description: '修仙入门功法，通过调息吐纳恢复灵力。'
   },
   basic_movement: {
-    id: 'basic_movement',
-    name: '轻功入门',
-    type: 'passive',
-    effect: 'dodge+5%',
-    level: '凡阶下品',
+    id: 'basic_movement', name: '轻功入门', type: 'passive',
+    effect: 'dodge+5%', grade: '凡阶下品', level: '凡阶下品',
+    alignment: 'neutral', weaponType: 'movement',
     description: '基础轻功，提升身法闪避能力。'
+  },
+  // ===== 凡阶上品 =====
+  tiger_fist: {
+    id: 'tiger_fist', name: '虎拳', type: 'active',
+    damage: 25, spiritCost: 12, grade: '凡阶上品', level: '凡阶上品',
+    alignment: '正', weaponType: 'fist',
+    counters: ['wind_sword'], countersDesc: '克制疾风剑法',
+    description: '刚猛虎拳，力发千钧，正气凛然。'
+  },
+  iron_body: {
+    id: 'iron_body', name: '铁布衫', type: 'passive',
+    effect: 'def+8%', grade: '凡阶上品', level: '凡阶上品',
+    alignment: '正',
+    description: '铁布衫横练功夫，刀枪不入，防御大增。'
+  },
+  // ===== 玄阶下品 =====
+  wind_sword: {
+    id: 'wind_sword', name: '疾风剑法', type: 'active',
+    damage: 35, spiritCost: 15, grade: '玄阶下品', level: '玄阶下品',
+    alignment: '正', weaponType: 'sword',
+    counters: ['tiger_fist', 'dragon_palm'], countersDesc: '克制虎拳、降龙掌',
+    description: '疾风剑法，快如闪电，剑气纵横。'
+  },
+  cloud_step: {
+    id: 'cloud_step', name: '云步', type: 'passive',
+    effect: 'dodge+10%', grade: '玄阶下品', level: '玄阶下品',
+    alignment: 'neutral', weaponType: 'movement',
+    description: '云步飘逸，身如轻烟，闪避率大增。'
+  },
+  // ===== 玄阶上品 =====
+  dragon_palm: {
+    id: 'dragon_palm', name: '降龙掌', type: 'active',
+    damage: 45, spiritCost: 20, grade: '玄阶上品', level: '玄阶上品',
+    alignment: '正', weaponType: 'fist',
+    counters: ['wind_sword'], countersDesc: '克制疾风剑法',
+    description: '降龙掌法，刚柔并济，威力无双。'
+  },
+  spirit_shield: {
+    id: 'spirit_shield', name: '灵气护盾', type: 'passive',
+    effect: 'hp+15%', grade: '玄阶上品', level: '玄阶上品',
+    alignment: 'neutral',
+    description: '灵气护盾环绕，生命值大幅提升。'
+  },
+  // ===== 地阶下品 =====
+  star_sword: {
+    id: 'star_sword', name: '星辰剑法', type: 'active',
+    damage: 60, spiritCost: 25, grade: '地阶下品', level: '地阶下品',
+    alignment: '正', weaponType: 'sword',
+    counters: ['void_body'], countersDesc: '克制虚空体',
+    description: '星辰剑法，剑落如星，光华万丈。'
+  },
+  void_body: {
+    id: 'void_body', name: '虚空体', type: 'passive',
+    effect: 'allResist+10%', grade: '地阶下品', level: '地阶下品',
+    alignment: '邪',
+    description: '虚空体修炼，万法不侵，全抗性提升。'
+  },
+  // ===== 地阶上品 =====
+  thunder_strike: {
+    id: 'thunder_strike', name: '雷霆一击', type: 'active',
+    damage: 80, spiritCost: 30, grade: '地阶上品', level: '地阶上品',
+    alignment: '邪', weaponType: 'fist',
+    counters: ['star_sword', 'phoenix_sword'], countersDesc: '克制星辰剑法、凤凰剑法',
+    description: '雷霆一击，天威浩荡，邪气逼人。'
+  },
+  heaven_step: {
+    id: 'heaven_step', name: '天步', type: 'passive',
+    effect: 'speed+20%', grade: '地阶上品', level: '地阶上品',
+    alignment: 'neutral', weaponType: 'movement',
+    description: '天步轻盈，超越极限，速度大增。'
+  },
+  // ===== 天阶下品 =====
+  phoenix_sword: {
+    id: 'phoenix_sword', name: '凤凰剑法', type: 'active',
+    damage: 100, spiritCost: 35, grade: '天阶下品', level: '天阶下品',
+    alignment: '正', weaponType: 'sword',
+    counters: ['chaos_palm'], countersDesc: '克制混沌掌',
+    description: '凤凰剑法，涅槃重生，正道之光。'
+  },
+  dragon_armor: {
+    id: 'dragon_armor', name: '龙鳞甲', type: 'passive',
+    effect: 'def+25%', grade: '天阶下品', level: '天阶下品',
+    alignment: '正',
+    description: '龙鳞甲护体，防御坚如磐石。'
+  },
+  // ===== 天阶上品 =====
+  chaos_palm: {
+    id: 'chaos_palm', name: '混沌掌', type: 'active',
+    damage: 130, spiritCost: 40, grade: '天阶上品', level: '天阶上品',
+    alignment: '邪', weaponType: 'fist',
+    counters: ['immortal_sword'], countersDesc: '克制仙剑诀',
+    description: '混沌掌，毁灭万物，邪道极致。'
+  },
+  immortality: {
+    id: 'immortality', name: '不死身', type: 'passive',
+    effect: 'revive_once', grade: '天阶上品', level: '天阶上品',
+    alignment: '邪',
+    description: '不死身修炼，每日可复活一次（HP恢复50%）。'
+  },
+  // ===== 仙阶 =====
+  immortal_sword: {
+    id: 'immortal_sword', name: '仙剑诀', type: 'active',
+    damage: 180, spiritCost: 50, grade: '仙阶', level: '仙阶',
+    alignment: '正', weaponType: 'sword',
+    counters: ['god_strike'], countersDesc: '克制神之一击',
+    description: '仙剑诀，仙人御剑，斩妖除魔。'
+  },
+  heaven_art: {
+    id: 'heaven_art', name: '天道心法', type: 'passive',
+    effect: 'all+20%', grade: '仙阶', level: '仙阶',
+    alignment: '正',
+    description: '天道心法，天人合一，全属性提升20%。'
+  },
+  // ===== 神阶 =====
+  god_strike: {
+    id: 'god_strike', name: '神之一击', type: 'active',
+    damage: 250, spiritCost: 60, grade: '神阶', level: '神阶',
+    alignment: 'neutral', weaponType: 'fist',
+    counters: ['immortal_sword'], countersDesc: '克制仙剑诀',
+    description: '神之一击，开天辟地，神威无量。'
+  },
+  primordial_art: {
+    id: 'primordial_art', name: '先天大道', type: 'passive',
+    effect: 'all+30%', grade: '神阶', level: '神阶',
+    alignment: 'neutral',
+    description: '先天大道，返璞归真，全属性提升30%。'
+  },
+  // ===== 门派专属技能 =====
+  shaolin_vajra: {
+    id: 'shaolin_vajra', name: '金刚伏魔功', type: 'active',
+    damage: 55, spiritCost: 22, grade: '玄阶上品', level: '玄阶上品',
+    alignment: '正', weaponType: 'fist',
+    counters: ['riyue_skill'], countersDesc: '克制吸星大法',
+    sectExclusive: 'shaolin',
+    description: '少林金刚伏魔功，正气浩然，克制邪魔。(少林专属)'
+  },
+  wudang_taiji: {
+    id: 'wudang_taiji', name: '太极神功', type: 'active',
+    damage: 50, spiritCost: 20, grade: '玄阶上品', level: '玄阶上品',
+    alignment: '正', weaponType: 'sword',
+    counters: ['mojiao_skill'], countersDesc: '克制天魔解体',
+    sectExclusive: 'wudang',
+    description: '武当太极神功，以柔克刚，四两拨千斤。(武当专属)'
+  },
+  riyue_skill: {
+    id: 'riyue_skill', name: '吸星大法', type: 'active',
+    damage: 55, spiritCost: 24, grade: '玄阶上品', level: '玄阶上品',
+    alignment: '邪', weaponType: 'fist',
+    lifesteal: 0.2,
+    counters: ['shaolin_vajra'], countersDesc: '克制金刚伏魔功',
+    sectExclusive: 'riyue',
+    description: '日月神教吸星大法，吸取敌方灵力。(日月神教专属)'
+  },
+  mojiao_skill: {
+    id: 'mojiao_skill', name: '天魔解体大法', type: 'active',
+    damage: 70, spiritCost: 30, grade: '地阶下品', level: '地阶下品',
+    alignment: '邪', weaponType: 'fist',
+    counters: ['wudang_taiji'], countersDesc: '克制太极神功',
+    sectExclusive: 'mojiao',
+    description: '魔教天魔解体大法，邪气冲天，威力惊人。(魔教专属)'
   }
 };
 
@@ -625,11 +778,11 @@ const SECTS_DATA = {
 
 // ===== PILLS (丹药) SYSTEM =====
 const PILLS_DATA = {
+  // ===== 凡丹 =====
   hp_pill: {
-    id: 'hp_pill',
-    name: '回血丹',
-    effect: '恢复50点生命',
-    price: 10,
+    id: 'hp_pill', name: '回血丹', grade: '凡丹',
+    effect: '恢复50点生命', price: 10,
+    recipe: { herb: 2, spirit_shard: 0, beast_core: 0 },
     apply: (player) => {
       const healed = Math.min(50, player.maxHp - player.hp);
       player.hp = Math.min(player.maxHp, player.hp + 50);
@@ -637,10 +790,9 @@ const PILLS_DATA = {
     }
   },
   spirit_pill: {
-    id: 'spirit_pill',
-    name: '回灵丹',
-    effect: '恢复30点灵力',
-    price: 15,
+    id: 'spirit_pill', name: '回灵丹', grade: '凡丹',
+    effect: '恢复30点灵力', price: 15,
+    recipe: { herb: 1, spirit_shard: 1, beast_core: 0 },
     apply: (player) => {
       const restored = Math.min(30, player.maxSpirit - player.spirit);
       player.spirit = Math.min(player.maxSpirit, player.spirit + 30);
@@ -648,10 +800,9 @@ const PILLS_DATA = {
     }
   },
   stamina_pill: {
-    id: 'stamina_pill',
-    name: '体力丹',
-    effect: '恢复50点体力',
-    price: 20,
+    id: 'stamina_pill', name: '体力丹', grade: '凡丹',
+    effect: '恢复50点体力', price: 20,
+    recipe: { herb: 2, spirit_shard: 1, beast_core: 0 },
     apply: (player) => {
       const restored = Math.min(50, player.maxStamina - player.stamina);
       player.stamina = Math.min(player.maxStamina, player.stamina + 50);
@@ -659,10 +810,9 @@ const PILLS_DATA = {
     }
   },
   exp_pill: {
-    id: 'exp_pill',
-    name: '小培元丹',
-    effect: '获得50经验',
-    price: 50,
+    id: 'exp_pill', name: '小培元丹', grade: '凡丹',
+    effect: '获得50经验', price: 50,
+    recipe: { herb: 3, spirit_shard: 2, beast_core: 0 },
     apply: (player) => {
       const result = addExp(player, 50);
       let msg = '获得了 50 经验！';
@@ -670,59 +820,382 @@ const PILLS_DATA = {
       if (result.realmChanged) msg += `\n✨ 突破成功！你的境界提升为: ${player.realm}`;
       return msg;
     }
+  },
+  // ===== 玄丹 =====
+  adv_hp_pill: {
+    id: 'adv_hp_pill', name: '高级回血丹', grade: '玄丹',
+    effect: '恢复150点生命', price: 30,
+    recipe: { herb: 4, spirit_shard: 2, beast_core: 0 },
+    apply: (player) => {
+      const healed = Math.min(150, player.maxHp - player.hp);
+      player.hp = Math.min(player.maxHp, player.hp + 150);
+      return `恢复了 ${healed} 点生命值。当前HP: ${player.hp}/${player.maxHp}`;
+    }
+  },
+  adv_spirit_pill: {
+    id: 'adv_spirit_pill', name: '高级回灵丹', grade: '玄丹',
+    effect: '恢复100点灵力', price: 40,
+    recipe: { herb: 2, spirit_shard: 3, beast_core: 1 },
+    apply: (player) => {
+      const restored = Math.min(100, player.maxSpirit - player.spirit);
+      player.spirit = Math.min(player.maxSpirit, player.spirit + 100);
+      return `恢复了 ${restored} 点灵力。当前灵力: ${player.spirit}/${player.maxSpirit}`;
+    }
+  },
+  // ===== 地丹 =====
+  str_pill: {
+    id: 'str_pill', name: '力量丹', grade: '地丹',
+    effect: '永久+2力量（限10颗属性丹）', price: 200,
+    recipe: { herb: 5, spirit_shard: 3, beast_core: 2 },
+    apply: (player) => {
+      if (!player.attributePillCount) player.attributePillCount = 0;
+      if (player.attributePillCount >= 10) return '你已服用10颗属性丹，无法再服用！';
+      player.stats.str += 2;
+      player.attributePillCount++;
+      return `力量永久+2！已服用属性丹: ${player.attributePillCount}/10`;
+    }
+  },
+  con_pill: {
+    id: 'con_pill', name: '根骨丹', grade: '地丹',
+    effect: '永久+2体质（限10颗属性丹）', price: 200,
+    recipe: { herb: 5, spirit_shard: 3, beast_core: 2 },
+    apply: (player) => {
+      if (!player.attributePillCount) player.attributePillCount = 0;
+      if (player.attributePillCount >= 10) return '你已服用10颗属性丹，无法再服用！';
+      player.stats.con += 2;
+      player.attributePillCount++;
+      return `体质永久+2！已服用属性丹: ${player.attributePillCount}/10`;
+    }
+  },
+  dex_pill: {
+    id: 'dex_pill', name: '敏捷丹', grade: '地丹',
+    effect: '永久+2敏捷（限10颗属性丹）', price: 200,
+    recipe: { herb: 5, spirit_shard: 3, beast_core: 2 },
+    apply: (player) => {
+      if (!player.attributePillCount) player.attributePillCount = 0;
+      if (player.attributePillCount >= 10) return '你已服用10颗属性丹，无法再服用！';
+      player.stats.dex += 2;
+      player.attributePillCount++;
+      return `敏捷永久+2！已服用属性丹: ${player.attributePillCount}/10`;
+    }
+  },
+  wis_pill: {
+    id: 'wis_pill', name: '悟性丹', grade: '地丹',
+    effect: '永久+2悟性（限10颗属性丹）', price: 200,
+    recipe: { herb: 5, spirit_shard: 3, beast_core: 2 },
+    apply: (player) => {
+      if (!player.attributePillCount) player.attributePillCount = 0;
+      if (player.attributePillCount >= 10) return '你已服用10颗属性丹，无法再服用！';
+      player.stats.wis += 2;
+      player.attributePillCount++;
+      return `悟性永久+2！已服用属性丹: ${player.attributePillCount}/10`;
+    }
+  },
+  // ===== 天丹 =====
+  breakthrough_pill: {
+    id: 'breakthrough_pill', name: '渡劫丹', grade: '天丹',
+    effect: '下次突破成功率+20%', price: 500,
+    recipe: { herb: 8, spirit_shard: 5, beast_core: 3 },
+    apply: (player) => {
+      player.breakthroughPillActive = true;
+      return '下次突破成功率+20%！';
+    }
+  },
+  rebirth_pill: {
+    id: 'rebirth_pill', name: '重生丹', grade: '天丹',
+    effect: '死亡时自动复活（不损失经验）', price: 800,
+    recipe: { herb: 10, spirit_shard: 6, beast_core: 4 },
+    apply: (player) => {
+      player.hasRebirthPill = true;
+      return '已激活重生丹效果！死亡时将自动复活。';
+    }
+  },
+  // ===== 仙丹 =====
+  immortal_pill: {
+    id: 'immortal_pill', name: '仙丹', grade: '仙丹',
+    effect: '永久全属性+3', price: 2000,
+    recipe: { herb: 15, spirit_shard: 10, beast_core: 5 },
+    apply: (player) => {
+      player.stats.str += 3;
+      player.stats.dex += 3;
+      player.stats.con += 3;
+      player.stats.wis += 3;
+      return '全属性永久+3！力量、敏捷、体质、悟性各+3！';
+    }
+  },
+  forbidden_pill: {
+    id: 'forbidden_pill', name: '禁丹', grade: '仙丹',
+    effect: '全属性+10%持续1小时，但道心-100', price: 300,
+    recipe: { herb: 6, spirit_shard: 4, beast_core: 3 },
+    apply: (player) => {
+      player.forbiddenPillExpiry = Date.now() + 3600000;
+      player.daoHeart = Math.max(0, (player.daoHeart || 500) - 100);
+      return `全属性+10%持续1小时！道心-100（当前道心: ${player.daoHeart}）`;
+    }
   }
+};
+
+// ===== ALCHEMY MATERIALS (炼丹材料) =====
+const MATERIALS_DATA = {
+  herb: { id: 'herb', name: '灵草', grade: '普通', desc: '常见灵草，炼丹基础材料。', dropChance: 0.30 },
+  spirit_shard: { id: 'spirit_shard', name: '灵石碎片', grade: '稀有', desc: '蕴含灵力的碎片，炼丹常用。', dropChance: 0.15 },
+  beast_core: { id: 'beast_core', name: '妖兽内丹', grade: '珍贵', desc: '妖兽体内的内丹，极为珍贵。', dropChance: 0.05 }
+};
+
+// Grade to alchemy level requirement mapping
+const GRADE_ALCHEMY_REQ = {
+  '凡丹': 1, '玄丹': 3, '地丹': 5, '天丹': 7, '仙丹': 9
 };
 
 // ===== EQUIPMENT (装备) SYSTEM =====
 const EQUIPMENT_DATA = {
+  // ===== Weapons =====
   wooden_sword: {
-    id: 'wooden_sword',
-    name: '木剑',
-    slot: 'weapon',
-    attack: 5,
-    price: 20,
+    id: 'wooden_sword', name: '木剑', slot: 'weapon',
+    attack: 5, price: 20, material: 'wood',
     description: '一把普通的木剑，适合初学者。'
   },
   iron_sword: {
-    id: 'iron_sword',
-    name: '铁剑',
-    slot: 'weapon',
-    attack: 12,
-    price: 80,
+    id: 'iron_sword', name: '铁剑', slot: 'weapon',
+    attack: 12, price: 80, material: 'iron',
     description: '精铁打造的长剑，锋利耐用。'
   },
+  steel_sword: {
+    id: 'steel_sword', name: '钢剑', slot: 'weapon',
+    attack: 20, price: 200, material: 'steel',
+    description: '精钢锻造的宝剑，削铁如泥。'
+  },
+  fire_sword: {
+    id: 'fire_sword', name: '火灵剑', slot: 'weapon',
+    attack: 35, price: 500, material: 'fire',
+    description: '蕴含火灵之力的神兵，攻击附带灼烧。'
+  },
+  // ===== Head =====
+  cloth_hood: {
+    id: 'cloth_hood', name: '布帽', slot: 'head',
+    defense: 2, price: 12, material: 'cloth',
+    description: '简单的布帽，聊胜于无。'
+  },
+  iron_helm: {
+    id: 'iron_helm', name: '铁盔', slot: 'head',
+    defense: 6, price: 80, material: 'iron',
+    description: '铁制头盔，防护力不错。'
+  },
+  spirit_crown: {
+    id: 'spirit_crown', name: '灵冠', slot: 'head',
+    defense: 10, wis: 3, price: 250, material: 'spirit',
+    description: '蕴含灵气的仙冠，提升悟性。'
+  },
+  // ===== Body =====
   cloth_armor: {
-    id: 'cloth_armor',
-    name: '布衣',
-    slot: 'body',
-    defense: 3,
-    price: 15,
+    id: 'cloth_armor', name: '布衣', slot: 'body',
+    defense: 3, price: 15, material: 'cloth',
     description: '简单的布衣，聊胜于无。'
   },
   leather_armor: {
-    id: 'leather_armor',
-    name: '皮甲',
-    slot: 'body',
-    defense: 8,
-    price: 60,
+    id: 'leather_armor', name: '皮甲', slot: 'body',
+    defense: 8, price: 60, material: 'leather',
     description: '厚实的皮甲，提供不错的防护。'
   },
+  chain_mail: {
+    id: 'chain_mail', name: '锁子甲', slot: 'body',
+    defense: 15, price: 300, material: 'chain',
+    description: '精密锁链编织的铠甲，防御出众。'
+  },
+  spirit_robe: {
+    id: 'spirit_robe', name: '灵纹袍', slot: 'body',
+    defense: 20, spirit: 50, price: 500, material: 'spirit',
+    description: '布满灵纹的法袍，大幅提升灵力上限。'
+  },
+  // ===== Legs =====
+  cloth_pants: {
+    id: 'cloth_pants', name: '布裤', slot: 'legs',
+    defense: 1, price: 10, material: 'cloth',
+    description: '普通的布裤，提供些许防护。'
+  },
+  iron_legs: {
+    id: 'iron_legs', name: '铁护腿', slot: 'legs',
+    defense: 5, price: 70, material: 'iron',
+    description: '铁制护膝，保护双腿。'
+  },
+  // ===== Feet =====
   straw_shoes: {
-    id: 'straw_shoes',
-    name: '草鞋',
-    slot: 'feet',
-    speed: 2,
-    price: 10,
+    id: 'straw_shoes', name: '草鞋', slot: 'feet',
+    speed: 2, price: 10, material: 'cloth',
     description: '编织的草鞋，轻便舒适。'
   },
+  leather_boots: {
+    id: 'leather_boots', name: '皮靴', slot: 'feet',
+    speed: 5, price: 80, material: 'leather',
+    description: '结实的皮靴，步伐更轻快。'
+  },
+  wind_shoes: {
+    id: 'wind_shoes', name: '踏风鞋', slot: 'feet',
+    speed: 10, price: 200, material: 'wind',
+    description: '蕴含风灵之力的鞋子，行走如飞。'
+  },
+  // ===== Wrist =====
+  cloth_bracer: {
+    id: 'cloth_bracer', name: '布护腕', slot: 'wrist',
+    attack: 2, price: 15, material: 'cloth',
+    description: '布制护腕，略微增强攻击力。'
+  },
+  iron_bracer: {
+    id: 'iron_bracer', name: '铁护腕', slot: 'wrist',
+    attack: 5, price: 60, material: 'iron',
+    description: '铁制护腕，显著增强攻击力。'
+  },
+  // ===== Necklace =====
+  jade_pendant: {
+    id: 'jade_pendant', name: '玉坠', slot: 'necklace',
+    wis: 3, price: 100, material: 'jade',
+    description: '温润的玉坠，提升悟性。'
+  },
+  spirit_pendant: {
+    id: 'spirit_pendant', name: '灵坠', slot: 'necklace',
+    wis: 8, allPercent: 3, price: 400, material: 'spirit',
+    description: '灵力流转的仙坠，全面提升属性。'
+  },
+  // ===== Shoulders =====
+  cloth_shoulder: {
+    id: 'cloth_shoulder', name: '布肩甲', slot: 'leftShoulder',
+    defense: 1, price: 12, material: 'cloth',
+    description: '简单的布制肩甲。'
+  },
+  iron_shoulder: {
+    id: 'iron_shoulder', name: '铁肩甲', slot: 'rightShoulder',
+    defense: 4, price: 50, material: 'iron',
+    description: '铁制肩甲，防护双肩。'
+  },
+  // ===== Rings =====
   iron_ring: {
-    id: 'iron_ring',
-    name: '铁戒指',
-    slot: 'ring',
-    str: 2,
-    price: 30,
+    id: 'iron_ring', name: '铁戒指', slot: 'ring',
+    str: 2, price: 30, ringColor: 'silver',
     description: '附有微弱灵力的铁戒指，提升力量。'
+  },
+  gold_ring: {
+    id: 'gold_ring', name: '金戒指', slot: 'ring',
+    str: 5, price: 300, ringColor: 'gold',
+    description: '纯金打造的戒指，灵力充盈。'
+  },
+  poison_ring: {
+    id: 'poison_ring', name: '毒戒', slot: 'ring',
+    attack: 8, price: 150, ringColor: 'poison',
+    selfPoison: true, poisonDmg: 2,
+    description: '蕴含剧毒的戒指，佩戴时自身中毒但攻击力大增。'
   }
+};
+
+// ===== TREASURE (法宝) SYSTEM =====
+const TREASURES_DATA = {
+  // ===== 法器级 =====
+  iron_mirror: {
+    id: 'iron_mirror', name: '铁镜', grade: '法器', type: 'defense',
+    effect: { shield: 50 }, price: 200,
+    description: '一面铁制古镜，可凝聚护盾。'
+  },
+  wooden_fan: {
+    id: 'wooden_fan', name: '木扇', grade: '法器', type: 'attack',
+    effect: { dmg: 10 }, price: 150,
+    description: '附有微弱灵力的木扇，攻击时增加伤害。'
+  },
+  // ===== 宝器级 =====
+  fire_sword_treasure: {
+    id: 'fire_sword_treasure', name: '火灵剑', grade: '宝器', type: 'attack',
+    effect: { dmg: 25 }, price: 600,
+    description: '蕴含火灵之力的法宝，威力不俗。'
+  },
+  water_shield: {
+    id: 'water_shield', name: '水灵盾', grade: '宝器', type: 'defense',
+    effect: { shield: 100 }, price: 500,
+    description: '水灵凝聚而成的护盾法宝。'
+  },
+  // ===== 灵器级 =====
+  thunder_drill: {
+    id: 'thunder_drill', name: '雷公钻', grade: '灵器', type: 'attack',
+    effect: { dmg: 50 }, price: 1500,
+    description: '雷电凝聚而成的灵器，攻击力惊人。'
+  },
+  earth_mirror: {
+    id: 'earth_mirror', name: '地灵镜', grade: '灵器', type: 'defense',
+    effect: { shield: 200 }, price: 1200,
+    description: '大地之力凝聚的灵镜，防御坚固。'
+  },
+  // ===== 仙器级 =====
+  phoenix_feather: {
+    id: 'phoenix_feather', name: '凤凰羽', grade: '仙器', type: 'auxiliary',
+    effect: { expBonus: 20 }, price: 5000,
+    description: '凤凰遗落的羽毛，修炼效率大幅提升。'
+  },
+  dragon_pearl: {
+    id: 'dragon_pearl', name: '龙珠', grade: '仙器', type: 'attack',
+    effect: { dmg: 100 }, price: 8000,
+    description: '龙族至宝，蕴含无穷力量。'
+  },
+  // ===== 神器级 =====
+  chaos_sword: {
+    id: 'chaos_sword', name: '混沌剑', grade: '神器', type: 'attack',
+    effect: { dmg: 200 }, price: 20000,
+    description: '混沌初开时诞生的神剑，一剑可开天辟地。'
+  },
+  primordial_mirror: {
+    id: 'primordial_mirror', name: '先天镜', grade: '神器', type: 'defense',
+    effect: { shield: 500, allPercent: 10 }, price: 25000,
+    description: '先天至宝，可照万物，可挡万法。'
+  }
+};
+
+// Treasure grade order for display
+const TREASURE_GRADES = ['法器', '宝器', '灵器', '仙器', '神器'];
+
+// Enhancement system data
+const ENHANCEMENT_RULES = {
+  1:  { successRate: 1.0, cost: 20,  stoneReq: 0, premium: false },
+  2:  { successRate: 1.0, cost: 40,  stoneReq: 0, premium: false },
+  3:  { successRate: 1.0, cost: 60,  stoneReq: 0, premium: false },
+  4:  { successRate: 1.0, cost: 80,  stoneReq: 0, premium: false },
+  5:  { successRate: 1.0, cost: 100, stoneReq: 0, premium: false },
+  6:  { successRate: 0.80, cost: 150, stoneReq: 1, premium: false },
+  7:  { successRate: 0.70, cost: 200, stoneReq: 1, premium: false },
+  8:  { successRate: 0.60, cost: 300, stoneReq: 1, premium: false },
+  9:  { successRate: 0.50, cost: 500, stoneReq: 2, premium: false },
+  10: { successRate: 0.40, cost: 800, stoneReq: 2, premium: false },
+  11: { successRate: 0.30, cost: 0,   stoneReq: 0, premium: true, premiumCost: 50 },
+  12: { successRate: 0.25, cost: 0,   stoneReq: 0, premium: true, premiumCost: 100 },
+  13: { successRate: 0.20, cost: 0,   stoneReq: 0, premium: true, premiumCost: 200 },
+  14: { successRate: 0.15, cost: 0,   stoneReq: 0, premium: true, premiumCost: 400 },
+  15: { successRate: 0.10, cost: 0,   stoneReq: 0, premium: true, premiumCost: 800 }
+};
+
+// All 19 equipment slots
+const ALL_EQUIPMENT_SLOTS = [
+  'weapon', 'weapon2', 'head', 'body', 'legs', 'feet',
+  'wrist', 'necklace', 'leftShoulder', 'rightShoulder', 'chest',
+  'ring', 'ring2', 'ring3', 'ring4', 'ring5',
+  'ring6', 'ring7', 'ring8', 'ring9', 'ring10'
+];
+
+// Slot display names
+const SLOT_NAMES = {
+  weapon: '主手武器', weapon2: '副手武器', head: '头部', body: '身体',
+  chest: '胸甲', legs: '腿部', feet: '足部', wrist: '护腕',
+  necklace: '项链', leftShoulder: '左肩', rightShoulder: '右肩',
+  ring: '戒指1', ring2: '戒指2', ring3: '戒指3', ring4: '戒指4', ring5: '戒指5',
+  ring6: '戒指6', ring7: '戒指7', ring8: '戒指8', ring9: '戒指9', ring10: '戒指10'
+};
+
+// Ring color definitions
+const RING_COLORS = {
+  red: { name: '红', bonus: 'attack' },
+  blue: { name: '蓝', bonus: 'defense' },
+  green: { name: '绿', bonus: 'recovery' },
+  purple: { name: '紫', bonus: 'spirit' },
+  orange: { name: '橙', bonus: 'speed' },
+  black: { name: '黑', bonus: 'crit' },
+  white: { name: '白', bonus: 'resistance' },
+  gold: { name: '金', bonus: 'str' },
+  silver: { name: '银', bonus: 'defense' },
+  poison: { name: '毒', bonus: 'poison' }
 };
 
 // ===== SHOP ITEMS =====
@@ -1094,8 +1567,17 @@ function createPlayer(email, password, name, profession) {
     sectDailyDate: null,
     sectWeeklyWarDate: null,
     pills: { hp_pill: 3, spirit_pill: 2 },
-    equipment: { weapon: null, head: null, body: null, feet: null, ring: null },
+    equipment: { weapon: null, weapon2: null, head: null, body: null, chest: null, legs: null, feet: null, wrist: null, necklace: null, leftShoulder: null, rightShoulder: null, ring: null, ring2: null, ring3: null, ring4: null, ring5: null, ring6: null, ring7: null, ring8: null, ring9: null, ring10: null },
     equipmentBag: [],
+    equipmentEnhance: {},
+    // Treasure (法宝) system
+    treasures: [],
+    activeTreasure: null,
+    treasureExp: 0,
+    treasureLevel: 1,
+    treasureDurability: 100,
+    // Premium currency
+    jade: 0,
     quests: { active: [], completed: [], dailyCompleted: {}, progress: {} },
     createdAt: new Date().toISOString(),
     encounterLog: [],
@@ -1123,7 +1605,23 @@ function createPlayer(email, password, name, profession) {
     lastOnlineTime: Date.now(),
     // P0-6a: Lifespan system
     lifespan: 100,
-    age: 60
+    age: 60,
+    // Phase 3: Proficiency system
+    proficiency: { fist: 0, sword: 0, blade: 0, spear: 0, hidden: 0, movement: 0 },
+    // Phase 3: Alchemy system
+    alchemyLevel: 1,
+    alchemyExp: 0,
+    materials: { herb: 0, spirit_shard: 0, beast_core: 0 },
+    // Phase 3: Attribute pill count
+    attributePillCount: 0,
+    // Phase 3: Breakthrough pill
+    breakthroughPillActive: false,
+    // Phase 3: Rebirth pill
+    hasRebirthPill: false,
+    // Phase 3: Forbidden pill expiry
+    forbiddenPillExpiry: 0,
+    // Phase 3: Pending forget skill confirmation
+    pendingForget: null
   };
   
   players[playerId] = newPlayer;
@@ -1385,8 +1883,15 @@ function handleLogin(ws, data) {
   if (!result.player.isIdle) result.player.isIdle = false;
   if (!result.player.idleStartTime) result.player.idleStartTime = null;
   if (!result.player.pills) result.player.pills = { hp_pill: 3, spirit_pill: 2 };
-  if (!result.player.equipment) result.player.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!result.player.equipment) result.player.equipment = { weapon: null, weapon2: null, head: null, body: null, chest: null, legs: null, feet: null, wrist: null, necklace: null, leftShoulder: null, rightShoulder: null, ring: null, ring2: null, ring3: null, ring4: null, ring5: null, ring6: null, ring7: null, ring8: null, ring9: null, ring10: null };
   if (!result.player.equipmentBag) result.player.equipmentBag = [];
+  if (!result.player.equipmentEnhance) result.player.equipmentEnhance = {};
+  if (!result.player.treasures) result.player.treasures = [];
+  if (result.player.activeTreasure === undefined) result.player.activeTreasure = null;
+  if (result.player.treasureExp === undefined) result.player.treasureExp = 0;
+  if (result.player.treasureLevel === undefined) result.player.treasureLevel = 1;
+  if (result.player.treasureDurability === undefined) result.player.treasureDurability = 100;
+  if (result.player.jade === undefined) result.player.jade = 0;
   if (!result.player.quests) result.player.quests = { active: [], completed: [], dailyCompleted: {}, progress: {} };
   if (!result.player.quests.progress) result.player.quests.progress = {};
   if (!result.player.encounterLog) result.player.encounterLog = [];
@@ -1414,6 +1919,16 @@ function handleLogin(ws, data) {
   // P0-6a: Lifespan initialization
   if (result.player.lifespan === undefined) result.player.lifespan = getRealmLifespan(result.player.realm);
   if (result.player.age === undefined) result.player.age = 60;
+  // Phase 3: New field initialization
+  if (!result.player.proficiency) result.player.proficiency = { fist: 0, sword: 0, blade: 0, spear: 0, hidden: 0, movement: 0 };
+  if (result.player.alchemyLevel === undefined) result.player.alchemyLevel = 1;
+  if (result.player.alchemyExp === undefined) result.player.alchemyExp = 0;
+  if (!result.player.materials) result.player.materials = { herb: 0, spirit_shard: 0, beast_core: 0 };
+  if (result.player.attributePillCount === undefined) result.player.attributePillCount = 0;
+  if (result.player.breakthroughPillActive === undefined) result.player.breakthroughPillActive = false;
+  if (result.player.hasRebirthPill === undefined) result.player.hasRebirthPill = false;
+  if (result.player.forbiddenPillExpiry === undefined) result.player.forbiddenPillExpiry = 0;
+  if (result.player.pendingForget === undefined) result.player.pendingForget = null;
   
   // P0-4: Offline gains calculation
   const now = Date.now();
@@ -1668,6 +2183,9 @@ function handleCommand(ws, data) {
   } else if (command.startsWith('/修炼')) {
     const skillId = command.replace('/修炼', '').trim();
     handlePracticeSkillCommand(ws, player, skillId);
+  } else if (command.startsWith('/遗忘')) {
+    const skillId = command.replace('/遗忘', '').trim();
+    handleForgetSkillCommand(ws, player, skillId);
   } else if (command.startsWith('/加入门派')) {
     const sectId = command.replace('/加入门派', '').trim();
     handleJoinSectCommand(ws, player, sectId);
@@ -1690,6 +2208,8 @@ function handleCommand(ws, data) {
     handleUsePillCommand(ws, player, command);
   } else if (command.startsWith('/炼丹')) {
     handleCraftPillCommand(ws, player, command);
+  } else if (command.startsWith('/材料')) {
+    handleMaterialsCommand(ws, player);
   } else if (command.startsWith('/丹药')) {
     handlePillListCommand(ws, player);
   } else if (command.startsWith('/购买装备')) {
@@ -1749,6 +2269,18 @@ function handleCommand(ws, data) {
     handleDaoHeartCommand(ws, player);
   } else if (command.startsWith('/信誉')) {
     handleCreditScoreCommand(ws, player);
+  } else if (command.startsWith('/强化')) {
+    handleEnhanceCommand(ws, player, command);
+  } else if (command.startsWith('/法宝商店')) {
+    handleTreasureShopCommand(ws, player);
+  } else if (command.startsWith('/装备法宝')) {
+    handleEquipTreasureCommand(ws, player, command);
+  } else if (command.startsWith('/卸下法宝')) {
+    handleUnequipTreasureCommand(ws, player);
+  } else if (command.startsWith('/修复法宝')) {
+    handleRepairTreasureCommand(ws, player);
+  } else if (command.startsWith('/法宝')) {
+    handleTreasureListCommand(ws, player);
   } else if (command.startsWith('/管理员')) {
     handleAdminCommand(ws, player, command);
   } else {
@@ -2374,9 +2906,10 @@ function handleHelpCommand(ws, player) {
 ║  /停止挂机 - 停止挂机修炼
 ║  
 ║  📜 功法系统:
-║  /功法  - 查看已学功法列表
+║  /功法  - 查看已学功法和熟练度
 ║  /学习 <功法ID> - 学习新功法
 ║  /修炼 <功法ID> - 修炼功法 (消耗体力)
+║  /遗忘 <功法ID> - 遗忘功法 (损失经验)
 ║  
 ║  🏯 门派系统:
 ║  /门派  - 查看可加入门派(39个)
@@ -2392,6 +2925,7 @@ function handleHelpCommand(ws, player) {
 ║  /使用 <丹药ID> - 使用丹药
 ║  /购买丹药 <丹药ID> [数量] - 在药铺购买丹药
 ║  /炼丹 <丹药ID> - 炼制丹药（需材料）
+║  /材料  - 查看炼丹材料
 ║  
 ║  🛡️ 装备系统:
 ║  /装备  - 查看已穿戴装备
@@ -2399,7 +2933,15 @@ function handleHelpCommand(ws, player) {
 ║  /穿戴 <装备ID> - 穿戴装备
 ║  /脱下 <部位> - 脱下装备
 ║  /购买装备 <装备ID> - 在铁匠铺购买装备
-║  
+║  /强化 <部位> - 强化装备(铁匠铺)
+║
+║  🏮 法宝系统:
+║  /法宝  - 查看法宝信息
+║  /法宝商店 - 浏览法宝商店(10级+)
+║  /装备法宝 <ID> - 装备法宝
+║  /卸下法宝 - 卸下当前法宝
+║  /修复法宝 - 修复法宝耐久(铁匠铺)
+║
 ║  📋 任务系统:
 ║  /任务  - 查看可接和进行中的任务
 ║  /接任务 <任务ID> - 接受任务
@@ -2513,19 +3055,320 @@ function handleCreditScoreCommand(ws, player) {
   });
 }
 
+// ===== ENHANCEMENT & TREASURE COMMANDS =====
+
+// Reverse map: Chinese slot name → slot ID
+const SLOT_NAME_TO_ID = {};
+for (const [id, name] of Object.entries(SLOT_NAMES)) {
+  SLOT_NAME_TO_ID[name] = id;
+  // Also allow short forms like 武器, 戒指
+  if (name.includes('武器')) SLOT_NAME_TO_ID['武器'] = id;
+  if (name === '戒指1') SLOT_NAME_TO_ID['戒指'] = id;
+}
+
+function resolveSlot(input) {
+  const trimmed = input.trim();
+  // Direct slot ID match
+  if (ALL_EQUIPMENT_SLOTS.includes(trimmed)) return trimmed;
+  // Chinese name match
+  if (SLOT_NAME_TO_ID[trimmed]) return SLOT_NAME_TO_ID[trimmed];
+  return null;
+}
+
+// /强化 <部位>
+function handleEnhanceCommand(ws, player, command) {
+  const slotInput = command.replace('/强化', '').trim();
+  if (!slotInput) {
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '装备强化',
+        content: `\n╔══════════════════════════════╗\n║  装备强化\n╠══════════════════════════════╣\n║  用法: /强化 <部位>\n║  示例: /强化 武器\n║        /强化 头部\n║        /强化 戒指1\n║\n║  部位列表:\n║  ${ALL_EQUIPMENT_SLOTS.map(s => SLOT_NAMES[s]).join('、')}\n║\n║  强化等级加成: 每级+5%基础属性\n║\n║  +1~+5: 100%成功  20/40/60/80/100银两\n║  +6~+8: 80/70/60%  150/200/300银两 + 强化石×1\n║  +9~+10: 50/40%   500/800银两 + 强化石×2\n║  +11~+15: 30~10%  需灵石(50~800)\n║\n║  ⚠️ 需要在铁匠铺操作\n╚══════════════════════════════╝`
+      }
+    });
+    return;
+  }
+
+  // Check location
+  if (player.currentRoom !== '铁匠铺') {
+    sendToClient(ws, { type: 'error', data: { message: '你必须在铁匠铺才能强化装备！当前房间: ' + (player.currentRoom || '未知') } });
+    return;
+  }
+
+  const slot = resolveSlot(slotInput);
+  if (!slot) {
+    sendToClient(ws, { type: 'error', data: { message: `未知部位: ${slotInput}。请使用 /强化 查看可强化部位列表。` } });
+    return;
+  }
+
+  // Check equipment in slot
+  if (!player.equipment || !player.equipment[slot]) {
+    sendToClient(ws, { type: 'error', data: { message: `你没有穿戴${SLOT_NAMES[slot]}的装备！` } });
+    return;
+  }
+
+  if (!player.equipmentEnhance) player.equipmentEnhance = {};
+  const currentLevel = player.equipmentEnhance[slot] || 0;
+
+  if (currentLevel >= 15) {
+    sendToClient(ws, { type: 'error', data: { message: `${SLOT_NAMES[slot]}的装备已达到最高强化等级+15！` } });
+    return;
+  }
+
+  const nextLevel = currentLevel + 1;
+  const rule = ENHANCEMENT_RULES[nextLevel];
+
+  if (!rule) {
+    sendToClient(ws, { type: 'error', data: { message: '无法获取强化规则数据。' } });
+    return;
+  }
+
+  // Premium levels (+11~+15) cost jade instead
+  if (rule.premium) {
+    if ((player.jade || 0) < rule.premiumCost) {
+      sendToClient(ws, { type: 'error', data: { message: `灵石不足！需要 ${rule.premiumCost} 灵石，当前: ${player.jade || 0}` } });
+      return;
+    }
+    player.jade -= rule.premiumCost;
+  } else {
+    // Normal levels cost silver
+    if (player.silver < rule.cost) {
+      sendToClient(ws, { type: 'error', data: { message: `银两不足！需要 ${rule.cost} 银两，当前: ${player.silver}` } });
+      return;
+    }
+    // Check enhancement stones
+    if (rule.stoneReq > 0) {
+      const stoneCount = (player.items && player.items.enhance_stone) || 0;
+      if (stoneCount < rule.stoneReq) {
+        sendToClient(ws, { type: 'error', data: { message: `强化石不足！需要 ${rule.stoneReq} 个，当前: ${stoneCount} 个。击败怪物可获得强化石。` } });
+        return;
+      }
+      player.items.enhance_stone -= rule.stoneReq;
+    }
+    player.silver -= rule.cost;
+  }
+
+  // Roll for success
+  const roll = Math.random();
+  const success = roll < rule.successRate;
+
+  const equipData = EQUIPMENT_DATA[player.equipment[slot]];
+  const equipName = equipData ? equipData.name : '装备';
+
+  if (success) {
+    player.equipmentEnhance[slot] = nextLevel;
+    const bonusPct = nextLevel * 5;
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '强化成功',
+        content: `\n╔══════════════════════════════╗\n║  ✨ 强化成功！\n╠══════════════════════════════╣\n║  ${equipName} (${SLOT_NAMES[slot]}) +${currentLevel} → +${nextLevel}\n║  成功率: ${Math.round(rule.successRate * 100)}%  (本次通过)\n║  基础属性加成: +${bonusPct}%\n║\n║  继续强化: /强化 ${slotInput}\n╚══════════════════════════════╝`
+      }
+    });
+  } else {
+    // Failure: at +10 and above, level decreases
+    let penalty = '';
+    if (currentLevel >= 10) {
+      player.equipmentEnhance[slot] = currentLevel - 1;
+      penalty = `\n║  💥 强化失败，等级下降！ +${currentLevel} → +${currentLevel - 1}`;
+    }
+    sendToClient(ws, {
+      type: 'command_response',
+      data: {
+        title: '强化失败',
+        content: `\n╔══════════════════════════════╗\n║  ❌ 强化失败！\n╠══════════════════════════════╣\n║  ${equipName} (${SLOT_NAMES[slot]})\n║  成功率: ${Math.round(rule.successRate * 100)}%  (本次未通过)${penalty}\n║\n║  继续强化: /强化 ${slotInput}\n╚══════════════════════════════╝`
+      }
+    });
+  }
+  savePlayers(getPlayers());
+}
+
+// /法宝 - List owned treasures
+function handleTreasureListCommand(ws, player) {
+  const treasures = player.treasures || [];
+
+  // Active treasure
+  let activeStr = '║  当前法宝: 无\n';
+  if (player.activeTreasure) {
+    const td = TREASURES_DATA[player.activeTreasure];
+    if (td) {
+      const dur = player.treasureDurability || 0;
+      const lvl = player.treasureLevel || 1;
+      const exp = player.treasureExp || 0;
+      const expNeeded = lvl * 200;
+      activeStr = `║  当前法宝: ${td.name} [${td.grade}]\n` +
+        `║  等级: Lv${lvl}  经验: ${exp}/${expNeeded}\n` +
+        `║  耐久: ${dur}/100  类型: ${td.type === 'attack' ? '攻击' : td.type === 'defense' ? '防御' : '辅助'}\n` +
+        `║  效果: ${td.description}\n`;
+    }
+  }
+
+  // Owned treasures list
+  let ownedStr = '';
+  if (treasures.length === 0) {
+    ownedStr = '║  法宝背包: 空\n';
+  } else {
+    ownedStr = '║  法宝背包:\n';
+    for (const tid of treasures) {
+      const td = TREASURES_DATA[tid];
+      if (td) {
+        const isActive = player.activeTreasure === tid ? ' [装备中]' : '';
+        ownedStr += `║    ${td.name} [${td.grade}]${isActive} - ${td.description}\n`;
+      }
+    }
+  }
+
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '法宝系统',
+      content: `\n╔══════════════════════════════╗\n║  🏮 法宝系统\n╠══════════════════════════════╣\n${activeStr}╠──────────────────────────────╣\n${ownedStr}╠══════════════════════════════╣\n║  装备法宝: /装备法宝 <法宝ID>\n║  卸下法宝: /卸下法宝\n║  修复法宝: /修复法宝 (铁匠铺)\n║  法宝商店: /法宝商店\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /装备法宝 <法宝ID>
+function handleEquipTreasureCommand(ws, player, command) {
+  const treasureId = command.replace('/装备法宝', '').trim();
+  if (!treasureId) {
+    sendToClient(ws, { type: 'error', data: { message: '用法: /装备法宝 <法宝ID>。输入 /法宝 查看拥有的法宝ID。' } });
+    return;
+  }
+
+  const treasures = player.treasures || [];
+  if (!treasures.includes(treasureId)) {
+    sendToClient(ws, { type: 'error', data: { message: `你没有这个法宝: ${treasureId}。输入 /法宝 查看拥有的法宝。` } });
+    return;
+  }
+
+  const td = TREASURES_DATA[treasureId];
+  if (!td) {
+    sendToClient(ws, { type: 'error', data: { message: `未知的法宝ID: ${treasureId}` } });
+    return;
+  }
+
+  player.activeTreasure = treasureId;
+  savePlayers(getPlayers());
+
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '装备法宝',
+      content: `\n╔══════════════════════════════╗\n║  ✨ 已装备法宝\n╠══════════════════════════════╣\n║  ${td.name} [${td.grade}]\n║  类型: ${td.type === 'attack' ? '攻击' : td.type === 'defense' ? '防御' : '辅助'}\n║  ${td.description}\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /卸下法宝
+function handleUnequipTreasureCommand(ws, player) {
+  if (!player.activeTreasure) {
+    sendToClient(ws, { type: 'error', data: { message: '你当前没有装备法宝。' } });
+    return;
+  }
+
+  const td = TREASURES_DATA[player.activeTreasure];
+  const name = td ? td.name : '法宝';
+  player.activeTreasure = null;
+  savePlayers(getPlayers());
+
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '卸下法宝',
+      content: `\n╔══════════════════════════════╗\n║  已卸下法宝\n╠══════════════════════════════╣\n║  ${name} 已卸下。\n║  使用 /法宝 查看法宝背包\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /法宝商店
+function handleTreasureShopCommand(ws, player) {
+  if ((player.level || 1) < 10) {
+    sendToClient(ws, { type: 'error', data: { message: '法宝商店需要角色等级达到10级才能使用！' } });
+    return;
+  }
+
+  let shopList = '';
+  for (const [id, td] of Object.entries(TREASURES_DATA)) {
+    shopList += `║  ${td.name} [${td.grade}] - ${td.price}银两\n`;
+    shopList += `║    ${td.description}\n`;
+    shopList += `║    ID: ${id}\n`;
+  }
+
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '法宝商店',
+      content: `\n╔══════════════════════════════╗\n║  🏮 法宝商店\n╠══════════════════════════════╣\n${shopList}╠══════════════════════════════╣\n║  购买: /购买 <法宝ID>\n║  法宝在战斗中自动生效\n║  耐久归零后需修复才能继续使用\n╚══════════════════════════════╝`
+    }
+  });
+}
+
+// /修复法宝
+function handleRepairTreasureCommand(ws, player) {
+  if (!player.activeTreasure) {
+    sendToClient(ws, { type: 'error', data: { message: '你当前没有装备法宝，无需修复。' } });
+    return;
+  }
+
+  if (player.currentRoom !== '铁匠铺') {
+    sendToClient(ws, { type: 'error', data: { message: '你必须在铁匠铺才能修复法宝！' } });
+    return;
+  }
+
+  const repairCost = 50;
+  if (player.silver < repairCost) {
+    sendToClient(ws, { type: 'error', data: { message: `银两不足！修复需要 ${repairCost} 银两，当前: ${player.silver}` } });
+    return;
+  }
+
+  const td = TREASURES_DATA[player.activeTreasure];
+  const name = td ? td.name : '法宝';
+  const oldDur = player.treasureDurability || 0;
+
+  player.silver -= repairCost;
+  player.treasureDurability = 100;
+  savePlayers(getPlayers());
+
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '修复法宝',
+      content: `\n╔══════════════════════════════╗\n║  🔧 修复完成\n╠══════════════════════════════╣\n║  ${name} 耐久: ${oldDur} → 100\n║  花费: ${repairCost} 银两\n╚══════════════════════════════╝`
+    }
+  });
+}
+
 // ===== SKILL COMMANDS =====
 
 // Show learned skills
 function handleSkillListCommand(ws, player) {
   if (!player.skills || player.skills.length === 0) {
+    const allSkillIds = Object.keys(SKILLS_DATA);
+    let availList = '';
+    for (const sid of allSkillIds) {
+      const sd = SKILLS_DATA[sid];
+      if (!sd.sectExclusive) {
+        availList += `║  /学习 ${sid}    - ${sd.name} [${sd.grade || sd.level}]\n`;
+      }
+    }
     sendToClient(ws, {
       type: 'command_response',
       data: {
         title: '功法列表',
-        content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n║  你还没有学会任何功法。\n║\n║  可学习的功法:\n║  /学习 basic_fist    - 基础拳法\n║  /学习 basic_sword   - 基础剑法\n║  /学习 basic_meditation - 吐纳术\n║  /学习 basic_movement - 轻功入门\n╚══════════════════════════════╝`
+        content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n║  你还没有学会任何功法。\n║\n║  可学习的功法:\n${availList}╚══════════════════════════════╝`
       }
     });
     return;
+  }
+  
+  // Show proficiency
+  const prof = player.proficiency || {};
+  let profStr = '';
+  const profNames = { fist: '拳法', sword: '剑法', blade: '刀法', spear: '枪法', hidden: '暗器', movement: '轻功' };
+  for (const [type, name] of Object.entries(profNames)) {
+    const val = prof[type] || 0;
+    const bonus = (val / 1000).toFixed(1);
+    profStr += `║  ${name}: ${val} (伤害+${bonus}%)\n`;
   }
   
   let skillList = '';
@@ -2536,14 +3379,25 @@ function handleSkillListCommand(ws, player) {
     const effectStr = sd.type === 'active' ? `伤害+${sd.damage + (ps.level-1)*3}` : sd.effect;
     const expToNext = ps.level * 50;
     const progress = ps.level >= 10 ? '已满级' : `${ps.exp}/${expToNext}`;
-    skillList += `║  【${sd.name}】${typeStr} Lv${ps.level}\n║    ${sd.level} | ${effectStr}\n║    经验: ${progress}\n`;
+    const gradeStr = sd.grade || sd.level;
+    const alignStr = sd.alignment ? ` [${sd.alignment}]` : '';
+    const counterStr = sd.countersDesc ? `\n║    ${sd.countersDesc}` : '';
+    skillList += `║  【${sd.name}】${typeStr} Lv${ps.level}${alignStr}\n║    ${gradeStr} | ${effectStr}\n║    经验: ${progress}${counterStr}\n`;
+  }
+  
+  // Check alignment conflict
+  let conflictWarning = '';
+  const hasZheng = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '正'; });
+  const hasXie = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '邪'; });
+  if (hasZheng && hasXie) {
+    conflictWarning = '║  ⚠️ 正邪冲突！你同时修炼正道和邪道功法，\n║  挂机时每分钟损失1%经验！\n║\n';
   }
   
   sendToClient(ws, {
     type: 'command_response',
     data: {
       title: '功法列表',
-      content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n${skillList}╚══════════════════════════════╝`
+      content: `\n╔══════════════════════════════╗\n║  功法列表\n╠══════════════════════════════╣\n${conflictWarning}${skillList}╠══════════════════════════════╣\n║  武器熟练度:\n${profStr}╠══════════════════════════════╣\n║  操作: /学习 /修炼 /遗忘 <功法ID>\n╚══════════════════════════════╝`
     }
   });
 }
@@ -2551,13 +3405,17 @@ function handleSkillListCommand(ws, player) {
 // Learn a skill
 function handleLearnSkillCommand(ws, player, skillId) {
   if (!skillId) {
-    sendToClient(ws, { type: 'system', data: { message: '用法: /学习 <功法ID>\n可用功法: basic_fist, basic_sword, basic_meditation, basic_movement' } });
+    let list = '用法: /学习 <功法ID>\n可学习功法:\n';
+    for (const [id, sd] of Object.entries(SKILLS_DATA)) {
+      if (!sd.sectExclusive) list += `  ${id} - ${sd.name} [${sd.grade || sd.level}]\n`;
+    }
+    sendToClient(ws, { type: 'system', data: { message: list } });
     return;
   }
   
   const skillData = SKILLS_DATA[skillId];
   if (!skillData) {
-    sendToClient(ws, { type: 'system', data: { message: '不存在该功法。可用: basic_fist, basic_sword, basic_meditation, basic_movement' } });
+    sendToClient(ws, { type: 'system', data: { message: '不存在该功法。输入 /功法 查看可用功法列表。' } });
     return;
   }
   
@@ -2570,6 +3428,25 @@ function handleLearnSkillCommand(ws, player, skillId) {
     return;
   }
   
+  // Check sect exclusive
+  if (skillData.sectExclusive) {
+    if (player.sect !== skillData.sectExclusive) {
+      const sectName = SECTS_DATA[skillData.sectExclusive] ? SECTS_DATA[skillData.sectExclusive].name : skillData.sectExclusive;
+      sendToClient(ws, { type: 'system', data: { message: `【${skillData.name}】是${sectName}专属功法，你不是该门派弟子，无法学习！` } });
+      return;
+    }
+  }
+  
+  // Check alignment conflict warning
+  let conflictMsg = '';
+  if (skillData.alignment === '正') {
+    const hasXie = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '邪'; });
+    if (hasXie) conflictMsg = '\n⚠️ 警告：你已修炼邪道功法，学习正道功法将导致正邪冲突！挂机时每分钟损失1%经验！';
+  } else if (skillData.alignment === '邪') {
+    const hasZheng = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '正'; });
+    if (hasZheng) conflictMsg = '\n⚠️ 警告：你已修炼正道功法，学习邪道功法将导致正邪冲突！挂机时每分钟损失1%经验！';
+  }
+  
   // Add skill
   const players = getPlayers();
   const p = players[player.id];
@@ -2577,9 +3454,13 @@ function handleLearnSkillCommand(ws, player, skillId) {
   p.skills.push({ id: skillId, level: 1, exp: 0 });
   savePlayers(players);
   
+  let msg = `📜 你学会了新功法【${skillData.name}】！[${skillData.grade || skillData.level}]\n${skillData.description}`;
+  if (skillData.countersDesc) msg += `\n${skillData.countersDesc}`;
+  if (conflictMsg) msg += conflictMsg;
+  
   sendToClient(ws, {
     type: 'system',
-    data: { message: `📜 你学会了新功法【${skillData.name}】！\n${skillData.description}` }
+    data: { message: msg }
   });
 }
 
@@ -2664,7 +3545,53 @@ function handlePracticeSkillCommand(ws, player, skillId) {
   sendToClient(ws, { type: 'system', data: { message: msg } });
 }
 
-// ===== SECT COMMANDS =====
+// ===== FORGET SKILL (遗忘功法) =====
+function handleForgetSkillCommand(ws, player, skillId) {
+  if (!skillId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /遗忘 <功法ID>\n输入 /功法 查看已学功法。\n⚠️ 遗忘功法将损失50%已投入经验！' } });
+    return;
+  }
+  
+  if (!player.skills || !player.skills.some(s => s.id === skillId)) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有学会这个功法。' } });
+    return;
+  }
+  
+  const skillData = SKILLS_DATA[skillId];
+  if (!skillData) {
+    sendToClient(ws, { type: 'system', data: { message: '不存在该功法。' } });
+    return;
+  }
+  
+  // Check if this is the confirmation
+  const players = getPlayers();
+  const p = players[player.id];
+  
+  if (p.pendingForget === skillId) {
+    // Confirmed: forget the skill
+    const idx = p.skills.findIndex(s => s.id === skillId);
+    if (idx >= 0) {
+      const lost = p.skills[idx].exp;
+      p.skills.splice(idx, 1);
+      p.pendingForget = null;
+      savePlayers(players);
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `📜 你遗忘了功法【${skillData.name}】，损失了 ${lost} 点功法经验。\n如需重新学习，使用 /学习 ${skillId}` }
+      });
+      return;
+    }
+  }
+  
+  // First call: set pending confirmation
+  p.pendingForget = skillId;
+  savePlayers(players);
+  
+  sendToClient(ws, {
+    type: 'system',
+    data: { message: `⚠️ 确认遗忘【${skillData.name}】？\n再次输入 /遗忘 ${skillId} 确认。\n⚠️ 将损失50%已投入功法经验！` }
+  });
+}
 
 // Show available sects
 function handleSectListCommand(ws, player) {
@@ -3016,7 +3943,8 @@ function handlePillListCommand(ws, player) {
     if (count <= 0) continue;
     const pd = PILLS_DATA[pillId];
     if (!pd) continue;
-    pillList += `║  【${pd.name}】x${count}\n║    ${pd.effect} | 单价: ${pd.price}灵石\n║    ID: ${pd.id}\n`;
+    const gradeStr = pd.grade ? ` [${pd.grade}]` : '';
+    pillList += `║  【${pd.name}】${gradeStr} x${count}\n║    ${pd.effect} | 单价: ${pd.price}灵石\n║    ID: ${pd.id}\n`;
   }
   
   if (!pillList) {
@@ -3066,6 +3994,27 @@ function handleUsePillCommand(ws, player, command) {
   });
 }
 
+// Show materials
+function handleMaterialsCommand(ws, player) {
+  const mats = player.materials || { herb: 0, spirit_shard: 0, beast_core: 0 };
+  const alchemyLevel = player.alchemyLevel || 1;
+  const alchemyExp = player.alchemyExp || 0;
+  const needed = alchemyLevel * 100;
+  
+  let matList = '';
+  for (const [mid, md] of Object.entries(MATERIALS_DATA)) {
+    matList += `║  【${md.name}】(${mid}) x${mats[mid] || 0}\n║    [${md.grade}] ${md.desc}\n`;
+  }
+  
+  sendToClient(ws, {
+    type: 'command_response',
+    data: {
+      title: '炼丹材料',
+      content: `\n╔══════════════════════════════╗\n║  炼丹材料\n╠══════════════════════════════╣\n${matList}╠══════════════════════════════╣\n║  炼丹等级: ${alchemyLevel}\n║  炼丹经验: ${alchemyExp}/${needed}\n║  \n║  材料来源:\n║  灵草 - 竹林怪物掉落(30%)\n║  灵石碎片 - 怪物掉落(15%)\n║  妖兽内丹 - BOSS怪物掉落(5%)\n║  \n║  操作: /炼丹 查看配方\n╚══════════════════════════════╝`
+    }
+  });
+}
+
 // Buy pills from herb shop
 function handleBuyPillCommand(ws, player, command) {
   if (player.currentRoom !== '药铺') {
@@ -3080,7 +4029,8 @@ function handleBuyPillCommand(ws, player, command) {
   if (!pillId) {
     let shopList = '🏪 药铺商品:\n';
     for (const [id, pd] of Object.entries(PILLS_DATA)) {
-      shopList += `  【${pd.name}】(${id}) - ${pd.effect} - ${pd.price}灵石/个\n`;
+      const gradeStr = pd.grade ? ` [${pd.grade}]` : '';
+      shopList += `  【${pd.name}】${gradeStr}(${id}) - ${pd.effect} - ${pd.price}灵石/个\n`;
     }
     shopList += '\n用法: /购买丹药 <丹药ID> [数量]';
     sendToClient(ws, { type: 'system', data: { message: shopList } });
@@ -3118,11 +4068,30 @@ function handleBuyPillCommand(ws, player, command) {
   });
 }
 
-// Craft pills (placeholder)
+// Craft pills (alchemy system)
 function handleCraftPillCommand(ws, player, command) {
   const pillId = command.replace('/炼丹', '').trim();
   if (!pillId) {
-    sendToClient(ws, { type: 'system', data: { message: '用法: /炼丹 <丹药ID>\n可炼制: hp_pill, spirit_pill, stamina_pill, exp_pill\n提示: 炼丹系统即将开放，敬请期待！' } });
+    let recipeList = '🔥 炼丹系统\n\n';
+    recipeList += '材料:\n';
+    for (const [mid, md] of Object.entries(MATERIALS_DATA)) {
+      const qty = (player.materials && player.materials[mid]) || 0;
+      recipeList += `  ${md.name}(${mid}): ${qty}个 [${md.grade}]\n`;
+    }
+    recipeList += '\n可炼制丹药:\n';
+    for (const [pid, pd] of Object.entries(PILLS_DATA)) {
+      if (!pd.recipe) continue;
+      const reqLevel = GRADE_ALCHEMY_REQ[pd.grade] || 1;
+      const recipe = pd.recipe;
+      let recipeStr = [];
+      for (const [mat, qty] of Object.entries(recipe)) {
+        if (qty > 0) recipeStr.push(`${MATERIALS_DATA[mat].name}x${qty}`);
+      }
+      recipeList += `  ${pd.name}(${pid}) [${pd.grade}] 需炼丹Lv${reqLevel} - ${recipeStr.join('+')}\n`;
+    }
+    recipeList += `\n你的炼丹等级: ${player.alchemyLevel || 1} | 炼丹经验: ${player.alchemyExp || 0}/${(player.alchemyLevel || 1) * 100}`;
+    recipeList += '\n\n用法: /炼丹 <丹药ID>';
+    sendToClient(ws, { type: 'system', data: { message: recipeList } });
     return;
   }
   
@@ -3132,23 +4101,91 @@ function handleCraftPillCommand(ws, player, command) {
     return;
   }
   
-  sendToClient(ws, {
-    type: 'system',
-    data: { message: `🔥 炼丹系统开发中，敬请期待！\n以后你将能炼制【${pd.name}】等丹药。` }
-  });
+  if (!pd.recipe) {
+    sendToClient(ws, { type: 'system', data: { message: '该丹药无法炼制。' } });
+    return;
+  }
+  
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.alchemyLevel) p.alchemyLevel = 1;
+  if (!p.alchemyExp) p.alchemyExp = 0;
+  if (!p.materials) p.materials = { herb: 0, spirit_shard: 0, beast_core: 0 };
+  
+  // Check alchemy level requirement
+  const reqLevel = GRADE_ALCHEMY_REQ[pd.grade] || 1;
+  if (p.alchemyLevel < reqLevel) {
+    sendToClient(ws, { type: 'system', data: { message: `炼丹等级不足！炼制【${pd.name}】需要炼丹等级${reqLevel}，你当前为${p.alchemyLevel}级。` } });
+    return;
+  }
+  
+  // Check materials
+  const recipe = pd.recipe;
+  for (const [mat, qty] of Object.entries(recipe)) {
+    if (qty > 0 && (p.materials[mat] || 0) < qty) {
+      sendToClient(ws, { type: 'system', data: { message: `材料不足！炼制【${pd.name}】需要${MATERIALS_DATA[mat].name}x${qty}，你只有${p.materials[mat] || 0}个。` } });
+      return;
+    }
+  }
+  
+  // Consume materials
+  for (const [mat, qty] of Object.entries(recipe)) {
+    if (qty > 0) p.materials[mat] -= qty;
+  }
+  
+  // Calculate success rate: 50% + alchemyLevel*5% + wisdom bonus
+  const wisBonus = Math.floor((p.stats.wis || 10) / 20);
+  const successRate = Math.min(0.95, 0.50 + p.alchemyLevel * 0.05 + wisBonus * 0.01);
+  
+  if (Math.random() < successRate) {
+    // Success!
+    if (!p.pills) p.pills = {};
+    p.pills[pillId] = (p.pills[pillId] || 0) + 1;
+    const alchemyExpGain = 10 + reqLevel * 5;
+    p.alchemyExp += alchemyExpGain;
+    
+    // Check alchemy level up
+    let lvlUpMsg = '';
+    const needed = p.alchemyLevel * 100;
+    if (p.alchemyExp >= needed) {
+      p.alchemyExp -= needed;
+      p.alchemyLevel++;
+      lvlUpMsg = `\n🔥 炼丹等级提升！当前等级: ${p.alchemyLevel}`;
+    }
+    
+    savePlayers(players);
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: `🔥 炼丹成功！获得【${pd.name}】x1！\n炼丹经验+${alchemyExpGain}（${p.alchemyExp}/${p.alchemyLevel * 100}）${lvlUpMsg}` }
+    });
+  } else {
+    // Failure
+    const alchemyExpGain = 5;
+    p.alchemyExp += alchemyExpGain;
+    savePlayers(players);
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: `💥 炼丹失败！材料消耗殆尽...\n炼丹经验+${alchemyExpGain}（${p.alchemyExp}/${p.alchemyLevel * 100}）` }
+    });
+  }
 }
 
 // ===== EQUIPMENT COMMANDS =====
 
 // Show equipped items
 function handleEquipmentCommand(ws, player) {
-  const equip = player.equipment || { weapon: null, head: null, body: null, feet: null, ring: null };
+  const equip = player.equipment || {};
+  const enhanceData = player.equipmentEnhance || {};
   
   let equipList = '';
-  const slotNames = { weapon: '武器', head: '头部', body: '身体', feet: '足部', ring: '戒指' };
-  let totalAttack = 0, totalDefense = 0, totalStr = 0, totalSpeed = 0;
+  let totalAttack = 0, totalDefense = 0, totalStr = 0, totalSpeed = 0, totalWis = 0;
   
-  for (const [slot, equipId] of Object.entries(equip)) {
+  for (const slot of ALL_EQUIPMENT_SLOTS) {
+    const equipId = equip[slot];
+    const slotName = SLOT_NAMES[slot] || slot;
+    const enhLevel = enhanceData[slot] || 0;
+    const enhStr = enhLevel > 0 ? `+${enhLevel}` : '';
+    
     if (equipId) {
       const ed = EQUIPMENT_DATA[equipId];
       if (ed) {
@@ -3157,20 +4194,44 @@ function handleEquipmentCommand(ws, player) {
         if (ed.defense) { stats.push(`防御+${ed.defense}`); totalDefense += ed.defense; }
         if (ed.str) { stats.push(`力量+${ed.str}`); totalStr += ed.str; }
         if (ed.speed) { stats.push(`速度+${ed.speed}`); totalSpeed += ed.speed; }
-        equipList += `║  [${slotNames[slot]}] ${ed.name} - ${stats.join(' ')}\n`;
+        if (ed.wis) { stats.push(`悟性+${ed.wis}`); totalWis += ed.wis; }
+        if (ed.spirit) stats.push(`灵力+${ed.spirit}`);
+        if (ed.allPercent) stats.push(`全属性+${ed.allPercent}%`);
+        if (ed.ringColor) stats.push(`[${RING_COLORS[ed.ringColor] ? RING_COLORS[ed.ringColor].name : ed.ringColor}]`);
+        equipList += `║  [${slotName}] ${ed.name}${enhStr} - ${stats.join(' ')}\n`;
       } else {
-        equipList += `║  [${slotNames[slot]}] 空\n`;
+        equipList += `║  [${slotName}] 空\n`;
       }
     } else {
-      equipList += `║  [${slotNames[slot]}] 空\n`;
+      equipList += `║  [${slotName}] 空\n`;
     }
   }
+  
+  // Show active treasure
+  let treasureLine = '║  [法宝] 无\n';
+  if (player.activeTreasure) {
+    const td = TREASURES_DATA[player.activeTreasure];
+    if (td) {
+      treasureLine = `║  [法宝] ${td.name} (Lv${player.treasureLevel || 1}) 耐久:${player.treasureDurability || 0}/100\n`;
+    }
+  }
+  
+  // Ring combo info
+  const ringBonuses = getRingComboBonuses(player);
+  let comboInfo = '';
+  if (ringBonuses.allPercent > 0) comboInfo += `全属性+${ringBonuses.allPercent}% `;
+  if (ringBonuses.attack > 0) comboInfo += `攻击+${ringBonuses.attack}% `;
+  if (ringBonuses.defense > 0) comboInfo += `防御+${ringBonuses.defense}% `;
+  if (ringBonuses.poisonDmg > 0) comboInfo += `毒伤+${ringBonuses.poisonDmg}% `;
+  if (ringBonuses.crit > 0) comboInfo += `暴击+${ringBonuses.crit}% `;
+  
+  const comboLine = comboInfo ? `║  戒指套装: ${comboInfo}\n` : '';
   
   sendToClient(ws, {
     type: 'command_response',
     data: {
       title: '装备栏',
-      content: `\n╔══════════════════════════════╗\n║  装备栏\n╠══════════════════════════════╣\n${equipList}╠══════════════════════════════╣\n║  装备加成: 攻击+${totalAttack} 防御+${totalDefense} 力量+${totalStr} 速度+${totalSpeed}\n╠══════════════════════════════╣\n║  穿戴: /穿戴 <装备ID>\n║  脱下: /脱下 <部位>\n║  装备背包: /装备栏\n╚══════════════════════════════╝`
+      content: `\n╔══════════════════════════════╗\n║  装备栏\n╠══════════════════════════════╣\n${equipList}${treasureLine}${comboLine}╠══════════════════════════════╣\n║  总加成: 攻击+${totalAttack} 防御+${totalDefense} 力量+${totalStr} 速度+${totalSpeed} 悟性+${totalWis}\n╠══════════════════════════════╣\n║  穿戴: /穿戴 <装备ID>\n║  脱下: /脱下 <部位>\n║  强化: /强化 <部位>\n║  装备背包: /装备栏\n╚══════════════════════════════╝`
     }
   });
 }
@@ -3199,6 +4260,9 @@ function handleEquipmentBagCommand(ws, player) {
       if (ed.defense) stats.push(`防御+${ed.defense}`);
       if (ed.str) stats.push(`力量+${ed.str}`);
       if (ed.speed) stats.push(`速度+${ed.speed}`);
+      if (ed.wis) stats.push(`悟性+${ed.wis}`);
+      if (ed.spirit) stats.push(`灵力+${ed.spirit}`);
+      if (ed.allPercent) stats.push(`全属性+${ed.allPercent}%`);
       bagList += `║  ${index + 1}. ${ed.name} - ${stats.join(' ')} (ID: ${ed.id})\n`;
     }
   });
@@ -3228,7 +4292,7 @@ function handleEquipCommand(ws, player, command) {
   
   const players = getPlayers();
   const p = players[player.id];
-  if (!p.equipment) p.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!p.equipment) p.equipment = {};
   if (!p.equipmentBag) p.equipmentBag = [];
   
   // Find item in bag
@@ -3238,8 +4302,18 @@ function handleEquipCommand(ws, player, command) {
     return;
   }
   
+  // Determine target slot - for rings, find first empty ring slot
+  let slot = ed.slot;
+  if (slot === 'ring') {
+    const ringSlots = ['ring', 'ring2', 'ring3', 'ring4', 'ring5', 'ring6', 'ring7', 'ring8', 'ring9', 'ring10'];
+    const emptyRingSlot = ringSlots.find(s => !p.equipment[s]);
+    if (emptyRingSlot) {
+      slot = emptyRingSlot;
+    }
+    // If all ring slots are full, replace ring (first slot)
+  }
+  
   // If slot is occupied, move current equipment to bag
-  const slot = ed.slot;
   if (p.equipment[slot]) {
     const currentEquipId = p.equipment[slot];
     p.equipmentBag.push({ id: currentEquipId });
@@ -3257,10 +4331,14 @@ function handleEquipCommand(ws, player, command) {
   if (ed.defense) stats.push(`防御+${ed.defense}`);
   if (ed.str) stats.push(`力量+${ed.str}`);
   if (ed.speed) stats.push(`速度+${ed.speed}`);
+  if (ed.wis) stats.push(`悟性+${ed.wis}`);
+  if (ed.spirit) stats.push(`灵力+${ed.spirit}`);
+  if (ed.allPercent) stats.push(`全属性+${ed.allPercent}%`);
   
+  const slotName = SLOT_NAMES[slot] || slot;
   sendToClient(ws, {
     type: 'system',
-    data: { message: `🛡️ 穿戴了【${ed.name}】！${stats.join(' ')}` }
+    data: { message: `🛡️ 穿戴了【${ed.name}】到${slotName}！${stats.join(' ')}` }
   });
 }
 
@@ -3268,19 +4346,18 @@ function handleEquipCommand(ws, player, command) {
 function handleUnequipCommand(ws, player, command) {
   const slot = command.replace('/脱下', '').trim();
   if (!slot) {
-    sendToClient(ws, { type: 'system', data: { message: '用法: /脱下 <部位>\n部位: weapon(武器), head(头部), body(身体), feet(足部), ring(戒指)' } });
+    sendToClient(ws, { type: 'system', data: { message: `用法: /脱下 <部位>\n可用部位: ${ALL_EQUIPMENT_SLOTS.join(', ')}` } });
     return;
   }
   
-  const validSlots = ['weapon', 'head', 'body', 'feet', 'ring'];
-  if (!validSlots.includes(slot)) {
-    sendToClient(ws, { type: 'system', data: { message: '无效部位。可用: weapon, head, body, feet, ring' } });
+  if (!ALL_EQUIPMENT_SLOTS.includes(slot)) {
+    sendToClient(ws, { type: 'system', data: { message: `无效部位。可用: ${ALL_EQUIPMENT_SLOTS.join(', ')}` } });
     return;
   }
   
   const players = getPlayers();
   const p = players[player.id];
-  if (!p.equipment) p.equipment = { weapon: null, head: null, body: null, feet: null, ring: null };
+  if (!p.equipment) p.equipment = {};
   if (!p.equipmentBag) p.equipmentBag = [];
   
   if (!p.equipment[slot]) {
@@ -3564,22 +4641,123 @@ function updateQuestProgress(player, type, amount) {
   }
 }
 
+// Get ring combo bonuses
+function getRingComboBonuses(player) {
+  const bonuses = { attack: 0, defense: 0, speed: 0, str: 0, crit: 0, resistance: 0, allPercent: 0, poisonDmg: 0 };
+  if (!player.equipment) return bonuses;
+  
+  // Collect ring colors from all ring slots
+  const ringSlots = ['ring', 'ring2', 'ring3', 'ring4', 'ring5', 'ring6', 'ring7', 'ring8', 'ring9', 'ring10'];
+  const colorCounts = {};
+  const equippedColors = [];
+  
+  for (const slot of ringSlots) {
+    const equipId = player.equipment[slot];
+    if (!equipId) continue;
+    const ed = EQUIPMENT_DATA[equipId];
+    if (!ed || !ed.ringColor) continue;
+    colorCounts[ed.ringColor] = (colorCounts[ed.ringColor] || 0) + 1;
+    equippedColors.push(ed.ringColor);
+  }
+  
+  // Same color combos
+  for (const [color, count] of Object.entries(colorCounts)) {
+    if (count >= 10) {
+      bonuses.allPercent += 30;
+    } else if (count >= 5) {
+      bonuses.allPercent += 15;
+    } else if (count >= 2) {
+      bonuses.allPercent += 5;
+    }
+  }
+  
+  // Mixed combos
+  const uniqueColors = [...new Set(equippedColors)];
+  
+  // Rainbow (7+ different colors)
+  if (uniqueColors.length >= 7) {
+    bonuses.allPercent += 10;
+  }
+  
+  // Poison+Red combo
+  if (uniqueColors.includes('poison') && uniqueColors.includes('red')) {
+    bonuses.attack += 15;
+    bonuses.poisonDmg += 20;
+  }
+  
+  // Blue+Green combo
+  if (uniqueColors.includes('blue') && uniqueColors.includes('green')) {
+    bonuses.defense += 10;
+  }
+  
+  // Black+White combo
+  if (uniqueColors.includes('black') && uniqueColors.includes('white')) {
+    bonuses.crit += 10;
+    bonuses.resistance += 10;
+  }
+  
+  // Poison build: self-poison ring check
+  for (const slot of ringSlots) {
+    const equipId = player.equipment[slot];
+    if (!equipId) continue;
+    const ed = EQUIPMENT_DATA[equipId];
+    if (ed && ed.selfPoison) {
+      bonuses.attack += 10; // +10% attack from poison ring
+    }
+  }
+  
+  return bonuses;
+}
+
 // Get equipment bonuses for combat
 function getEquipmentBonuses(player) {
-  let attack = 0, defense = 0, str = 0, speed = 0;
-  if (!player.equipment) return { attack, defense, str, speed };
+  let attack = 0, defense = 0, str = 0, speed = 0, wis = 0, con = 0;
+  let hp = 0, spirit = 0, allPercent = 0;
+  if (!player.equipment) return { attack, defense, str, speed, wis, con, hp, spirit, allPercent };
   
-  for (const equipId of Object.values(player.equipment)) {
+  const enhanceData = player.equipmentEnhance || {};
+  
+  for (const [slot, equipId] of Object.entries(player.equipment)) {
     if (!equipId) continue;
     const ed = EQUIPMENT_DATA[equipId];
     if (!ed) continue;
-    if (ed.attack) attack += ed.attack;
-    if (ed.defense) defense += ed.defense;
-    if (ed.str) str += ed.str;
-    if (ed.speed) speed += ed.speed;
+    
+    // Get enhancement level for this slot
+    const enhanceLevel = enhanceData[slot] || 0;
+    const enhanceMultiplier = 1 + enhanceLevel * 0.05; // +5% per level
+    
+    if (ed.attack) attack += Math.floor(ed.attack * enhanceMultiplier);
+    if (ed.defense) defense += Math.floor(ed.defense * enhanceMultiplier);
+    if (ed.str) str += Math.floor(ed.str * enhanceMultiplier);
+    if (ed.speed) speed += Math.floor(ed.speed * enhanceMultiplier);
+    if (ed.wis) wis += Math.floor(ed.wis * enhanceMultiplier);
+    if (ed.con) con += Math.floor(ed.con * enhanceMultiplier);
+    if (ed.hp) hp += Math.floor(ed.hp * enhanceMultiplier);
+    if (ed.spirit) spirit += Math.floor(ed.spirit * enhanceMultiplier);
+    if (ed.allPercent) allPercent += ed.allPercent;
   }
   
-  return { attack, defense, str, speed };
+  // Add ring combo bonuses
+  const ringBonuses = getRingComboBonuses(player);
+  attack += ringBonuses.attack;
+  defense += ringBonuses.defense;
+  speed += ringBonuses.speed;
+  str += ringBonuses.str;
+  allPercent += ringBonuses.allPercent;
+  
+  // Add treasure bonuses
+  if (player.activeTreasure && player.treasureDurability > 0) {
+    const td = TREASURES_DATA[player.activeTreasure];
+    if (td) {
+      const tLevel = player.treasureLevel || 1;
+      const tMultiplier = 1 + (tLevel - 1) * 0.02; // +2% per level
+      if (td.effect.dmg) attack += Math.floor(td.effect.dmg * tMultiplier);
+      if (td.effect.shield) defense += Math.floor(td.effect.shield * tMultiplier);
+      if (td.effect.allPercent) allPercent += Math.floor(td.effect.allPercent * tMultiplier);
+    }
+  }
+  
+  return { attack, defense, str, speed, wis, con, hp, spirit, allPercent, ringBonuses };
 }
 
 // ===== SHOP COMMANDS =====
@@ -4534,6 +5712,17 @@ function executeCombat(ws, player, room) {
   let realmDmgBonus = 1;
   let realmDmgReduce = 1;
   let realmSupMsg = '';
+  
+  // Apply forbidden pill bonus (+10% all stats for 1 hour)
+  let forbiddenBonus = 1;
+  if (player.forbiddenPillExpiry && player.forbiddenPillExpiry > Date.now()) {
+    forbiddenBonus = 1.10;
+  } else if (player.forbiddenPillExpiry && player.forbiddenPillExpiry <= Date.now()) {
+    player.forbiddenPillExpiry = 0; // expired
+  }
+  playerAttack = Math.floor(playerAttack * forbiddenBonus);
+  playerDefense = Math.floor(playerDefense * forbiddenBonus);
+  playerSpeed = Math.floor(playerSpeed * forbiddenBonus);
   if (monsterTemplate.realm) {
     const monsterRealmOrder = getRealmOrder(monsterTemplate.realm);
     if (playerRealmOrder > monsterRealmOrder) {
@@ -4550,31 +5739,69 @@ function executeCombat(ws, player, room) {
   // Find best active skill for bonus damage
   let activeSkillBonus = 0;
   let activeSkillName = null;
+  let activeSkillId = null;
   if (player.skills && player.skills.length > 0) {
     for (const ps of player.skills) {
       const skillData = SKILLS_DATA[ps.id];
       if (skillData && skillData.type === 'active') {
-        const bonus = skillData.damage + (ps.level - 1) * 3; // +3 damage per skill level
+        let bonus = skillData.damage + (ps.level - 1) * 3; // +3 damage per skill level
+        // Proficiency bonus: proficiency/1000 * baseDamage (max 10x at 10000)
+        const prof = player.proficiency || {};
+        const wType = skillData.weaponType || 'fist';
+        const profVal = prof[wType] || 0;
+        const profMultiplier = Math.min(10, profVal / 1000);
+        bonus = Math.floor(bonus * (1 + profMultiplier));
         if (bonus > activeSkillBonus) {
           activeSkillBonus = bonus;
           activeSkillName = skillData.name + ' Lv' + ps.level;
+          activeSkillId = ps.id;
         }
       }
+    }
+  }
+  
+  // Counter bonus: +8% damage if player's skill counters monster's skill
+  let counterBonus = 1;
+  const monsterSkillId = monsterTemplate.skillId || null;
+  if (activeSkillId && monsterSkillId) {
+    const playerSkillData = SKILLS_DATA[activeSkillId];
+    if (playerSkillData && playerSkillData.counters && playerSkillData.counters.includes(monsterSkillId)) {
+      counterBonus = 1.08;
+      combatLog.push(`⚔️ 你的【${playerSkillData.name}】克制了${monster.name}的功法！伤害+8%！`);
     }
   }
   
   // Check passive skills
   let dodgeChance = 0;
   let extraSpiritRecovery = 0;
+  let passiveDefBonus = 1;
+  let passiveHpBonus = 1;
+  let passiveAllResist = 1;
+  let passiveSpeedBonus = 1;
+  let passiveAllBonus = 1;
   if (player.skills) {
     for (const ps of player.skills) {
       const skillData = SKILLS_DATA[ps.id];
       if (skillData && skillData.type === 'passive') {
         if (skillData.id === 'basic_movement') dodgeChance += 0.05 + (ps.level - 1) * 0.01;
         if (skillData.id === 'basic_meditation') extraSpiritRecovery += 2 + (ps.level - 1);
+        if (skillData.id === 'iron_body') passiveDefBonus += 0.08 + (ps.level - 1) * 0.01;
+        if (skillData.id === 'cloud_step') dodgeChance += 0.10 + (ps.level - 1) * 0.01;
+        if (skillData.id === 'spirit_shield') passiveHpBonus += 0.15 + (ps.level - 1) * 0.02;
+        if (skillData.id === 'void_body') passiveAllResist -= 0.10 + (ps.level - 1) * 0.01;
+        if (skillData.id === 'heaven_step') passiveSpeedBonus += 0.20 + (ps.level - 1) * 0.02;
+        if (skillData.id === 'dragon_armor') passiveDefBonus += 0.25 + (ps.level - 1) * 0.02;
+        if (skillData.id === 'heaven_art') passiveAllBonus += 0.20;
+        if (skillData.id === 'primordial_art') passiveAllBonus += 0.30;
       }
     }
   }
+  // Apply passive defense bonus
+  playerDefense = Math.floor(playerDefense * passiveDefBonus);
+  // Apply passive speed bonus
+  playerSpeed = Math.floor(playerSpeed * passiveSpeedBonus * passiveAllBonus);
+  // Apply passive all bonus to attack
+  playerAttack = Math.floor(playerAttack * passiveAllBonus);
   // Relic dodge bonus (T02)
   if (player.relics && player.relics.includes('T02')) dodgeChance += 0.10;
   
@@ -4647,6 +5874,10 @@ function executeCombat(ws, player, room) {
     if (activeSkillBonus > 0) {
       playerDmg += activeSkillBonus;
       if (round === 1) combatLog.push(`⚔️ 发动功法【${activeSkillName}】，额外造成 ${activeSkillBonus} 点伤害！`);
+    }
+    // Apply counter bonus
+    if (counterBonus > 1) {
+      playerDmg = Math.floor(playerDmg * counterBonus);
     }
     // Apply B31 damage bug
     const combatBugs = player.activeBugs || {};
@@ -4736,13 +5967,36 @@ function executeCombat(ws, player, room) {
       }
     }
     
+    // Proficiency gain from combat (+2 to relevant weapon type)
+    if (!player.proficiency) player.proficiency = { fist: 0, sword: 0, blade: 0, spear: 0, hidden: 0, movement: 0 };
+    if (activeSkillId) {
+      const skillData = SKILLS_DATA[activeSkillId];
+      if (skillData && skillData.weaponType) {
+        player.proficiency[skillData.weaponType] = (player.proficiency[skillData.weaponType] || 0) + 2;
+      }
+    }
+    
     // Check for item drop
     if (Math.random() < monster.dropRate) {
-      // Drop table: pills and basic equipment
+      // First check for material drop (30% chance)
+      if (Math.random() < 0.30) {
+        if (!player.materials) player.materials = { herb: 0, spirit_shard: 0, beast_core: 0 };
+        // Determine which material drops
+        const matRoll = Math.random();
+        let matDrop = null;
+        if (matRoll < 0.60) matDrop = 'herb';
+        else if (matRoll < 0.90) matDrop = 'spirit_shard';
+        else matDrop = 'beast_core';
+        player.materials[matDrop] = (player.materials[matDrop] || 0) + 1;
+        combatLog.push(`🍀 ${monster.name} 掉落了材料【${MATERIALS_DATA[matDrop].name}】！`);
+      }
+      
+      // Drop table: pills, basic equipment, and enhancement stones
       const dropTable = [
         { id: 'hp_pill', name: '回血丹', type: 'pill', weight: 40 },
         { id: 'spirit_pill', name: '回灵丹', type: 'pill', weight: 30 },
         { id: 'stamina_pill', name: '体力丹', type: 'pill', weight: 15 },
+        { id: 'enhance_stone', name: '强化石', type: 'item', weight: 10 },
         { id: 'wooden_sword', name: '木剑', type: 'equipment', weight: 8 },
         { id: 'cloth_armor', name: '布衣', type: 'equipment', weight: 5 },
         { id: 'straw_shoes', name: '草鞋', type: 'equipment', weight: 2 }
@@ -4774,7 +6028,46 @@ function executeCombat(ws, player, room) {
           if (!player.equipmentBag) player.equipmentBag = [];
           player.equipmentBag.push({ id: dropItem.id });
           combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！已收入背包。`);
+        } else if (dropItem.type === 'item') {
+          // Generic item drops (e.g. enhancement stones)
+          if (!player.items) player.items = {};
+          player.items[dropItem.id] = (player.items[dropItem.id] || 0) + 1;
+          combatLog.push(`🍀 ${monster.name} 掉落了【${dropItem.name}】！`);
         }
+      }
+    }
+    
+    // Treasure exp and durability from combat
+    if (player.activeTreasure) {
+      player.treasureExp = (player.treasureExp || 0) + 3;
+      player.treasureDurability = Math.max(0, (player.treasureDurability || 0) - 1);
+      
+      // Check treasure level up
+      const tLevel = player.treasureLevel || 1;
+      const tExpNeeded = tLevel * 200;
+      if (player.treasureExp >= tExpNeeded && tLevel < 10) {
+        player.treasureExp -= tExpNeeded;
+        player.treasureLevel = tLevel + 1;
+        const td = TREASURES_DATA[player.activeTreasure];
+        combatLog.push(`✨ 法宝【${td.name}】突破！等级: ${player.treasureLevel}`);
+      }
+      
+      if (player.treasureDurability <= 0) {
+        const td = TREASURES_DATA[player.activeTreasure];
+        combatLog.push(`⚠️ 法宝【${td.name}】耐久耗尽，效果已失效！使用 /修复法宝 修复。`);
+      }
+    }
+    
+    // Poison ring self-damage
+    const ringSlots = ['ring', 'ring2', 'ring3', 'ring4', 'ring5', 'ring6', 'ring7', 'ring8', 'ring9', 'ring10'];
+    for (const rSlot of ringSlots) {
+      const rEquipId = player.equipment[rSlot];
+      if (!rEquipId) continue;
+      const rEd = EQUIPMENT_DATA[rEquipId];
+      if (rEd && rEd.selfPoison) {
+        const poisonDmg = Math.floor(player.maxHp * (rEd.poisonDmg || 2) / 100);
+        player.hp = Math.max(1, player.hp - poisonDmg);
+        combatLog.push(`☠️ 毒戒反噬！你损失了 ${poisonDmg} HP（攻击+10%）`);
       }
     }
     
@@ -4867,21 +6160,47 @@ function executeCombat(ws, player, room) {
     
     result = { success: true, victory: true, exp: finalExpGain, silver: silverGain };
   } else if (player.hp <= 0) {
-    // Player dies
-    combatLog.push(`💀 你被 ${monster.name} 击败了！`);
-    
-    // Lose 10% exp
-    const expLoss = Math.floor(player.exp * 0.1);
-    player.exp = Math.max(0, player.exp - expLoss);
-    combatLog.push(`损失 ${expLoss} 经验...`);
-    
-    // Respawn at 村口
-    player.currentRoom = '村口';
-    player.hp = Math.floor(player.maxHp * 0.5);
-    player.spirit = Math.floor(player.maxSpirit * 0.5);
-    combatLog.push(`你被传送到 村口，恢复了一半状态。`);
-    
-    result = { success: true, victory: false, expLoss: expLoss, respawn: '村口' };
+    // Check rebirth pill
+    if (player.hasRebirthPill) {
+      player.hasRebirthPill = false;
+      player.hp = Math.floor(player.maxHp * 0.5);
+      player.spirit = Math.floor(player.maxSpirit * 0.5);
+      combatLog.push(`💊 重生丹生效！你原地复活，恢复50%状态！`);
+      result = { success: true, victory: false, expLoss: 0 };
+    }
+    // Check immortality passive (once per day)
+    else if (player.skills && player.skills.some(ps => ps.id === 'immortality')) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (player._immortalityLastUse !== today) {
+        player._immortalityLastUse = today;
+        player.hp = Math.floor(player.maxHp * 0.5);
+        player.spirit = Math.floor(player.maxSpirit * 0.5);
+        combatLog.push(`📜 不死身发动！你原地复活，恢复50%状态！（每日一次）`);
+        result = { success: true, victory: false, expLoss: 0 };
+      } else {
+        // Normal death
+        const expLoss = Math.floor(player.exp * 0.1);
+        player.exp = Math.max(0, player.exp - expLoss);
+        combatLog.push(`💀 你被 ${monster.name} 击败了！`);
+        combatLog.push(`损失 ${expLoss} 经验...`);
+        player.currentRoom = '村口';
+        player.hp = Math.floor(player.maxHp * 0.5);
+        player.spirit = Math.floor(player.maxSpirit * 0.5);
+        combatLog.push(`你被传送到 村口，恢复了一半状态。`);
+        result = { success: true, victory: false, expLoss: expLoss, respawn: '村口' };
+      }
+    } else {
+      // Player dies - normal death
+      combatLog.push(`💀 你被 ${monster.name} 击败了！`);
+      const expLoss = Math.floor(player.exp * 0.1);
+      player.exp = Math.max(0, player.exp - expLoss);
+      combatLog.push(`损失 ${expLoss} 经验...`);
+      player.currentRoom = '村口';
+      player.hp = Math.floor(player.maxHp * 0.5);
+      player.spirit = Math.floor(player.maxSpirit * 0.5);
+      combatLog.push(`你被传送到 村口，恢复了一半状态。`);
+      result = { success: true, victory: false, expLoss: expLoss, respawn: '村口' };
+    }
   } else {
     combatLog.push(`战斗超时，你逃离了战斗。`);
     result = { success: true, victory: false, timeout: true };
@@ -5115,6 +6434,21 @@ const idleTickInterval = setInterval(() => {
             data: { message: `📜 打坐修炼中，功法【${sd.name}】突破！等级: ${ps.level}` }
           });
         }
+      }
+    }
+    
+    // Alignment conflict penalty: lose 1% exp per minute if both 正 and 邪 skills
+    if (player.skills) {
+      const hasZheng = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '正'; });
+      const hasXie = player.skills.some(ps => { const sd = SKILLS_DATA[ps.id]; return sd && sd.alignment === '邪'; });
+      if (hasZheng && hasXie) {
+        const expLoss = Math.max(1, Math.floor(player.exp * 0.01));
+        player.exp = Math.max(0, player.exp - expLoss);
+        sendToClient(ws, {
+          type: 'system',
+          data: { message: `⚠️ 正邪冲突！功法互斥，损失 ${expLoss} 经验。建议遗忘其中一类功法。` }
+        });
+        changed = true;
       }
     }
     
