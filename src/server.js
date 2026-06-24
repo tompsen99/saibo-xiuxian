@@ -182,6 +182,13 @@ const WORLD_DATA = {
   }
 };
 
+// ===== PHASE 5: SOCIAL & ECONOMY SYSTEMS =====
+// In-memory data stores for social and economy systems
+const teams = {};        // teamId -> { leader, members: [], created }
+const tradeSessions = {}; // tradeId -> { player1, player2, items1: [], items2: [], silver1: 0, silver2: 0, confirmed1: false, confirmed2: false }
+const auctions = [];      // [{ id, seller, item, price, buyout, endTime, highestBidder, highestBid }]
+const bounties = [];      // [{ id, target, reward, poster, hunter, status }]
+
 // ===== SKILLS (功法) SYSTEM =====
 const SKILLS_DATA = {
   // ===== 凡阶下品 =====
@@ -1698,7 +1705,17 @@ function createPlayer(email, password, name, profession) {
     // Phase 3: Forbidden pill expiry
     forbiddenPillExpiry: 0,
     // Phase 3: Pending forget skill confirmation
-    pendingForget: null
+    pendingForget: null,
+    // Phase 5: Social systems
+    mentor: null,
+    apprentices: [],
+    team: null,
+    teamInvite: null,
+    swornBrothers: [],
+    grudges: [],
+    // Phase 5: Economy systems
+    pendingTrade: null,
+    pendingBounty: null
   };
   
   players[playerId] = newPlayer;
@@ -2006,6 +2023,16 @@ function handleLogin(ws, data) {
   if (result.player.hasRebirthPill === undefined) result.player.hasRebirthPill = false;
   if (result.player.forbiddenPillExpiry === undefined) result.player.forbiddenPillExpiry = 0;
   if (result.player.pendingForget === undefined) result.player.pendingForget = null;
+  // Phase 5: Social systems initialization
+  if (result.player.mentor === undefined) result.player.mentor = null;
+  if (!result.player.apprentices) result.player.apprentices = [];
+  if (result.player.team === undefined) result.player.team = null;
+  if (result.player.teamInvite === undefined) result.player.teamInvite = null;
+  if (!result.player.swornBrothers) result.player.swornBrothers = [];
+  if (!result.player.grudges) result.player.grudges = [];
+  // Phase 5: Economy systems initialization
+  if (result.player.pendingTrade === undefined) result.player.pendingTrade = null;
+  if (result.player.pendingBounty === undefined) result.player.pendingBounty = null;
   
   // P0-4: Offline gains calculation
   const now = Date.now();
@@ -2358,6 +2385,70 @@ function handleCommand(ws, data) {
     handleRepairTreasureCommand(ws, player);
   } else if (command.startsWith('/法宝')) {
     handleTreasureListCommand(ws, player);
+  // ===== Phase 5: Social Systems =====
+  } else if (command.startsWith('/拜师')) {
+    handleMentorRequestCommand(ws, player, command);
+  } else if (command.startsWith('/收徒')) {
+    handleAcceptApprenticeCommand(ws, player, command);
+  } else if (command.startsWith('/叛师')) {
+    handleLeaveMentorCommand(ws, player);
+  } else if (command.startsWith('/师徒')) {
+    handleMentorInfoCommand(ws, player);
+  } else if (command.startsWith('/赠予')) {
+    handleGiftCommand(ws, player, command);
+  } else if (command.startsWith('/组队')) {
+    handleTeamInviteCommand(ws, player, command);
+  } else if (command.startsWith('/接受组队')) {
+    handleAcceptTeamCommand(ws, player);
+  } else if (command.startsWith('/离队')) {
+    handleLeaveTeamCommand(ws, player);
+  } else if (command.startsWith('/队伍')) {
+    handleTeamInfoCommand(ws, player);
+  } else if (command.startsWith('/结义')) {
+    handleSwornProposeCommand(ws, player, command);
+  } else if (command.startsWith('/接受结义')) {
+    handleAcceptSwornCommand(ws, player);
+  } else if (command.startsWith('/断义')) {
+    handleBreakSwornCommand(ws, player, command);
+  } else if (command.startsWith('/仇人')) {
+    handleGrudgeListCommand(ws, player);
+  } else if (command.startsWith('/报仇')) {
+    handleMarkGrudgeCommand(ws, player, command);
+  } else if (command.startsWith('/复仇')) {
+    handleRevengeCommand(ws, player);
+  // ===== Phase 5: Economy Systems =====
+  } else if (command.startsWith('/交易物品')) {
+    handleTradeAddItemCommand(ws, player, command);
+  } else if (command.startsWith('/交易灵石')) {
+    handleTradeAddSilverCommand(ws, player, command);
+  } else if (command.startsWith('/确认交易')) {
+    handleTradeConfirmCommand(ws, player);
+  } else if (command.startsWith('/取消交易')) {
+    handleTradeCancelCommand(ws, player);
+  } else if (command.startsWith('/接受交易')) {
+    handleAcceptTradeCommand(ws, player);
+  } else if (command.startsWith('/交易')) {
+    handleTradeCommand(ws, player, command);
+  } else if (command.startsWith('/拍卖行')) {
+    handleAuctionListCommand(ws, player);
+  } else if (command.startsWith('/上架')) {
+    handleAuctionListNewCommand(ws, player, command);
+  } else if (command.startsWith('/竞拍')) {
+    handleAuctionBidCommand(ws, player, command);
+  } else if (command.startsWith('/购买拍卖')) {
+    handleAuctionBuyCommand(ws, player, command);
+  } else if (command.startsWith('/我的拍卖')) {
+    handleMyAuctionsCommand(ws, player);
+  } else if (command.startsWith('/发布悬赏')) {
+    handlePostBountyCommand(ws, player, command);
+  } else if (command.startsWith('/接悬赏')) {
+    handleAcceptBountyCommand(ws, player, command);
+  } else if (command.startsWith('/提交悬赏')) {
+    handleCompleteBountyCommand(ws, player);
+  } else if (command.startsWith('/放弃悬赏')) {
+    handleAbandonBountyCommand(ws, player, command);
+  } else if (command.startsWith('/悬赏')) {
+    handleBountyListCommand(ws, player);
   } else if (command.startsWith('/管理员')) {
     handleAdminCommand(ws, player, command);
   } else {
@@ -2569,9 +2660,7 @@ function handleMoveCommand(ws, player, direction) {
   players[player.id].currentRoom = newRoomName;
   players[player.id].currentMap = targetMap;
   savePlayers(players);
-  const players = getPlayers();
-  players[player.id].currentRoom = newRoomName;
-  savePlayers(players);
+
   
   // Notify old room
   broadcast({
@@ -3103,6 +3192,51 @@ function handleHelpCommand(ws, player) {
 ║  /Bug   - 查看已发现的Bug
 ║  /探索Bug - 搜索当前房间的Bug
 ║  /使用Bug <BugID> - 激活Bug效果
+║
+║  👨‍🏫 师徒系统:
+║  /拜师 <玩家名> - 拜高等级玩家为师
+║  /收徒 <玩家名> - 收低等级玩家为徒
+║  /师徒 - 查看师徒信息
+║  /叛师 - 离开师父(扣20%经验)
+║  /赠予 <物品ID> <数量> - 赠予徒弟物品
+║
+║  👥 组队系统:
+║  /组队 <玩家名> - 邀请玩家组队
+║  /接受组队 - 接受组队邀请
+║  /离队 - 离开队伍
+║  /队伍 - 查看队伍信息
+║
+║  🤝 结义系统:
+║  /结义 <玩家名> - 提议结义
+║  /接受结义 - 接受结义提议
+║  /断义 <玩家名> - 断绝结义(扣100道心)
+║
+║  ⚔️ 仇怨系统:
+║  /仇人 - 查看仇人列表
+║  /报仇 <玩家名> - 标记仇人
+║  /复仇 - 攻击同房间仇人
+║
+║  💰 自由交易:
+║  /交易 <玩家名> - 发起交易
+║  /接受交易 - 接受交易请求
+║  /交易物品 <类型> <ID> <数量> - 添加物品
+║  /交易灵石 <数量> - 添加灵石
+║  /确认交易 - 确认并完成交易
+║  /取消交易 - 取消交易
+║
+║  🔨 拍卖行:
+║  /拍卖行 - 浏览拍卖列表
+║  /上架 <类型> <ID> <价格> - 上架物品
+║  /竞拍 <拍卖ID> <金额> - 竞拍物品
+║  /购买拍卖 <拍卖ID> - 一口价购买
+║  /我的拍卖 - 查看我的拍卖
+║
+║  🏴 悬赏系统:
+║  /悬赏 - 查看悬赏列表
+║  /发布悬赏 <玩家名> <金额> - 发布悬赏
+║  /接悬赏 <悬赏ID> - 接受悬赏
+║  /提交悬赏 - 提交完成悬赏
+║  /放弃悬赏 <悬赏ID> - 放弃悬赏(扣信誉)
 ╚══════════════════════════════╝`
     }
   });
@@ -6336,6 +6470,997 @@ function executeCombat(ws, player, room) {
   
   result.combatLog = combatLog;
   return result;
+}
+
+// ===== HELPER: Find online player ws by player id =====
+function findOnlineWs(playerId) {
+  for (const [clientWs, info] of connectedClients.entries()) {
+    if (info.playerId === playerId && clientWs.readyState === WebSocket.OPEN) {
+      return clientWs;
+    }
+  }
+  return null;
+}
+
+// ===== HELPER: Find online player ws by player name =====
+function findOnlineWsByName(playerName) {
+  for (const [clientWs, info] of connectedClients.entries()) {
+    if (info.playerName === playerName && clientWs.readyState === WebSocket.OPEN) {
+      return clientWs;
+    }
+  }
+  return null;
+}
+
+// ===== PHASE 5: SOCIAL HANDLERS =====
+
+// === MENTOR SYSTEM ===
+function handleMentorRequestCommand(ws, player, command) {
+  const targetName = command.replace('/拜师', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /拜师 <玩家名>' } });
+    return;
+  }
+  if (targetName === player.name) {
+    sendToClient(ws, { type: 'system', data: { message: '不能拜自己为师。' } });
+    return;
+  }
+  const players = getPlayers();
+  const target = Object.values(players).find(p => p.name === targetName);
+  if (!target) {
+    sendToClient(ws, { type: 'system', data: { message: `找不到玩家【${targetName}】。` } });
+    return;
+  }
+  if (target.level - player.level < 10) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】的等级不够高，需要比你高10级以上才能拜师。` } });
+    return;
+  }
+  const targetWs = findOnlineWs(target.id);
+  if (!targetWs) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】不在线。` } });
+    return;
+  }
+  if (player.mentor) {
+    sendToClient(ws, { type: 'system', data: { message: '你已经有师父了。' } });
+    return;
+  }
+  const tp = players[target.id];
+  if (!tp.pendingMentorRequests) tp.pendingMentorRequests = [];
+  if (tp.pendingMentorRequests.includes(player.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `你已经向【${targetName}】发送过拜师请求了。` } });
+    return;
+  }
+  tp.pendingMentorRequests.push(player.id);
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已向【${targetName}】发送拜师请求，等待对方同意。` } });
+  sendToClient(targetWs, { type: 'system', data: { message: `📩 【${player.name}】(Lv${player.level})想要拜你为师！使用 /收徒 ${player.name} 接受。` } });
+}
+
+function handleAcceptApprenticeCommand(ws, player, command) {
+  const targetName = command.replace('/收徒', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /收徒 <玩家名>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pendingMentorRequests || !p.pendingMentorRequests.length) {
+    sendToClient(ws, { type: 'system', data: { message: '没有待处理的拜师请求。' } });
+    return;
+  }
+  const target = Object.values(players).find(pl => pl.name === targetName);
+  if (!target || !p.pendingMentorRequests.includes(target.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `没有来自【${targetName}】的拜师请求。` } });
+    return;
+  }
+  p.pendingMentorRequests = p.pendingMentorRequests.filter(id => id !== target.id);
+  if (!p.apprentices) p.apprentices = [];
+  p.apprentices.push(target.id);
+  const tp = players[target.id];
+  tp.mentor = player.name;
+  tp.mentorId = player.id;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 你已收【${targetName}】为徒！` } });
+  const targetWs = findOnlineWs(target.id);
+  if (targetWs) {
+    sendToClient(targetWs, { type: 'system', data: { message: `✅ 【${player.name}】已收你为徒！你获得了师徒经验加成。` } });
+  }
+}
+
+function handleLeaveMentorCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.mentor) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有师父。' } });
+    return;
+  }
+  const mentorName = p.mentor;
+  const mentorPlayer = Object.values(players).find(pl => pl.name === mentorName);
+  if (mentorPlayer && mentorPlayer.apprentices) {
+    mentorPlayer.apprentices = mentorPlayer.apprentices.filter(id => id !== player.id);
+  }
+  const expPenalty = Math.floor(p.exp * 0.2);
+  p.exp = Math.max(0, p.exp - expPenalty);
+  p.mentor = null;
+  p.mentorId = null;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `你已叛离师门，损失 ${expPenalty} 经验。` } });
+}
+
+function handleMentorInfoCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  let content = '\n╔══════════════════════════════╗\n║  师徒信息\n╠══════════════════════════════╣\n';
+  if (p.mentor) {
+    content += `║  师父: ${p.mentor}\n`;
+    content += `║  师徒加成: 经验+10%\n`;
+  } else {
+    content += `║  师父: 无\n`;
+  }
+  if (p.apprentices && p.apprentices.length > 0) {
+    content += `╠══════════════════════════════╣\n║  徒弟列表:\n`;
+    p.apprentices.forEach(aid => {
+      const ap = players[aid];
+      if (ap) content += `║  - ${ap.name} (Lv${ap.level})\n`;
+    });
+    content += `║  徒弟经验加成: 每收1徒+5%\n`;
+  } else {
+    content += `║  徒弟: 无\n`;
+  }
+  content += '╚══════════════════════════════╝';
+  sendToClient(ws, { type: 'command_response', data: { title: '师徒信息', content } });
+}
+
+function handleGiftCommand(ws, player, command) {
+  const args = command.replace('/赠予', '').trim().split(/\s+/);
+  const itemId = args[0];
+  const qty = parseInt(args[1]) || 1;
+  if (!itemId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /赠予 <物品ID> [数量]' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.apprentices || p.apprentices.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有徒弟可以赠予。' } });
+    return;
+  }
+  if (PILLS_DATA[itemId]) {
+    if (!p.pills || !p.pills[itemId] || p.pills[itemId] < qty) {
+      sendToClient(ws, { type: 'system', data: { message: '你没有足够的物品。' } });
+      return;
+    }
+    // Give to first apprentice
+    const apprentice = players[p.apprentices[0]];
+    if (!apprentice) { sendToClient(ws, { type: 'system', data: { message: '找不到徒弟。' } }); return; }
+    p.pills[itemId] -= qty;
+    if (!apprentice.pills) apprentice.pills = {};
+    apprentice.pills[itemId] = (apprentice.pills[itemId] || 0) + qty;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `已赠予【${apprentice.name}】${qty}个${PILLS_DATA[itemId].name}。` } });
+    const apprenticeWs = findOnlineWs(apprentice.id);
+    if (apprenticeWs) {
+      sendToClient(apprenticeWs, { type: 'system', data: { message: `🎁 师父【${player.name}】赠予你 ${qty}个${PILLS_DATA[itemId].name}！` } });
+    }
+  } else {
+    sendToClient(ws, { type: 'system', data: { message: `未知物品ID: ${itemId}` } });
+  }
+}
+
+// === TEAM SYSTEM ===
+function handleTeamInviteCommand(ws, player, command) {
+  const targetName = command.replace('/组队', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /组队 <玩家名>' } });
+    return;
+  }
+  if (targetName === player.name) {
+    sendToClient(ws, { type: 'system', data: { message: '不能邀请自己。' } });
+    return;
+  }
+  const targetWs = findOnlineWsByName(targetName);
+  if (!targetWs) {
+    sendToClient(ws, { type: 'system', data: { message: `玩家【${targetName}】不在线。` } });
+    return;
+  }
+  // Check if player is already in a team
+  let teamId = null;
+  for (const [tid, team] of Object.entries(teams)) {
+    if (team.members.includes(player.id)) {
+      teamId = tid;
+      break;
+    }
+  }
+  if (!teamId) {
+    teamId = 'team_' + Date.now();
+    teams[teamId] = { leader: player.id, members: [player.id], created: Date.now() };
+  }
+  const team = teams[teamId];
+  if (team.members.length >= 5) {
+    sendToClient(ws, { type: 'system', data: { message: '队伍已满（最多5人）。' } });
+    return;
+  }
+  const players = getPlayers();
+  const target = Object.values(players).find(p => p.name === targetName);
+  if (!target) { sendToClient(ws, { type: 'system', data: { message: '找不到该玩家。' } }); return; }
+  if (team.members.includes(target.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】已在你的队伍中。` } });
+    return;
+  }
+  target.pendingTeamInvite = teamId;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已邀请【${targetName}】加入队伍，等待对方接受。` } });
+  sendToClient(targetWs, { type: 'system', data: { message: `📩 【${player.name}】邀请你加入队伍！使用 /接受组队 加入。` } });
+}
+
+function handleAcceptTeamCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pendingTeamInvite) {
+    sendToClient(ws, { type: 'system', data: { message: '没有待处理的组队邀请。' } });
+    return;
+  }
+  const teamId = p.pendingTeamInvite;
+  const team = teams[teamId];
+  if (!team) {
+    p.pendingTeamInvite = null;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: '组队邀请已过期。' } });
+    return;
+  }
+  if (team.members.length >= 5) {
+    sendToClient(ws, { type: 'system', data: { message: '队伍已满。' } });
+    p.pendingTeamInvite = null;
+    savePlayers(players);
+    return;
+  }
+  team.members.push(player.id);
+  p.pendingTeamInvite = null;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: '✅ 你已加入队伍！' } });
+  // Notify all team members
+  for (const mid of team.members) {
+    if (mid === player.id) continue;
+    const mws = findOnlineWs(mid);
+    if (mws) {
+      const mp = players[mid];
+      sendToClient(mws, { type: 'system', data: { message: `👥 【${player.name}】加入了队伍！` } });
+    }
+  }
+}
+
+function handleLeaveTeamCommand(ws, player) {
+  let teamId = null;
+  for (const [tid, team] of Object.entries(teams)) {
+    if (team.members.includes(player.id)) {
+      teamId = tid;
+      break;
+    }
+  }
+  if (!teamId) {
+    sendToClient(ws, { type: 'system', data: { message: '你不在任何队伍中。' } });
+    return;
+  }
+  const team = teams[teamId];
+  team.members = team.members.filter(id => id !== player.id);
+  const players = getPlayers();
+  sendToClient(ws, { type: 'system', data: { message: '你已离开队伍。' } });
+  if (team.members.length === 0) {
+    delete teams[teamId];
+  } else {
+    if (team.leader === player.id) {
+      team.leader = team.members[0];
+    }
+    for (const mid of team.members) {
+      const mws = findOnlineWs(mid);
+      if (mws) {
+        const mp = players[mid];
+        sendToClient(mws, { type: 'system', data: { message: `👥 【${player.name}】离开了队伍。` } });
+      }
+    }
+  }
+}
+
+function handleTeamInfoCommand(ws, player) {
+  let teamId = null;
+  for (const [tid, team] of Object.entries(teams)) {
+    if (team.members.includes(player.id)) {
+      teamId = tid;
+      break;
+    }
+  }
+  if (!teamId) {
+    sendToClient(ws, { type: 'system', data: { message: '你不在任何队伍中。使用 /组队 <玩家名> 创建或加入队伍。' } });
+    return;
+  }
+  const team = teams[teamId];
+  const players = getPlayers();
+  let content = '\n╔══════════════════════════════╗\n║  队伍信息\n╠══════════════════════════════╣\n';
+  for (const mid of team.members) {
+    const mp = players[mid];
+    if (!mp) continue;
+    const isLeader = mid === team.leader ? '👑' : '  ';
+    const hpStr = `${mp.hp}/${mp.maxHp}`;
+    const loc = `${mp.currentMap}-${mp.currentRoom}`;
+    content += `║ ${isLeader}${mp.name} Lv${mp.level} HP:${hpStr} ${loc}\n`;
+  }
+  content += '╚══════════════════════════════╝';
+  sendToClient(ws, { type: 'command_response', data: { title: '队伍信息', content } });
+}
+
+// === SWORN BROTHER SYSTEM ===
+function handleSwornProposeCommand(ws, player, command) {
+  const targetName = command.replace('/结义', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /结义 <玩家名>' } });
+    return;
+  }
+  if (targetName === player.name) {
+    sendToClient(ws, { type: 'system', data: { message: '不能和自己结义。' } });
+    return;
+  }
+  const players = getPlayers();
+  const target = Object.values(players).find(p => p.name === targetName);
+  if (!target) {
+    sendToClient(ws, { type: 'system', data: { message: `找不到玩家【${targetName}】。` } });
+    return;
+  }
+  if (player.level < 5 || target.level < 5) {
+    sendToClient(ws, { type: 'system', data: { message: '双方都需要达到5级才能结义。' } });
+    return;
+  }
+  const targetWs = findOnlineWs(target.id);
+  if (!targetWs) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】不在线。` } });
+    return;
+  }
+  if (player.swornBrothers && player.swornBrothers.includes(target.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `你和【${targetName}】已经是结义兄弟了。` } });
+    return;
+  }
+  const tp = players[target.id];
+  tp.pendingSworn = player.id;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已向【${targetName}】发送结义请求。` } });
+  sendToClient(targetWs, { type: 'system', data: { message: `🤝 【${player.name}】想与你结义！使用 /接受结义 接受。` } });
+}
+
+function handleAcceptSwornCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pendingSworn) {
+    sendToClient(ws, { type: 'system', data: { message: '没有待处理的结义请求。' } });
+    return;
+  }
+  const requester = players[p.pendingSworn];
+  if (!requester) {
+    p.pendingSworn = null;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: '请求已过期。' } });
+    return;
+  }
+  if (!p.swornBrothers) p.swornBrothers = [];
+  if (!requester.swornBrothers) requester.swornBrothers = [];
+  p.swornBrothers.push(requester.id);
+  requester.swornBrothers.push(player.id);
+  p.pendingSworn = null;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 你已与【${requester.name}】结义！结义兄弟战斗时互相加成5%伤害。` } });
+  const reqWs = findOnlineWs(requester.id);
+  if (reqWs) {
+    sendToClient(reqWs, { type: 'system', data: { message: `✅ 【${player.name}】已与你结义！` } });
+  }
+}
+
+function handleBreakSwornCommand(ws, player, command) {
+  const targetName = command.replace('/断义', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /断义 <玩家名>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  const target = Object.values(players).find(pl => pl.name === targetName);
+  if (!target || !p.swornBrothers || !p.swornBrothers.includes(target.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】不是你的结义兄弟。` } });
+    return;
+  }
+  p.swornBrothers = p.swornBrothers.filter(id => id !== target.id);
+  if (target.swornBrothers) {
+    target.swornBrothers = target.swornBrothers.filter(id => id !== player.id);
+  }
+  const dhPenalty = 100;
+  p.daoHeart = Math.max(0, (p.daoHeart || 500) - dhPenalty);
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `你与【${targetName}】断义，道心 -${dhPenalty}。` } });
+  const targetWs = findOnlineWs(target.id);
+  if (targetWs) {
+    sendToClient(targetWs, { type: 'system', data: { message: `💔 【${player.name}】与你断义了！` } });
+  }
+}
+
+// === GRUDGE SYSTEM ===
+function handleGrudgeListCommand(ws, player) {
+  const grudges = player.grudges || [];
+  if (grudges.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有仇人。' } });
+    return;
+  }
+  let list = '⚔️ 仇人列表:\n';
+  grudges.forEach((g, i) => { list += `  ${i + 1}. ${g.name} - 原因: ${g.reason}\n`; });
+  sendToClient(ws, { type: 'command_response', data: { title: '仇人列表', content: `\n╔══════════════════════════════╗\n║  仇人列表\n╠══════════════════════════════╣\n║  ${list.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+function handleMarkGrudgeCommand(ws, player, command) {
+  const targetName = command.replace('/报仇', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /报仇 <玩家名>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  const target = Object.values(players).find(pl => pl.name === targetName);
+  if (!target) {
+    sendToClient(ws, { type: 'system', data: { message: `找不到玩家【${targetName}】。` } });
+    return;
+  }
+  if (!p.grudges) p.grudges = [];
+  if (p.grudges.find(g => g.id === target.id)) {
+    sendToClient(ws, { type: 'system', data: { message: `【${targetName}】已在你的仇人列表中。` } });
+    return;
+  }
+  p.grudges.push({ id: target.id, name: targetName, reason: '手动标记', time: Date.now() });
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已标记【${targetName}】为仇人。使用 /复仇 攻击同房间的仇人。` } });
+}
+
+function handleRevengeCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  const grudges = p.grudges || [];
+  if (grudges.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有仇人。' } });
+    return;
+  }
+  // Find grudge target in same room
+  const targetsInRoom = [];
+  for (const [clientWs, info] of connectedClients.entries()) {
+    if (clientWs.readyState === WebSocket.OPEN && info.playerId !== player.id) {
+      const tp = players[info.playerId];
+      if (tp && tp.currentMap === player.currentMap && tp.currentRoom === player.currentRoom) {
+        if (grudges.find(g => g.id === tp.id)) {
+          targetsInRoom.push({ ws: clientWs, player: tp });
+        }
+      }
+    }
+  }
+  if (targetsInRoom.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '当前房间没有你的仇人。' } });
+    return;
+  }
+  const target = targetsInRoom[0];
+  // PvP combat with +15% revenge bonus
+  const pvpDamageBonus = 1.15;
+  const equipBonuses = getEquipmentBonuses(p);
+  let pAttack = p.stats.str * 2 + p.level * 3 + equipBonuses.attack;
+  pAttack = Math.floor(pAttack * pvpDamageBonus);
+  const tEquipBonuses = getEquipmentBonuses(target.player);
+  let tAttack = target.player.stats.str * 2 + target.player.level * 3 + tEquipBonuses.attack;
+  let tDef = target.player.stats.con * 1.5 + target.player.level * 2 + tEquipBonuses.defense;
+  const pDmg = Math.max(1, pAttack - Math.floor(tDef * 0.5));
+  target.player.hp = Math.max(0, target.player.hp - pDmg);
+  const players2 = getPlayers();
+  players2[target.player.id] = target.player;
+  players2[p.id] = p;
+  savePlayers(players2);
+  sendToClient(ws, { type: 'system', data: { message: `⚔️ 复仇攻击【${target.player.name}】！造成 ${pDmg} 伤害（+15%复仇加成）！` } });
+  sendToClient(target.ws, { type: 'system', data: { message: `⚔️ 【${p.name}】对你发动了复仇攻击！你受到 ${pDmg} 伤害！` } });
+  if (target.player.hp <= 0) {
+    // Auto-grudge on PvP kill
+    const tp2 = players2[target.player.id];
+    if (!tp2.grudges) tp2.grudges = [];
+    if (!tp2.grudges.find(g => g.id === player.id)) {
+      tp2.grudges.push({ id: player.id, name: player.name, reason: 'PK击杀', time: Date.now() });
+    }
+    tp2.hp = Math.floor(tp2.maxHp * 0.5);
+    tp2.currentRoom = '村口';
+    tp2.currentMap = '新手村';
+    savePlayers(players2);
+    sendToClient(ws, { type: 'system', data: { message: `💀 你击杀了【${target.player.name}】！` } });
+    sendToClient(target.ws, { type: 'system', data: { message: `💀 你被【${player.name}】击杀！已自动标记为仇人。你被传送到新手村。` } });
+    // Send respawn room to target
+    const respawnRoom = getRoom('新手村', '村口');
+    if (respawnRoom) {
+      sendToClient(target.ws, {
+        type: 'room',
+        data: { name: respawnRoom.name, description: respawnRoom.description, exits: respawnRoom.exits, players: getPlayersInRoom('新手村', '村口', target.ws) }
+      });
+    }
+  }
+}
+
+// ===== PHASE 5: ECONOMY HANDLERS =====
+
+// === TRADE SYSTEM ===
+function handleTradeCommand(ws, player, command) {
+  const targetName = command.replace('/交易', '').trim();
+  if (!targetName) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /交易 <玩家名>' } });
+    return;
+  }
+  if (targetName === player.name) {
+    sendToClient(ws, { type: 'system', data: { message: '不能和自己交易。' } });
+    return;
+  }
+  const targetWs = findOnlineWsByName(targetName);
+  if (!targetWs) {
+    sendToClient(ws, { type: 'system', data: { message: `玩家【${targetName}】不在线。` } });
+    return;
+  }
+  const players = getPlayers();
+  const target = Object.values(players).find(p => p.name === targetName);
+  if (!target) { sendToClient(ws, { type: 'system', data: { message: '找不到该玩家。' } }); return; }
+  // Check if either is already in a trade
+  for (const [tid, trade] of Object.entries(tradeSessions)) {
+    if (trade.player1 === player.id || trade.player2 === player.id ||
+        trade.player1 === target.id || trade.player2 === target.id) {
+      sendToClient(ws, { type: 'system', data: { message: '你或对方正在交易中。' } });
+      return;
+    }
+  }
+  const tradeId = 'trade_' + Date.now();
+  tradeSessions[tradeId] = {
+    player1: player.id, player2: target.id,
+    items1: [], items2: [], silver1: 0, silver2: 0,
+    confirmed1: false, confirmed2: false
+  };
+  players[player.id].activeTrade = tradeId;
+  players[target.id].activeTrade = tradeId;
+  players[target.id].pendingTradeInvite = tradeId;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `已向【${targetName}】发起交易请求，等待对方接受。` } });
+  sendToClient(targetWs, { type: 'system', data: { message: `💰 【${player.name}】想与你交易！使用 /接受交易 接受。` } });
+}
+
+function handleAcceptTradeCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  if (!p.pendingTradeInvite) {
+    sendToClient(ws, { type: 'system', data: { message: '没有待处理的交易请求。' } });
+    return;
+  }
+  const tradeId = p.pendingTradeInvite;
+  const trade = tradeSessions[tradeId];
+  if (!trade) {
+    p.pendingTradeInvite = null;
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: '交易请求已过期。' } });
+    return;
+  }
+  p.pendingTradeInvite = null;
+  p.activeTrade = tradeId;
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: '✅ 你已接受交易！使用 /交易物品 /交易灵石 添加物品，/确认交易 完成。' } });
+  const p1Ws = findOnlineWs(trade.player1);
+  if (p1Ws) {
+    sendToClient(p1Ws, { type: 'system', data: { message: `✅ 【${player.name}】接受了交易！使用 /交易物品 /交易灵石 添加物品。` } });
+  }
+}
+
+function handleTradeAddItemCommand(ws, player, command) {
+  const args = command.replace('/交易物品', '').trim().split(/\s+/);
+  const itemType = args[0]; // 'pill' or 'equip'
+  const itemId = args[1];
+  const qty = parseInt(args[2]) || 1;
+  if (!itemType || !itemId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /交易物品 <pill|equip> <物品ID> [数量]' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  const tradeId = p.activeTrade;
+  if (!tradeId || !tradeSessions[tradeId]) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有正在进行的交易。' } });
+    return;
+  }
+  const trade = tradeSessions[tradeId];
+  const isP1 = trade.player1 === player.id;
+  if (trade[isP1 ? 'confirmed1' : 'confirmed2']) {
+    sendToClient(ws, { type: 'system', data: { message: '你已确认交易，不能再修改。' } });
+    return;
+  }
+  if (itemType === 'pill') {
+    if (!p.pills || !p.pills[itemId] || p.pills[itemId] < qty) {
+      sendToClient(ws, { type: 'system', data: { message: '你没有足够的物品。' } });
+      return;
+    }
+    const key = isP1 ? 'items1' : 'items2';
+    trade[key].push({ type: 'pill', id: itemId, qty });
+    const pd = PILLS_DATA[itemId];
+    sendToClient(ws, { type: 'system', data: { message: `已添加 ${qty}个${pd ? pd.name : itemId} 到交易栏。` } });
+  } else if (itemType === 'equip') {
+    if (!p.equipmentBag || !p.equipmentBag.find(e => e.id === itemId)) {
+      sendToClient(ws, { type: 'system', data: { message: '你没有该装备。' } });
+      return;
+    }
+    const key = isP1 ? 'items1' : 'items2';
+    trade[key].push({ type: 'equip', id: itemId, qty: 1 });
+    const ed = EQUIPMENT_DATA[itemId];
+    sendToClient(ws, { type: 'system', data: { message: `已添加 ${ed ? ed.name : itemId} 到交易栏。` } });
+  } else {
+    sendToClient(ws, { type: 'system', data: { message: '类型应为 pill 或 equip。' } });
+  }
+}
+
+function handleTradeAddSilverCommand(ws, player, command) {
+  const amount = parseInt(command.replace('/交易灵石', '').trim());
+  if (!amount || amount <= 0) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /交易灵石 <数量>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  const tradeId = p.activeTrade;
+  if (!tradeId || !tradeSessions[tradeId]) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有正在进行的交易。' } });
+    return;
+  }
+  const trade = tradeSessions[tradeId];
+  const isP1 = trade.player1 === player.id;
+  if (trade[isP1 ? 'confirmed1' : 'confirmed2']) {
+    sendToClient(ws, { type: 'system', data: { message: '你已确认交易，不能再修改。' } });
+    return;
+  }
+  if (p.silver < amount) {
+    sendToClient(ws, { type: 'system', data: { message: '灵石不足。' } });
+    return;
+  }
+  if (isP1) trade.silver1 += amount;
+  else trade.silver2 += amount;
+  sendToClient(ws, { type: 'system', data: { message: `已添加 ${amount} 灵石到交易栏。` } });
+}
+
+function handleTradeConfirmCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  const tradeId = p.activeTrade;
+  if (!tradeId || !tradeSessions[tradeId]) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有正在进行的交易。' } });
+    return;
+  }
+  const trade = tradeSessions[tradeId];
+  const isP1 = trade.player1 === player.id;
+  if (isP1) trade.confirmed1 = true;
+  else trade.confirmed2 = true;
+  sendToClient(ws, { type: 'system', data: { message: '✅ 你已确认交易，等待对方确认。' } });
+  const otherWs = findOnlineWs(isP1 ? trade.player2 : trade.player1);
+  if (otherWs) {
+    sendToClient(otherWs, { type: 'system', data: { message: '对方已确认交易，请你也 /确认交易。' } });
+  }
+  // If both confirmed, execute trade
+  if (trade.confirmed1 && trade.confirmed2) {
+    const p1 = players[trade.player1];
+    const p2 = players[trade.player2];
+    // Transfer items
+    for (const item of trade.items1) {
+      if (item.type === 'pill') {
+        p1.pills[item.id] -= item.qty;
+        if (p1.pills[item.id] <= 0) delete p1.pills[item.id];
+        if (!p2.pills) p2.pills = {};
+        p2.pills[item.id] = (p2.pills[item.id] || 0) + item.qty;
+      } else if (item.type === 'equip') {
+        const idx = p1.equipmentBag.findIndex(e => e.id === item.id);
+        if (idx >= 0) {
+          const eq = p1.equipmentBag.splice(idx, 1)[0];
+          if (!p2.equipmentBag) p2.equipmentBag = [];
+          p2.equipmentBag.push(eq);
+        }
+      }
+    }
+    for (const item of trade.items2) {
+      if (item.type === 'pill') {
+        if (!p2.pills) p2.pills = {};
+        p2.pills[item.id] -= item.qty;
+        if (p2.pills[item.id] <= 0) delete p2.pills[item.id];
+        if (!p1.pills) p1.pills = {};
+        p1.pills[item.id] = (p1.pills[item.id] || 0) + item.qty;
+      } else if (item.type === 'equip') {
+        const idx = p2.equipmentBag.findIndex(e => e.id === item.id);
+        if (idx >= 0) {
+          const eq = p2.equipmentBag.splice(idx, 1)[0];
+          if (!p1.equipmentBag) p1.equipmentBag = [];
+          p1.equipmentBag.push(eq);
+        }
+      }
+    }
+    // Transfer silver
+    p1.silver = (p1.silver || 0) - trade.silver1 + trade.silver2;
+    p2.silver = (p2.silver || 0) - trade.silver2 + trade.silver1;
+    p1.activeTrade = null;
+    p2.activeTrade = null;
+    delete tradeSessions[tradeId];
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: '✅ 交易完成！' } });
+    if (otherWs) {
+      sendToClient(otherWs, { type: 'system', data: { message: '✅ 交易完成！' } });
+    }
+  } else {
+    savePlayers(players);
+  }
+}
+
+function handleTradeCancelCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  const tradeId = p.activeTrade;
+  if (!tradeId || !tradeSessions[tradeId]) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有正在进行的交易。' } });
+    return;
+  }
+  const trade = tradeSessions[tradeId];
+  const otherId = trade.player1 === player.id ? trade.player2 : trade.player1;
+  const otherWs = findOnlineWs(otherId);
+  const other = players[otherId];
+  if (other) other.activeTrade = null;
+  p.activeTrade = null;
+  delete tradeSessions[tradeId];
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: '❌ 交易已取消。' } });
+  if (otherWs) {
+    sendToClient(otherWs, { type: 'system', data: { message: '❌ 对方取消了交易。' } });
+  }
+}
+
+// === AUCTION SYSTEM ===
+function handleAuctionListCommand(ws, player) {
+  if (auctions.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '拍卖行目前没有物品。使用 /上架 上架物品。' } });
+    return;
+  }
+  let list = '🔨 拍卖行:\n';
+  auctions.forEach((a, i) => {
+    const item = a.itemType === 'pill' ? (PILLS_DATA[a.itemId] || {}) : (EQUIPMENT_DATA[a.itemId] || {});
+    const itemName = item.name || a.itemId;
+    list += `  [${a.id}] ${itemName} x${a.qty} - ${a.price}灵石 (卖家: ${a.sellerName})\n`;
+  });
+  sendToClient(ws, { type: 'command_response', data: { title: '拍卖行', content: `\n╔══════════════════════════════╗\n║  拍卖行\n╠══════════════════════════════╣\n║  ${list.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+function handleAuctionListNewCommand(ws, player, command) {
+  const args = command.replace('/上架', '').trim().split(/\s+/);
+  const itemType = args[0]; // 'pill' or 'equip'
+  const itemId = args[1];
+  const price = parseInt(args[2]);
+  const qty = parseInt(args[3]) || 1;
+  if (!itemType || !itemId || !price || price <= 0) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /上架 <pill|equip> <物品ID> <价格> [数量]' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if (itemType === 'pill') {
+    if (!p.pills || !p.pills[itemId] || p.pills[itemId] < qty) {
+      sendToClient(ws, { type: 'system', data: { message: '你没有足够的物品。' } });
+      return;
+    }
+    p.pills[itemId] -= qty;
+    if (p.pills[itemId] <= 0) delete p.pills[itemId];
+  } else if (itemType === 'equip') {
+    if (!p.equipmentBag || !p.equipmentBag.find(e => e.id === itemId)) {
+      sendToClient(ws, { type: 'system', data: { message: '你没有该装备。' } });
+      return;
+    }
+    const idx = p.equipmentBag.findIndex(e => e.id === itemId);
+    p.equipmentBag.splice(idx, 1);
+  } else {
+    sendToClient(ws, { type: 'system', data: { message: '类型应为 pill 或 equip。' } });
+    return;
+  }
+  const auctionId = auctions.length + 1;
+  auctions.push({
+    id: auctionId, sellerId: player.id, sellerName: player.name,
+    itemType, itemId, qty, price, endTime: Date.now() + 86400000 // 24h
+  });
+  savePlayers(players);
+  const item = itemType === 'pill' ? (PILLS_DATA[itemId] || {}) : (EQUIPMENT_DATA[itemId] || {});
+  sendToClient(ws, { type: 'system', data: { message: `✅ 已上架 ${item.name || itemId} x${qty}，定价 ${price} 灵石。` } });
+}
+
+function handleAuctionBidCommand(ws, player, command) {
+  const args = command.replace('/竞拍', '').trim().split(/\s+/);
+  const auctionId = parseInt(args[0]);
+  const amount = parseInt(args[1]);
+  if (!auctionId || !amount) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /竞拍 <拍卖ID> <金额>' } });
+    return;
+  }
+  const auction = auctions.find(a => a.id === auctionId);
+  if (!auction) {
+    sendToClient(ws, { type: 'system', data: { message: '找不到该拍卖。' } });
+    return;
+  }
+  if (auction.sellerId === player.id) {
+    sendToClient(ws, { type: 'system', data: { message: '不能竞拍自己的物品。' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if ((p.silver || 0) < amount) {
+    sendToClient(ws, { type: 'system', data: { message: '灵石不足。' } });
+    return;
+  }
+  // Buyout
+  if (amount >= auction.price) {
+    p.silver -= auction.price;
+    const seller = players[auction.sellerId];
+    if (seller) seller.silver = (seller.silver || 0) + auction.price;
+    if (auction.itemType === 'pill') {
+      if (!p.pills) p.pills = {};
+      p.pills[auction.itemId] = (p.pills[auction.itemId] || 0) + auction.qty;
+    } else {
+      if (!p.equipmentBag) p.equipmentBag = [];
+      p.equipmentBag.push({ id: auction.itemId });
+    }
+    const idx = auctions.indexOf(auction);
+    auctions.splice(idx, 1);
+    savePlayers(players);
+    sendToClient(ws, { type: 'system', data: { message: `✅ 你以 ${auction.price} 灵石购买了拍卖物品！` } });
+    const sellerWs = findOnlineWs(auction.sellerId);
+    if (sellerWs) {
+      sendToClient(sellerWs, { type: 'system', data: { message: `💰 你上架的物品已被购买！获得 ${auction.price} 灵石。` } });
+    }
+  } else {
+    sendToClient(ws, { type: 'system', data: { message: `出价不足，需要至少 ${auction.price} 灵石（一口价）。` } });
+  }
+}
+
+function handleAuctionBuyCommand(ws, player, command) {
+  const auctionId = parseInt(command.replace('/购买拍卖', '').trim());
+  if (!auctionId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /购买拍卖 <拍卖ID>' } });
+    return;
+  }
+  handleAuctionBidCommand(ws, player, `/竞拍 ${auctionId} 999999999`);
+}
+
+function handleMyAuctionsCommand(ws, player) {
+  const myAuctions = auctions.filter(a => a.sellerId === player.id);
+  if (myAuctions.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有上架的物品。' } });
+    return;
+  }
+  let list = '📦 我的拍卖:\n';
+  myAuctions.forEach(a => {
+    const item = a.itemType === 'pill' ? (PILLS_DATA[a.itemId] || {}) : (EQUIPMENT_DATA[a.itemId] || {});
+    list += `  [${a.id}] ${item.name || a.itemId} x${a.qty} - ${a.price}灵石\n`;
+  });
+  sendToClient(ws, { type: 'command_response', data: { title: '我的拍卖', content: `\n╔══════════════════════════════╗\n║  我的拍卖\n╠══════════════════════════════╣\n║  ${list.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+// === BOUNTY SYSTEM ===
+function handleBountyListCommand(ws, player) {
+  const active = bounties.filter(b => b.status === 'active');
+  if (active.length === 0) {
+    sendToClient(ws, { type: 'system', data: { message: '目前没有悬赏。使用 /发布悬赏 发布悬赏。' } });
+    return;
+  }
+  let list = '🏴 悬赏列表:\n';
+  active.forEach(b => {
+    list += `  [${b.id}] ${b.targetName} - ${b.reward}灵石 (发布者: ${b.posterName})\n`;
+  });
+  sendToClient(ws, { type: 'command_response', data: { title: '悬赏列表', content: `\n╔══════════════════════════════╗\n║  悬赏列表\n╠══════════════════════════════╣\n║  ${list.split('\n').join('\n║  ')}\n╚══════════════════════════════╝` } });
+}
+
+function handlePostBountyCommand(ws, player, command) {
+  const args = command.replace('/发布悬赏', '').trim().split(/\s+/);
+  const targetName = args[0];
+  const reward = parseInt(args[1]);
+  if (!targetName || !reward || reward <= 0) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /发布悬赏 <玩家名> <金额>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  if ((p.silver || 0) < reward) {
+    sendToClient(ws, { type: 'system', data: { message: '灵石不足。' } });
+    return;
+  }
+  const target = Object.values(players).find(pl => pl.name === targetName);
+  if (!target) {
+    sendToClient(ws, { type: 'system', data: { message: `找不到玩家【${targetName}】。` } });
+    return;
+  }
+  if (target.id === player.id) {
+    sendToClient(ws, { type: 'system', data: { message: '不能悬赏自己。' } });
+    return;
+  }
+  p.silver -= reward;
+  const bountyId = bounties.length + 1;
+  bounties.push({
+    id: bountyId, targetId: target.id, targetName,
+    reward, posterId: player.id, posterName: player.name,
+    hunterId: null, status: 'active', time: Date.now()
+  });
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 已发布悬赏【${targetName}】，奖金 ${reward} 灵石。` } });
+  broadcast({ type: 'system', data: { message: `🏴 新悬赏发布！【${targetName}】- ${reward}灵石。使用 /接悬赏 ${bountyId} 接受。` } });
+}
+
+function handleAcceptBountyCommand(ws, player, command) {
+  const bountyId = parseInt(command.replace('/接悬赏', '').trim());
+  if (!bountyId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /接悬赏 <悬赏ID>' } });
+    return;
+  }
+  const bounty = bounties.find(b => b.id === bountyId);
+  if (!bounty || bounty.status !== 'active') {
+    sendToClient(ws, { type: 'system', data: { message: '找不到该悬赏或已被接受。' } });
+    return;
+  }
+  if (bounty.posterId === player.id) {
+    sendToClient(ws, { type: 'system', data: { message: '不能接受自己的悬赏。' } });
+    return;
+  }
+  bounty.hunterId = player.id;
+  bounty.hunterName = player.name;
+  bounty.status = 'accepted';
+  const players = getPlayers();
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 你已接受悬赏！击杀【${bounty.targetName}】后使用 /提交悬赏 领取奖金。` } });
+}
+
+function handleCompleteBountyCommand(ws, player) {
+  const players = getPlayers();
+  const p = players[player.id];
+  const bounty = bounties.find(b => b.hunterId === player.id && b.status === 'accepted');
+  if (!bounty) {
+    sendToClient(ws, { type: 'system', data: { message: '你没有已接受的悬赏任务。' } });
+    return;
+  }
+  // Check if target is dead (hp <= 0 or in village)
+  const target = players[bounty.targetId];
+  if (!target) {
+    sendToClient(ws, { type: 'system', data: { message: '目标不存在。' } });
+    return;
+  }
+  // Simple check: if target's grudges include hunter, they were PK'd
+  const targetGrudges = target.grudges || [];
+  const wasKilled = targetGrudges.find(g => g.id === player.id);
+  if (!wasKilled) {
+    sendToClient(ws, { type: 'system', data: { message: '你还没有击杀目标。使用 /复仇 攻击目标，击杀后再提交。' } });
+    return;
+  }
+  p.silver = (p.silver || 0) + bounty.reward;
+  bounty.status = 'completed';
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `✅ 悬赏完成！获得 ${bounty.reward} 灵石奖励！` } });
+  // Notify poster
+  const posterWs = findOnlineWs(bounty.posterId);
+  if (posterWs) {
+    sendToClient(posterWs, { type: 'system', data: { message: `📋 你发布的悬赏【${bounty.targetName}】已被完成。` } });
+  }
+}
+
+function handleAbandonBountyCommand(ws, player, command) {
+  const bountyId = parseInt(command.replace('/放弃悬赏', '').trim());
+  if (!bountyId) {
+    sendToClient(ws, { type: 'system', data: { message: '用法: /放弃悬赏 <悬赏ID>' } });
+    return;
+  }
+  const players = getPlayers();
+  const p = players[player.id];
+  const bounty = bounties.find(b => b.id === bountyId && b.hunterId === player.id);
+  if (!bounty) {
+    sendToClient(ws, { type: 'system', data: { message: '找不到你接受的该悬赏。' } });
+    return;
+  }
+  bounty.hunterId = null;
+  bounty.hunterName = null;
+  bounty.status = 'active';
+  // Penalty: lose credit score
+  p.creditScore = Math.max(0, (p.creditScore || 500) - 50);
+  savePlayers(players);
+  sendToClient(ws, { type: 'system', data: { message: `你放弃了悬赏，信誉 -50。` } });
 }
 
 // Initialize and start server
