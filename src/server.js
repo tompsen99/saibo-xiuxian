@@ -54,7 +54,7 @@ const WORLD_DATA = {
         '村口': {
           name: '村口',
           description: '村庄的入口处，一块石碑上刻着"新手村"三个大字。微风拂过，带来远处花草的清香。',
-          exits: { north: '村广场', east: '集市', west: '修炼场', south: '竹林', southeast: '铁匠铺' }
+          exits: { north: '村广场', east: '集市', west: '修炼场', south: '竹林', southeast: '铁匠铺', southwest: '洛阳城' }
         },
         '竹林': {
           name: '竹林',
@@ -100,6 +100,83 @@ const WORLD_DATA = {
           description: '开阔的修炼场，地面平整。几位修士正在打坐修炼，空气中隐约有灵气流动。',
           exits: { east: '村口' }
         }
+      }
+    },
+    '中原江湖': {
+      name: '中原江湖', realmRequirement: '筑基',
+      description: '中原大地，江湖纷争。洛阳城繁华似锦。',
+      rooms: {
+        '洛阳城': { name: '洛阳城', description: '中原第一大城，车水马马龙。北通嵩山，南接长安，东达华山，西连野外。', exits: { north: '嵩山脚下', south: '长安街', east: '华山脚下', west: '野外树林', up: '少林寺' } },
+        '长安街': { name: '长安街', description: '长安大街，古色古香。两旁酒楼茶馆鳞次栉比。', exits: { north: '洛阳城', east: '酒楼' } },
+        '客栈': { name: '中原客栈', description: '客栈内灯火通明，旅人们围坐桌旁。', exits: { south: '洛阳城' } },
+        '酒楼': { name: '醉仙楼', description: '酒楼三层，登高可望洛阳全貌。', exits: { west: '长安街' } },
+        '黑市': { name: '黑市', description: '阴暗的地下市场，这里什么都卖。', exits: { east: '洛阳城', north: '黑木崖' } },
+        '华山脚下': { name: '华山脚下', description: '华山巍峨耸立，山脚处常有山贼出没。', exits: { west: '洛阳城' }, monsters: [{ name: '山贼', hp: 120, maxHp: 120, attack: 25, defense: 12, exp: 60, silver: 20, dropRate: 0.2 }, { name: '妖狼', hp: 180, maxHp: 180, attack: 35, defense: 15, exp: 90, silver: 30, dropRate: 0.15 }] },
+        '嵩山脚下': { name: '嵩山脚下', description: '嵩山巍峨，少林钟声悠扬。', exits: { south: '洛阳城' }, monsters: [{ name: '野猪', hp: 150, maxHp: 150, attack: 30, defense: 18, exp: 70, silver: 25, dropRate: 0.18 }] },
+        '野外树林': { name: '野外树林', description: '密林深处，古木参天。', exits: { east: '洛阳城', south: '秘境入口' }, monsters: [{ name: '黑熊', hp: 200, maxHp: 200, attack: 40, defense: 20, exp: 100, silver: 35, dropRate: 0.15 }, { name: '毒蛇', hp: 100, maxHp: 100, attack: 50, defense: 8, exp: 80, silver: 20, dropRate: 0.2 }] }
+      }
+    },
+    '正派山门': {
+      name: '正派山门', realmRequirement: '金丹',
+      description: '正道诸派山门所在，仙气缭绕。',
+      rooms: {
+        '少林寺': { name: '少林寺', description: '千年古刹，钟声悠扬。', exits: { south: '武当山' } },
+        '武当山': { name: '武当山', description: '武当金顶，云海翻腾。', exits: { north: '少林寺', south: '峨眉山' } },
+        '峨眉山': { name: '峨眉山', description: '峨眉天下秀，云雾缭绕。', exits: { north: '武当山', east: '华山绝顶' } },
+        '华山绝顶': { name: '华山绝顶', description: '华山之巅，剑气纵横。', exits: { west: '峨眉山' }, monsters: [{ name: '护山剑灵', hp: 500, maxHp: 500, attack: 80, defense: 40, exp: 300, silver: 100, dropRate: 0.1 }] },
+        '昆仑山': { name: '昆仑山', description: '昆仑仙境，白雪皑皑。', exits: { south: '正派演武场' }, monsters: [{ name: '雪域灵兽', hp: 600, maxHp: 600, attack: 90, defense: 45, exp: 350, silver: 120, dropRate: 0.08 }] },
+        '正派演武场': { name: '正派演武场', description: '正派联盟演武大校场。', exits: { north: '昆仑山' } }
+      }
+    },
+    '邪派禁地': {
+      name: '邪派禁地', realmRequirement: '金丹',
+      description: '邪道势力盘踞之地，阴气森森。',
+      rooms: {
+        '黑木崖': { name: '黑木崖', description: '日月神教总坛所在。', exits: { south: '星宿海' } },
+        '星宿海': { name: '星宿海', description: '星宿派所在，毒雾弥漫。', exits: { north: '黑木崖', east: '五毒岭' }, monsters: [{ name: '毒蝎', hp: 300, maxHp: 300, attack: 60, defense: 25, exp: 200, silver: 60, dropRate: 0.15 }] },
+        '五毒岭': { name: '五毒岭', description: '五毒教圣地。', exits: { west: '星宿海' }, monsters: [{ name: '蛊虫', hp: 250, maxHp: 250, attack: 70, defense: 15, exp: 180, silver: 50, dropRate: 0.2 }] },
+        '血刀门': { name: '血刀门', description: '血刀门据点。', exits: { east: '幽冥谷入口' }, monsters: [{ name: '血刀弟子', hp: 400, maxHp: 400, attack: 75, defense: 30, exp: 250, silver: 80, dropRate: 0.12 }] },
+        '幽冥谷入口': { name: '幽冥谷入口', description: '幽冥谷口，阴风阵阵。', exits: { west: '血刀门', south: '邪派祭坛' } },
+        '邪派祭坛': { name: '邪派祭坛', description: '邪派联盟的秘密祭坛。', exits: { north: '幽冥谷入口' }, monsters: [{ name: '祭坛守卫', hp: 800, maxHp: 800, attack: 100, defense: 50, exp: 500, silver: 150, dropRate: 0.08 }] }
+      }
+    },
+    '修仙秘境': {
+      name: '修仙秘境', realmRequirement: '化神',
+      description: '传说中的修仙秘境，灵气浓郁。',
+      rooms: {
+        '秘境入口': { name: '秘境入口', description: '一道光门矗立虚空。', exits: { north: '灵脉' } },
+        '灵脉': { name: '灵脉', description: '地底灵脉汇聚之处。', exits: { south: '秘境入口', north: '幻境' } },
+        '幻境': { name: '幻境', description: '虚实交织的幻境。', exits: { south: '灵脉', down: '秘境深处' }, monsters: [{ name: '幻影', hp: 1000, maxHp: 1000, attack: 120, defense: 60, exp: 600, silver: 200, dropRate: 0.1 }] },
+        '秘境深处': { name: '秘境深处', description: '秘境最深处。', exits: { up: '幻境', down: '遗迹入口' }, monsters: [{ name: '秘境妖王', hp: 2000, maxHp: 2000, attack: 180, defense: 80, exp: 1200, silver: 500, dropRate: 0.05 }] }
+      }
+    },
+    '上古遗迹': {
+      name: '上古遗迹', realmRequirement: '合体',
+      description: '远古修士留下的遗迹。',
+      rooms: {
+        '遗迹入口': { name: '遗迹入口', description: '巨大的石门矗立。', exits: { north: '远古战场' } },
+        '远古战场': { name: '远古战场', description: '远古大战的遗址。', exits: { south: '遗迹入口', east: '仙人洞府' }, monsters: [{ name: '远古战士', hp: 3000, maxHp: 3000, attack: 200, defense: 100, exp: 2000, silver: 800, dropRate: 0.08 }] },
+        '仙人洞府': { name: '仙人洞府', description: '远古仙人的修炼洞府。', exits: { west: '远古战场', up: '神兽巢穴' } },
+        '神兽巢穴': { name: '神兽巢穴', description: '上古神兽的巢穴。', exits: { down: '仙人洞府', up: '天劫台' }, monsters: [{ name: '上古神兽', hp: 5000, maxHp: 5000, attack: 300, defense: 150, exp: 5000, silver: 2000, dropRate: 0.03 }] }
+      }
+    },
+    '渡劫仙域': {
+      name: '渡劫仙域', realmRequirement: '渡劫',
+      description: '渡劫飞升之地，天威浩荡。',
+      rooms: {
+        '天劫台': { name: '天劫台', description: '巨大的祭坛矗立云端。', exits: { north: '飞升通道' }, monsters: [{ name: '天劫守卫', hp: 8000, maxHp: 8000, attack: 400, defense: 200, exp: 10000, silver: 5000, dropRate: 0.02 }] },
+        '飞升通道': { name: '飞升通道', description: '通往仙界的通道。', exits: { south: '天劫台', north: '仙界边缘' } },
+        '仙界边缘': { name: '仙界边缘', description: '仙凡交界之处。', exits: { south: '飞升通道' } }
+      }
+    },
+    '代码空间': {
+      name: '代码空间', requireWatch: true,
+      description: '这个世界深处隐藏的代码空间。',
+      rooms: {
+        '代码入口': { name: '代码入口', description: '一道由0和1组成的光门。', exits: { north: 'Bug走廊' } },
+        'Bug走廊': { name: 'Bug走廊', description: '走廊两旁闪烁着各种Bug的代码片段。', exits: { south: '代码入口', north: '程序遗物殿' }, monsters: [{ name: '程序Bug', hp: 500, maxHp: 500, attack: 80, defense: 40, exp: 300, silver: 100, dropRate: 0.3 }] },
+        '程序遗物殿': { name: '程序遗物殿', description: '金色的大殿中，程序遗物散发着光芒。', exits: { south: 'Bug走廊', north: '源码之心' } },
+        '源码之心': { name: '源码之心', description: '代码空间的核心。', exits: { south: '程序遗物殿' }, monsters: [{ name: '源码守护者', hp: 10000, maxHp: 10000, attack: 500, defense: 250, exp: 20000, silver: 10000, dropRate: 0.01 }] }
       }
     }
   }
@@ -2440,18 +2517,58 @@ function handleMoveCommand(ws, player, direction) {
     return;
   }
   
-  const newRoomName = room.exits[dir];
-  const newRoom = getRoom(player.currentMap, newRoomName);
+  let newRoomName = room.exits[dir];
+  let targetMap = player.currentMap;
+  
+  // Handle cross-map transitions
+  if (newRoomName && !getRoom(targetMap, newRoomName)) {
+    // Check if it's a reference to another map
+    for (const [mapId, mapData] of Object.entries(WORLD_DATA.maps)) {
+      if (mapData.rooms[newRoomName]) {
+        targetMap = mapId;
+        break;
+      }
+    }
+  }
+  
+  const newRoom = getRoom(targetMap, newRoomName);
   
   if (!newRoom) {
     sendToClient(ws, {
-      type: 'error',
-      data: { message: '目标房间不存在' }
+      type: 'system',
+      data: { message: '那个方向走不通。' }
+    });
+    return;
+  }
+  
+  // Check realm requirement for target map
+  const targetMapData = WORLD_DATA.maps[targetMap];
+  if (targetMapData && targetMapData.realmRequirement) {
+    const playerRealmLevel = getRealmLevel(player.realm);
+    const requiredLevel = getRealmLevel(targetMapData.realmRequirement);
+    if (playerRealmLevel < requiredLevel) {
+      sendToClient(ws, {
+        type: 'system',
+        data: { message: `你的境界不足，无法进入${targetMapData.name}。需要至少${targetMapData.realmRequirement}境界。` }
+      });
+      return;
+    }
+  }
+  
+  // Check watch requirement (代码空间)
+  if (targetMapData && targetMapData.requireWatch && !player.adminWatch) {
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: '你感觉到了某种异常的力量，但无法进入...' }
     });
     return;
   }
   
   // Update player position
+  const players = getPlayers();
+  players[player.id].currentRoom = newRoomName;
+  players[player.id].currentMap = targetMap;
+  savePlayers(players);
   const players = getPlayers();
   players[player.id].currentRoom = newRoomName;
   savePlayers(players);
@@ -5425,6 +5542,17 @@ function handleUseBugCommand(ws, player, bugId) {
 }
 
 // Helper functions
+
+// Get realm order number for comparison
+function getRealmLevel(realmStr) {
+  if (!realmStr) return 0;
+  const levels = {'练气':1,'筑基':2,'金丹':3,'元婴':4,'化神':5,'炼虚':6,'合体':7,'大乘':8,'渡劫':9,'飞升':10,'仙人':11,'神尊':12};
+  for (const [name, order] of Object.entries(levels)) {
+    if (realmStr.includes(name)) return order;
+  }
+  return 0;
+}
+
 function getRoom(mapName, roomName) {
   const map = WORLD_DATA.maps[mapName];
   if (!map) return null;
