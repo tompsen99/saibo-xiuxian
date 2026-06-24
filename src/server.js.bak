@@ -1110,22 +1110,7 @@ const PILLS_DATA = {
   full_heal_spirit: { id: 'full_heal_spirit', name: '天灵丹', grade: '天丹', effect: '恢复全部灵力', price: 300, recipe: { herb: 8, spirit_shard: 8, beast_core: 3 }, apply: (p) => { p.spirit = p.maxSpirit || 50; return `灵力已满！${p.spirit}/${p.maxSpirit}`; } },
   full_heal_stamina: { id: 'full_heal_stamina', name: '天体力丹', grade: '天丹', effect: '恢复全部体力', price: 300, recipe: { herb: 8, spirit_shard: 6, beast_core: 4 }, apply: (p) => { p.stamina = p.maxStamina || 100; return `体力已满！${p.stamina}/${p.maxStamina}`; } },
   revive_pill: { id: 'revive_pill', name: '续命丹', grade: '天丹', effect: '死亡后自动复活(70%HP)', price: 500, recipe: { herb: 10, spirit_shard: 8, beast_core: 5 }, apply: (p) => { p.reviveBuff = true; return '获得续命效果：死亡后自动复活！'; } },
-  omniscient_pill: { id: 'omniscient_pill', name: '全知丹', grade: '仙丹', effect: '全属性临时+30%(2小时)', price: 800, recipe: { herb: 15, spirit_shard: 12, beast_core: 6 }, apply: (p) => { p.omniBuff = Date.now() + 7200000; return '全属性+30%，持续2小时！'; } },
-  // ===== 【新增】更多丹药 =====
-  mini_hp_pill: { id: 'mini_hp_pill', name: '小回血丹', grade: '凡丹', effect: '恢复25HP', price: 5, recipe: { herb: 1, spirit_shard: 0, beast_core: 0 }, apply: (p) => { const r = Math.min(25, (p.maxHp||100)-(p.hp||0)); p.hp = Math.min(p.maxHp||100, (p.hp||0)+25); return `恢复了${r}点HP`; } },
-  mini_spirit_pill: { id: 'mini_spirit_pill', name: '小回灵丹', grade: '凡丹', effect: '恢复15灵力', price: 8, recipe: { herb: 0, spirit_shard: 1, beast_core: 0 }, apply: (p) => { const r = Math.min(15, (p.maxSpirit||50)-(p.spirit||0)); p.spirit = Math.min(p.maxSpirit||50, (p.spirit||0)+15); return `恢复了${r}点灵力`; } },
-  stamina_regen_pill: { id: 'stamina_regen_pill', name: '回体力丹', grade: '凡丹', effect: '恢复30体力', price: 12, recipe: { herb: 2, spirit_shard: 0, beast_core: 0 }, apply: (p) => { const r = Math.min(30, (p.maxStamina||100)-(p.stamina||0)); p.stamina = Math.min(p.maxStamina||100, (p.stamina||0)+30); return `恢复了${r}点体力`; } },
-  berserker_pill: { id: 'berserker_pill', name: '狂战丹', grade: '玄丹', effect: '攻击+30%但防御-10%(30分钟)', price: 90, recipe: { herb: 4, spirit_shard: 2, beast_core: 2 }, apply: (p) => { p.berserkerBuff = Date.now() + 1800000; return '攻击+30%，防御-10%，持续30分钟！'; } },
-  iron_skin_pill: { id: 'iron_skin_pill', name: '铁皮丹', grade: '玄丹', effect: '防御+30%但速度-10%(30分钟)', price: 90, recipe: { herb: 3, spirit_shard: 3, beast_core: 2 }, apply: (p) => { p.ironSkinBuff = Date.now() + 1800000; return '防御+30%，速度-10%，持续30分钟！'; } },
-  swift_pill: { id: 'swift_pill', name: '疾速丹', grade: '玄丹', effect: '速度+20%(30分钟)', price: 80, recipe: { herb: 3, spirit_shard: 2, beast_core: 1 }, apply: (p) => { p.swiftBuff = Date.now() + 1800000; return '速度+20%，持续30分钟！'; } },
-  fortune_pill: { id: 'fortune_pill', name: '福运丹', grade: '地丹', effect: '掉率+30%(1小时)', price: 300, recipe: { herb: 6, spirit_shard: 5, beast_core: 3 }, apply: (p) => { p.fortuneBuff = Date.now() + 3600000; return '掉率+30%，持续1小时！'; } },
-  cultivation_pill: { id: 'cultivation_pill', name: '修炼丹', grade: '地丹', effect: '挂机经验+50%(1小时)', price: 250, recipe: { herb: 5, spirit_shard: 4, beast_core: 2 }, apply: (p) => { p.cultivationBuff = Date.now() + 3600000; return '挂机经验+50%，持续1小时！'; } },
-  silver_pill: { id: 'silver_pill', name: '聚灵丹', grade: '地丹', effect: '灵石获取+50%(1小时)', price: 200, recipe: { herb: 4, spirit_shard: 4, beast_core: 2 }, apply: (p) => { p.silverBuff = Date.now() + 3600000; return '灵石获取+50%，持续1小时！'; } },
-  full_restore_pill: { id: 'full_restore_pill', name: '天元丹', grade: '天丹', effect: '恢复全部HP/灵力/体力', price: 400, recipe: { herb: 8, spirit_shard: 8, beast_core: 4 }, apply: (p) => { p.hp = p.maxHp||100; p.spirit = p.maxSpirit||50; p.stamina = p.maxStamina||100; return '全部恢复！'; } },
-  exp_surge_pill: { id: 'exp_surge_pill', name: '经验爆发丹', grade: '天丹', effect: '下次战斗经验x3', price: 350, recipe: { herb: 7, spirit_shard: 6, beast_core: 3 }, apply: (p) => { p.expSurgeBuff = true; return '下次战斗经验x3！'; } },
-  silver_surge_pill: { id: 'silver_surge_pill', name: '灵石爆发丹', grade: '天丹', effect: '下次战斗灵石x3', price: 350, recipe: { herb: 6, spirit_shard: 7, beast_core: 3 }, apply: (p) => { p.silverSurgeBuff = true; return '下次战斗灵石x3！'; } },
-  god_hp_pill: { id: 'god_hp_pill', name: '仙血丹', grade: '仙丹', effect: 'HP上限永久+50', price: 1500, recipe: { herb: 15, spirit_shard: 12, beast_core: 6 }, apply: (p) => { p.maxHp = (p.maxHp||100) + 50; p.hp = p.maxHp; return 'HP上限永久+50！'; } },
-  god_spirit_pill: { id: 'god_spirit_pill', name: '仙灵丹', grade: '仙丹', effect: '灵力上限永久+30', price: 1500, recipe: { herb: 12, spirit_shard: 15, beast_core: 6 }, apply: (p) => { p.maxSpirit = (p.maxSpirit||50) + 30; p.spirit = p.maxSpirit; return '灵力上限永久+30！'; } }
+  omniscient_pill: { id: 'omniscient_pill', name: '全知丹', grade: '仙丹', effect: '全属性临时+30%(2小时)', price: 800, recipe: { herb: 15, spirit_shard: 12, beast_core: 6 }, apply: (p) => { p.omniBuff = Date.now() + 7200000; return '全属性+30%，持续2小时！'; } }
 };
 // ===== ALCHEMY MATERIALS (炼丹材料) =====
 const MATERIALS_DATA = {
@@ -1391,41 +1376,7 @@ const EQUIPMENT_DATA = {
   void_crown: { id: 'void_crown', name: '虚空冠', slot: 'helmet', defense: 40, maxHp: 300, spirit: 120, price: 5000, description: '虚空之力凝聚的皇冠。' },
   // ===== 【新增】戒指 =====
   jade_ring: { id: 'jade_ring', name: '玉戒指', slot: 'ring', attack: 8, defense: 8, daoHeart: 10, price: 180, description: '翠玉雕琢的戒指。' },
-  destiny_ring: { id: 'destiny_ring', name: '命运之戒', slot: 'ring', attack: 35, defense: 30, critRate: 0.10, price: 5000, description: '掌控命运的神秘戒指。' },
-  // ===== 【新增】更多武器 =====
-  wooden_staff: { id: 'wooden_staff', name: '木杖', slot: 'weapon', attack: 3, spirit: 15, price: 25, description: '蕴含微弱灵力的木杖。' },
-  bone_club: { id: 'bone_club', name: '骨棒', slot: 'weapon', attack: 8, price: 40, description: '兽骨制成的粗犷武器。' },
-  jade_sword: { id: 'jade_sword', name: '玉剑', slot: 'weapon', attack: 18, spirit: 20, price: 250, description: '玉石雕琢的灵剑。' },
-  wind_blade: { id: 'wind_blade', name: '风刃', slot: 'weapon', attack: 25, speed: 10, price: 400, description: '风属性利刃，出手极快。' },
-  earth_hammer: { id: 'earth_hammer', name: '大地之锤', slot: 'weapon', attack: 35, defense: 10, speed: -5, price: 500, description: '沉重的战锤，一击碎石。' },
-  water_ribbon: { id: 'water_ribbon', name: '水灵绸', slot: 'weapon', attack: 20, spirit: 40, price: 450, description: '水灵力凝聚的绸带。' },
-  holy_staff: { id: 'holy_staff', name: '圣光杖', slot: 'weapon', attack: 15, spirit: 60, price: 600, description: '圣光凝聚的法杖。' },
-  dark_scythe: { id: 'dark_scythe', name: '暗影镰', slot: 'weapon', attack: 50, critRate: 0.12, price: 800, description: '暗影之力凝聚的镰刀。' },
-  sky_bow: { id: 'sky_bow', name: '天穹弓', slot: 'weapon', attack: 45, speed: 8, critRate: 0.08, price: 700, description: '射天之弓，百步穿杨。' },
-  chaos_sword: { id: 'chaos_sword', name: '混沌剑', slot: 'weapon', attack: 70, spirit: 30, critRate: 0.10, price: 2000, description: '混沌之力铸就的神剑。' },
-  // ===== 【新增】更多护甲 =====
-  fur_armor: { id: 'fur_armor', name: '毛皮甲', slot: 'armor', defense: 4, maxHp: 25, price: 30, description: '兽毛皮制的简易护甲。' },
-  scale_armor: { id: 'scale_armor', name: '鳞甲', slot: 'armor', defense: 12, maxHp: 80, price: 150, description: '鱼鳞编织的轻甲。' },
-  mystic_robe: { id: 'mystic_robe', name: '玄丝袍', slot: 'armor', defense: 16, maxHp: 100, spirit: 25, price: 280, description: '玄蚕丝编织的法袍。' },
-  heavy_plate: { id: 'heavy_plate', name: '重铠', slot: 'armor', defense: 28, maxHp: 180, speed: -3, price: 450, description: '厚重的全身铠甲。' },
-  shadow_cloak: { id: 'shadow_cloak', name: '暗影斗篷', slot: 'armor', defense: 20, maxHp: 120, dodge: 8, price: 380, description: '暗影编织的斗篷，提升闪避。' },
-  holy_armor: { id: 'holy_armor', name: '圣光铠', slot: 'armor', defense: 35, maxHp: 250, price: 900, description: '圣光祝福的铠甲。' },
-  // ===== 【新增】更多头盔 =====
-  fur_cap: { id: 'fur_cap', name: '毛皮帽', slot: 'helmet', defense: 3, maxHp: 15, price: 20, description: '兽毛皮制的帽子。' },
-  bronze_helm: { id: 'bronze_helm', name: '青铜盔', slot: 'helmet', defense: 8, maxHp: 45, price: 100, description: '青铜锻造的头盔。' },
-  mystic_hood: { id: 'mystic_hood', name: '玄丝兜帽', slot: 'helmet', defense: 12, maxHp: 60, spirit: 20, price: 200, description: '玄蚕丝编织的兜帽。' },
-  holy_crown: { id: 'holy_crown', name: '圣光冠', slot: 'helmet', defense: 25, maxHp: 150, spirit: 50, price: 800, description: '圣光祝福的王冠。' },
-  // ===== 【新增】更多戒指 =====
-  copper_ring: { id: 'copper_ring', name: '铜戒指', slot: 'ring', attack: 3, defense: 3, price: 25, description: '铜制戒指，基础属性。' },
-  iron_ring: { id: 'iron_ring', name: '铁戒指', slot: 'ring', attack: 6, defense: 6, price: 60, description: '铁制戒指，略优于铜。' },
-  spirit_ring: { id: 'spirit_ring', name: '灵力戒', slot: 'ring', spirit: 30, price: 120, description: '蕴含灵力的戒指。' },
-  blood_ring: { id: 'blood_ring', name: '血玉戒', slot: 'ring', attack: 12, defense: 8, price: 250, description: '血红色的玉戒，蕴含杀气。' },
-  // ===== 【新增】更多饰品 =====
-  wooden_amulet: { id: 'wooden_amulet', name: '木护身符', slot: 'accessory', maxHp: 20, price: 15, description: '木质护身符，微增生命。' },
-  stone_amulet: { id: 'stone_amulet', name: '石护身符', slot: 'accessory', defense: 5, price: 30, description: '石质护身符，微增防御。' },
-  crystal_pendant: { id: 'crystal_pendant', name: '水晶坠', slot: 'accessory', spirit: 25, price: 80, description: '水晶吊坠，增加灵力。' },
-  lucky_charm: { id: 'lucky_charm', name: '幸运符', slot: 'accessory', price: 100, description: '据说能带来好运的护身符。' },
-  exp_talisman: { id: 'exp_talisman', name: '经验符', slot: 'accessory', price: 150, description: '佩戴后经验获取增加10%。' }
+  destiny_ring: { id: 'destiny_ring', name: '命运之戒', slot: 'ring', attack: 35, defense: 30, critRate: 0.10, price: 5000, description: '掌控命运的神秘戒指。' }
 };
 
 // ===== TREASURE (法宝) SYSTEM =====
@@ -1484,13 +1435,7 @@ const TREASURES_DATA = {
     id: 'primordial_mirror', name: '先天镜', grade: '神器', type: 'defense',
     effect: { shield: 500, allPercent: 10 }, price: 25000,
     description: '先天至宝，可照万物，可挡万法。'
-  },
-  // ===== 【新增】高级法宝 =====
-  golden_pagoda: { id: 'golden_pagoda', name: '金光宝塔', grade: '灵器', type: 'defense', effect: { shield: 200, defense: 15 }, price: 1000, description: '金光闪闪的宝塔，可凝聚强力护盾。' },
-  dragon_mirror: { id: 'dragon_mirror', name: '龙纹宝镜', grade: '灵器', type: 'utility', effect: { spirit: 50, wisdom: 10 }, price: 1200, description: '刻有龙纹的宝镜，增加灵力和悟性。' },
-  phoenix_lamp: { id: 'phoenix_lamp', name: '凤凰神灯', grade: '灵器', type: 'heal', effect: { hpRegen: 20, spirit: 30 }, price: 1500, description: '凤凰羽毛点燃的神灯，持续恢复生命。' },
-  void_bell: { id: 'void_bell', name: '虚空铃铛', grade: '仙器', type: 'utility', effect: { dodge: 15, speed: 20 }, price: 2500, description: '虚空之力凝聚的铃铛，提升闪避和速度。' },
-  chaos_seal: { id: 'chaos_seal', name: '混沌神印', grade: '仙器', type: 'attack', effect: { attack: 30, critRate: 0.10, critDamage: 0.20 }, price: 3000, description: '混沌之力凝聚的神印，大幅提升攻击和暴击。' }
+  }
 };
 
 // Treasure grade order for display
@@ -9794,46 +9739,6 @@ const NPC_DIALOGS = {
   '远古仙人': {
     greeting: '...（无言的注视）',
     topics: { '遗物': '这些遗物...是创世者的记忆碎片。', '日记': '创世者写了103篇日记。找到它们，你就能了解一切。', '守护': '我守护这里已经很久了。久到记不清时间。', '离开': '如果你想离开，去源码之心吧。那里有答案。' }
-  },
-  '江南渔夫': {
-    greeting: '客官，要坐船吗？江南水乡可美了！',
-    topics: { '水乡': '水乡最美的地方是湖心岛，那里的灵气特别浓郁。', '鱼': '这河里的鱼可不一般，有些鱼肚子里藏着宝贝呢！', '传说': '传说湖底有一座龙宫，里面住着龙王。' }
-  },
-  '沙漠旅人': {
-    greeting: '别看我这样，我可是走遍了大漠的旅人。',
-    topics: { '沙漠': '沙漠里最危险的不是沙虫，而是迷路。', '绿洲': '绿洲是沙漠中的天堂，那里的水可以治百病。', '古城': '古城遗迹里据说藏着上古宝物，但也有守墓傀儡。' }
-  },
-  '冰原猎人': {
-    greeting: '这冰天雪地的，你来做什么？',
-    topics: { '冰原': '冰原上最可怕的是冰龙，一口寒气能冻住一切。', '极光': '极光出现的时候，雪山之巅会有宝物现世。', '冰狼': '冰狼成群结队，单独遇上必死无疑。' }
-  },
-  '南疆巫师': {
-    greeting: '嘿嘿...你身上有股好闻的味道...',
-    topics: { '蛊术': '蛊术是南疆的秘术，用虫子炼蛊，威力无穷。', '毒物': '南疆的毒物可不能乱碰，一不小心就没命了。', '祭坛': '巫蛊祭坛是南疆最神圣的地方，只有最强的巫师才能进入。' }
-  },
-  '海底蚌精': {
-    greeting: '（蚌壳微开，露出一颗珍珠）',
-    topics: { '珍珠': '这是我千年来孕育的珍珠，价值连城。', '龙宫': '龙宫在深海最深处，那里有龙王的宝藏。', '海底': '海底的世界比陆地更精彩，但也更危险。' }
-  },
-  '虚空行者': {
-    greeting: '你...能看到我？',
-    topics: { '虚空': '虚空是世界的裂缝，这里的时间和空间都是扭曲的。', '帝王': '虚空帝王是虚空的主宰，他已经存在了无数年。', '离开': '想离开虚空？找到虚空王座，那里有回去的路。' }
-  },
-  '神秘商人': {
-    greeting: '嘘...好东西，便宜卖...',
-    topics: { '商品': '我这有稀有材料、高级丹药，价格好商量。', '来源': '别问东西从哪来的，问就是捡的。', '秘密': '听说代码空间里有创世者留下的宝藏...' }
-  },
-  '客栈老板娘': {
-    greeting: '客官，住店还是吃饭？',
-    topics: { '住店': '住一晚10灵石，可以恢复全部体力。', '消息': '最近来了不少外地人，听说是来寻宝的。', '传闻': '听说竹林深处有块奇怪的石碑，上面写着奇怪的符号。' }
-  },
-  '药铺老掌柜': {
-    greeting: '老朽行医六十载，什么病都能治。',
-    topics: { '治病': '中毒了？用解毒丹。受伤了？用回血丹。', '秘方': '我有一祖传秘方，需要龙血和凤泪才能炼制。', '药材': '好药材都在深山老林里，需要有实力才能采集。' }
-  },
-  '铁匠大师': {
-    greeting: '来找我锻造？你的眼光不错！',
-    topics: { '锻造': '好武器需要好材料，更需要好手艺。', '强化': '装备强化有风险，失败了可能碎掉。', '传说武器': '传说中有一把混沌剑，需要混沌石才能锻造。' }
   }
 };
 
