@@ -1,0 +1,176 @@
+{
+  "461f6401-bdd7-4644-8bf7-c1666bf222b4": {
+    "id": "461f6401-bdd7-4644-8bf7-c1666bf222b4",
+    "email": "test2@game.com",
+    "password": "$2a$10$eYfP9fN1nnvFBSu3kCIpkORlRyLI38pb1SZuA1tpj2Y324adw2wZG",
+    "name": "退休老王",
+    "profession": null,
+    "stats": null,
+    "level": 1,
+    "realm": "练气期",
+    "exp": 0,
+    "hp": 0,
+    "maxHp": 0,
+    "spirit": 0,
+    "maxSpirit": 0,
+    "stamina": 0,
+    "maxStamina": 0,
+    "silver": 100,
+    "jade": 0,
+    "currentMap": null,
+    "currentRoom": null,
+    "needsProfession": true,
+    "createdAt": "2026-06-22T17:00:55.099Z"
+  },
+  "aebad255-3662-4bd5-a74c-5a0977b3530a": {
+    "id": "aebad255-3662-4bd5-a74c-5a0977b3530a",
+    "email": "yuanxuchen99@gmail.com",
+    "password": "$2a$10$c9PI0NjZaXQKb2jG7AkR7.QlkJL1mKcD/Bq3Lo9x.F1e7GDvXdqW6",
+    "name": "01",
+    "profession": "退休程序员",
+    "stats": {
+      "str": 20,
+      "con": 21,
+      "dex": 22,
+      "wis": 37
+    },
+    "level": 25,
+    "realm": "练气后期",
+    "exp": 20135,
+    "hp": 167,
+    "maxHp": 167,
+    "spirit": 129,
+    "maxSpirit": 129,
+    "stamina": 131,
+    "maxStamina": 143,
+    "silver": 10884,
+    "jade": 0,
+    "currentMap": "新手村",
+    "currentRoom": "修炼场",
+    "needsProfession": false,
+    "createdAt": "2026-06-22T23:29:44.992Z",
+    "isIdle": false,
+    "idleStartTime": null,
+    "exploredRooms": [
+      "新手村:村广场",
+      "新手村:村长屋",
+      "新手村:村口",
+      "新手村:竹林",
+      "新手村:集市",
+      "新手村:修炼场"
+    ],
+    "skills": [
+      {
+        "id": "basic_fist",
+        "level": 3,
+        "exp": 140
+      }
+    ],
+    "quests": {
+      "active": [],
+      "completed": [
+        "q_admin_watch",
+        "q_first_steps"
+      ],
+      "dailyCompleted": {},
+      "progress": {}
+    },
+    "lastSignIn": "2026-06-23",
+    "pills": {
+      "stamina_pill": 1,
+      "rebirth_pill": 1
+    },
+    "adminWatch": true,
+    "adminWatchLevel": 1,
+    "mysteryLetters": 1,
+    "discoveredBugs": [
+      "B50"
+    ],
+    "equipmentBag": [
+      {
+        "id": "dragon_helm"
+      }
+    ]
+  },
+  "a0a3e2ae-ea0e-48af-8150-18c18d1e301c": {
+    "id": "a0a3e2ae-ea0e-48af-8150-18c18d1e301c",
+    "email": "test3@game.com",
+    "password": "$2a$10$lmx9KH3oOizYPlCVXAx7XOlE4/fC669f7joIj/4MpmPa86NVR38iq",
+    "name": "退休老李",
+    "profession": null,
+    "stats": null,
+    "level": 1,
+    "realm": "练气期",
+    "exp": 0,
+    "hp": 0,
+    "maxHp": 0,
+    "spirit": 0,
+    "maxSpirit": 0,
+    "stamina": 0,
+    "maxStamina": 0,
+    "silver": 100,
+    "jade": 0,
+    "currentMap": null,
+    "currentRoom": null,
+    "needsProfession": true,
+    "createdAt": "2026-06-22T23:34:24.999Z"
+  },
+  "798a8aff-cbb6-4b4b-9e7c-1f9b8e9aec31": {
+    "id": "798a8aff-cbb6-4b4b-9e7c-1f9b8e9aec31",
+    "email": "test4@game.com",
+    "password": "$2a$10$cedfADw434Ob8cBbY9flgOarlYsRNa/7JoBXqGXixzHsYO8uZeumC",
+    "name": "退休老张",
+    "profession": null,
+    "stats": null,
+    "level": 1,
+    "realm": "练气期",
+    "exp": 0,
+    "hp": 0,
+    "maxHp": 0,
+    "spirit": 0,
+    "maxSpirit": 0,
+    "stamina": 0,
+    "maxStamina": 0,
+    "silver": 100,
+    "jade": 0,
+    "currentMap": null,
+    "currentRoom": null,
+    "needsProfession": true,
+    "createdAt": "2026-06-22T23:45:20.945Z"
+  },
+  "68260dae-99d1-45d8-be42-4522b2afc476": {
+    "id": "68260dae-99d1-45d8-be42-4522b2afc476",
+    "email": "test5@game.com",
+    "password": "$2a$10$b8vx52Z1vNN0AjO5MGdXVOysheHIwTfYbDgz7YO73U6eOEIpn.zb2",
+    "name": "退休老赵",
+    "profession": "退休程序员",
+    "stats": {
+      "str": 19,
+      "con": 23,
+      "dex": 24,
+      "wis": 34
+    },
+    "level": 1,
+    "realm": "练气期",
+    "exp": 15,
+    "hp": 125,
+    "maxHp": 126,
+    "spirit": 98,
+    "maxSpirit": 98,
+    "stamina": 117,
+    "maxStamina": 127,
+    "silver": 125,
+    "jade": 0,
+    "currentMap": "新手村",
+    "currentRoom": "竹林",
+    "needsProfession": false,
+    "createdAt": "2026-06-23T04:54:51.539Z",
+    "lastSignIn": "2026-06-23",
+    "pills": {
+      "hp_pill": 1
+    },
+    "exploredRooms": [
+      "新手村:竹林"
+    ]
+  }
+}

@@ -681,7 +681,7 @@
     output += '  ' + room.description + '\n\n';
 
     if (room.exits) {
-      var exitNames = { north: '北', south: '南', east: '东', west: '西', up: '上', down: '下', southeast: '东南', northeast: '东北', southwest: '西南', northwest: '西北' };
+      var exitNames = { north: '北', south: '南', east: '东', west: '西', up: '上', down: '下' };
       var exits = Object.keys(room.exits).map(function(e) { return exitNames[e] || e; }).join('、');
       output += '  出口: ' + exits + '\n';
     }
