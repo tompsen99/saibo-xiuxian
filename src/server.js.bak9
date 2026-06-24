@@ -1016,42 +1016,14 @@ const PILLS_DATA = {
       player.daoHeart = Math.max(0, (player.daoHeart || 500) - 100);
       return `全属性+10%持续1小时！道心-100（当前道心: ${player.daoHeart}）`;
     }
-  },
-  // ===== 【新增】凡丹 =====
-  str_pill: { id: 'str_pill', name: '力量丹', grade: '凡丹', effect: '力量+1(永久)', price: 80, recipe: { herb: 4, spirit_shard: 2, beast_core: 0 }, apply: (p) => { p.str = (p.str || 0) + 1; return '力量+1！'; } },
-  dex_pill: { id: 'dex_pill', name: '敏捷丹', grade: '凡丹', effect: '敏捷+1(永久)', price: 80, recipe: { herb: 2, spirit_shard: 4, beast_core: 0 }, apply: (p) => { p.dex = (p.dex || 0) + 1; return '敏捷+1！'; } },
-  con_pill: { id: 'con_pill', name: '体质丹', grade: '凡丹', effect: '体质+1(永久)', price: 80, recipe: { herb: 3, spirit_shard: 3, beast_core: 0 }, apply: (p) => { p.con = (p.con || 0) + 1; return '体质+1！'; } },
-  wis_pill: { id: 'wis_pill', name: '悟性丹', grade: '凡丹', effect: '悟性+1(永久)', price: 80, recipe: { herb: 2, spirit_shard: 2, beast_core: 2 }, apply: (p) => { p.wis = (p.wis || 0) + 1; return '悟性+1！'; } },
-  // ===== 【新增】玄丹 =====
-  speed_pill: { id: 'speed_pill', name: '疾风丹', grade: '玄丹', effect: '速度+10(30分钟)', price: 60, recipe: { herb: 3, spirit_shard: 3, beast_core: 1 }, apply: (p) => { p.speedBuff = Date.now() + 1800000; return '速度+10，持续30分钟！'; } },
-  crit_pill: { id: 'crit_pill', name: '暴击丹', grade: '玄丹', effect: '暴击+5%(30分钟)', price: 80, recipe: { herb: 4, spirit_shard: 3, beast_core: 1 }, apply: (p) => { p.critBuff = Date.now() + 1800000; return '暴击率+5%，持续30分钟！'; } },
-  dao_pill: { id: 'dao_pill', name: '道心丹', grade: '地丹', effect: '道心+50', price: 250, recipe: { herb: 6, spirit_shard: 4, beast_core: 3 }, apply: (p) => { p.daoHeart = Math.min(2000, (p.daoHeart || 500) + 50); return `道心+50！当前道心: ${p.daoHeart}`; } },
-  lifespan_pill: { id: 'lifespan_pill', name: '延寿丹', grade: '地丹', effect: '寿命+10', price: 200, recipe: { herb: 5, spirit_shard: 5, beast_core: 2 }, apply: (p) => { p.lifespan = (p.lifespan || 100) + 10; return `寿命+10！当前寿命: ${p.lifespan}`; } },
-  breakthrough_pill: { id: 'breakthrough_pill', name: '突破丹', grade: '地丹', effect: '突破率+20%', price: 150, recipe: { herb: 6, spirit_shard: 3, beast_core: 2 }, apply: (p) => { p.breakthroughBuff = true; return '下次突破成功率+20%！'; } },
-  attribute_reset: { id: 'attribute_reset', name: '洗髓丹', grade: '天丹', effect: '重置所有属性点', price: 500, recipe: { herb: 10, spirit_shard: 10, beast_core: 5 }, apply: (p) => { p.str = 10; p.dex = 10; p.con = 10; p.wis = 10; return '属性已重置！'; } },
-  skill_learn_pill: { id: 'skill_learn_pill', name: '悟道丹', grade: '天丹', effect: '学会一个随机功法', price: 400, recipe: { herb: 8, spirit_shard: 8, beast_core: 4 }, apply: (p) => { return '请使用后查看效果。'; } },
-  realm_pill: { id: 'realm_pill', name: '境界丹', grade: '天丹', effect: '直接突破一个小境界', price: 600, recipe: { herb: 12, spirit_shard: 10, beast_core: 5 }, apply: (p) => { return '请使用后查看效果。'; } },
-  full_buff_pill: { id: 'full_buff_pill', name: '天罡丹', grade: '天丹', effect: '全属性+20%(1小时)', price: 300, recipe: { herb: 8, spirit_shard: 6, beast_core: 3 }, apply: (p) => { p.fullBuff = Date.now() + 3600000; return '全属性+20%，持续1小时！'; } },
-  immortal_pill: { id: 'immortal_pill', name: '长生不老丹', grade: '仙丹', effect: '寿命+50,全属性+10%', price: 1000, recipe: { herb: 20, spirit_shard: 15, beast_core: 8 }, apply: (p) => { p.lifespan = (p.lifespan || 100) + 50; return '寿命+50，全属性+10%！'; } },
-  god_pill: { id: 'god_pill', name: '造化丹', grade: '仙丹', effect: '全属性永久+5', price: 2000, recipe: { herb: 25, spirit_shard: 20, beast_core: 10 }, apply: (p) => { p.str=(p.str||0)+5; p.dex=(p.dex||0)+5; p.con=(p.con||0)+5; p.wis=(p.wis||0)+5; return '全属性永久+5！'; } }
+  }
 };
+
 // ===== ALCHEMY MATERIALS (炼丹材料) =====
 const MATERIALS_DATA = {
   herb: { id: 'herb', name: '灵草', grade: '普通', desc: '常见灵草，炼丹基础材料。', dropChance: 0.30 },
-  spirit_shard: { id: 'spirit_shard', name: '灵石碎片', grade: '稀有', desc: '蕴含灵力的碎片。', dropChance: 0.15 },
-  beast_core: { id: 'beast_core', name: '妖兽内丹', grade: '珍贵', desc: '妖兽体内的内丹。', dropChance: 0.05 },
-  mushroom: { id: 'mushroom', name: '灵芝', grade: '普通', desc: '灵芝，炼丹材料。', dropChance: 0.25 },
-  flower: { id: 'flower', name: '灵花', grade: '普通', desc: '灵花，炼丹材料。', dropChance: 0.20 },
-  ore_dust: { id: 'ore_dust', name: '矿粉', grade: '普通', desc: '矿石粉末，锻造材料。', dropChance: 0.20 },
-  spider_silk: { id: 'spider_silk', name: '蛛丝', grade: '稀有', desc: '蜘蛛丝，防具材料。', dropChance: 0.12 },
-  wolf_fang: { id: 'wolf_fang', name: '狼牙', grade: '稀有', desc: '狼牙，武器材料。', dropChance: 0.12 },
-  snake_gall: { id: 'snake_gall', name: '蛇胆', grade: '稀有', desc: '蛇胆，丹药材料。', dropChance: 0.10 },
-  tiger_bone: { id: 'tiger_bone', name: '虎骨', grade: '珍贵', desc: '虎骨，高级丹药材料。', dropChance: 0.08 },
-  dragon_blood: { id: 'dragon_blood', name: '龙血', grade: '传说', desc: '龙血，天丹材料。', dropChance: 0.03 },
-  phoenix_tear: { id: 'phoenix_tear', name: '凤泪', grade: '传说', desc: '凤凰之泪，天丹材料。', dropChance: 0.03 },
-  void_fragment: { id: 'void_fragment', name: '虚空碎片', grade: '神话', desc: '虚空碎片，仙丹材料。', dropChance: 0.01 },
-  enhance_stone: { id: 'enhance_stone', name: '强化石', grade: '稀有', desc: '装备强化材料。', dropChance: 0.10 },
-  refine_stone: { id: 'refine_stone', name: '精炼石', grade: '珍贵', desc: '装备精炼材料。', dropChance: 0.05 }
+  spirit_shard: { id: 'spirit_shard', name: '灵石碎片', grade: '稀有', desc: '蕴含灵力的碎片，炼丹常用。', dropChance: 0.15 },
+  beast_core: { id: 'beast_core', name: '妖兽内丹', grade: '珍贵', desc: '妖兽体内的内丹，极为珍贵。', dropChance: 0.05 }
 };
 
 // Grade to alchemy level requirement mapping
@@ -1195,36 +1167,7 @@ const EQUIPMENT_DATA = {
     attack: 8, price: 150, ringColor: 'poison',
     selfPoison: true, poisonDmg: 2,
     description: '蕴含剧毒的戒指，佩戴时自身中毒但攻击力大增。'
-  },
-  // ===== 【新增】武器 =====
-  bamboo_spear: { id: 'bamboo_spear', name: '竹枪', slot: 'weapon', attack: 10, speed: 2, price: 60, description: '竹制长枪，轻便灵活。' },
-  hunters_bow: { id: 'hunters_bow', name: '猎弓', slot: 'weapon', attack: 14, speed: 3, critRate: 0.02, price: 120, description: '猎人专用弓，精准致命。' },
-  iron_staff: { id: 'iron_staff', name: '铁杖', slot: 'weapon', attack: 8, spirit: 25, price: 100, description: '蕴含灵力的铁杖。' },
-  steel_staff: { id: 'steel_staff', name: '钢杖', slot: 'weapon', attack: 15, spirit: 50, price: 300, description: '精钢锻造的法杖。' },
-  shadow_blade: { id: 'shadow_blade', name: '暗影刃', slot: 'weapon', attack: 28, speed: 8, critRate: 0.05, price: 600, description: '暗影中锻造的利刃。' },
-  thunder_hammer: { id: 'thunder_hammer', name: '雷神锤', slot: 'weapon', attack: 45, defense: 5, speed: -5, critRate: 0.08, price: 1200, description: '雷神遗落的战锤。' },
-  ice_crystal_sword: { id: 'ice_crystal_sword', name: '冰晶剑', slot: 'weapon', attack: 40, speed: 5, critRate: 0.05, price: 1000, description: '冰晶铸就的宝剑。' },
-  dragon_fang_spear: { id: 'dragon_fang_spear', name: '龙牙枪', slot: 'weapon', attack: 60, speed: 10, critRate: 0.10, price: 3000, description: '龙牙打造的神枪。' },
-  phoenix_fan: { id: 'phoenix_fan', name: '凤羽扇', slot: 'weapon', attack: 55, speed: 12, critRate: 0.08, price: 2800, description: '凤羽编织的宝扇。' },
-  void_blade: { id: 'void_blade', name: '虚空刃', slot: 'weapon', attack: 80, speed: 15, critRate: 0.15, price: 8000, description: '虚空之力凝聚的神兵。' },
-  // ===== 【新增】护甲 =====
-  bamboo_armor: { id: 'bamboo_armor', name: '竹甲', slot: 'armor', defense: 5, maxHp: 30, dodge: 2, price: 40, description: '竹片编织的轻甲。' },
-  hunters_cloak: { id: 'hunters_cloak', name: '猎人斗篷', slot: 'armor', defense: 6, maxHp: 40, dodge: 5, price: 80, description: '猎人专用斗篷。' },
-  steel_armor: { id: 'steel_armor', name: '钢甲', slot: 'armor', defense: 22, maxHp: 150, price: 400, description: '精钢锻造的重甲。' },
-  silver_robe: { id: 'silver_robe', name: '银丝袍', slot: 'armor', defense: 18, maxHp: 120, spirit: 30, dodge: 3, price: 350, description: '银丝编织的法袍。' },
-  fire_armor: { id: 'fire_armor', name: '烈焰甲', slot: 'armor', defense: 30, maxHp: 200, price: 800, description: '火焰淬炼的战甲。' },
-  ice_robe: { id: 'ice_robe', name: '寒冰袍', slot: 'armor', defense: 25, maxHp: 180, dodge: 5, price: 750, description: '寒冰凝结的法袍。' },
-  dragon_scale: { id: 'dragon_scale', name: '龙鳞甲', slot: 'armor', defense: 45, maxHp: 350, price: 2500, description: '龙鳞打造的神甲。' },
-  phoenix_cloak: { id: 'phoenix_cloak', name: '凤凰斗篷', slot: 'armor', defense: 40, maxHp: 300, dodge: 10, price: 3000, description: '凤凰羽毛编织的斗篷。' },
-  void_armor: { id: 'void_armor', name: '虚空战甲', slot: 'armor', defense: 60, maxHp: 500, price: 7000, description: '虚空之力凝聚的神甲。' },
-  // ===== 【新增】头盔 =====
-  leather_cap: { id: 'leather_cap', name: '皮帽', slot: 'helmet', defense: 4, maxHp: 20, price: 35, description: '皮革制成的帽子。' },
-  iron_helm: { id: 'iron_helm', name: '铁盔', slot: 'helmet', defense: 10, maxHp: 60, price: 150, description: '铁制头盔。' },
-  thunder_crown: { id: 'thunder_crown', name: '雷霆冠', slot: 'helmet', defense: 30, maxHp: 200, spirit: 80, critRate: 0.05, price: 2000, description: '雷霆之力凝聚的王冠。' },
-  void_crown: { id: 'void_crown', name: '虚空冠', slot: 'helmet', defense: 40, maxHp: 300, spirit: 120, price: 5000, description: '虚空之力凝聚的皇冠。' },
-  // ===== 【新增】戒指 =====
-  jade_ring: { id: 'jade_ring', name: '玉戒指', slot: 'ring', attack: 8, defense: 8, daoHeart: 10, price: 180, description: '翠玉雕琢的戒指。' },
-  destiny_ring: { id: 'destiny_ring', name: '命运之戒', slot: 'ring', attack: 35, defense: 30, critRate: 0.10, price: 5000, description: '掌控命运的神秘戒指。' }
+  }
 };
 
 // ===== TREASURE (法宝) SYSTEM =====
@@ -1496,63 +1439,7 @@ const QUESTS_DATA = {
     requirement: { type: 'explore_bamboo', target: 1 },
     reward: { exp: 150, silver: 50, special: 'admin_watch' },
     prereq: null
-  },
-  // ===== 【新增】新手村主线任务 =====
-  xc_01: { id: 'xc_01', name: '初到村庄', type: 'main', description: '与村长对话，了解村庄', requirement: { type: 'talk', target: '村长' }, reward: { exp: 50 }, prereq: null },
-  xc_02: { id: 'xc_02', name: '竹林试炼', type: 'main', description: '击杀3只野兔', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 100, pills: { hp_pill: 3 } }, prereq: 'xc_01' },
-  xc_03: { id: 'xc_03', name: '药铺帮手', type: 'main', description: '采集5株灵草', requirement: { type: 'gather', target: 5 }, reward: { exp: 80, silver: 50 }, prereq: 'xc_01' },
-  xc_04: { id: 'xc_04', name: '铁匠的委托', type: 'main', description: '击杀5只野鸡', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 100, equipment: 'iron_sword' }, prereq: 'xc_02' },
-  xc_05: { id: 'xc_05', name: '客栈风波', type: 'main', description: '赶走闹事的醉汉', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 200 }, prereq: 'xc_01' },
-  xc_06: { id: 'xc_06', name: '集市纠纷', type: 'main', description: '帮商贩找回货物', requirement: { type: 'explore', target: '竹林' }, reward: { exp: 150, silver: 100 }, prereq: 'xc_05' },
-  xc_07: { id: 'xc_07', name: '药铺秘方', type: 'main', description: '帮药铺老板试制新丹药', requirement: { type: 'gather', target: 3 }, reward: { exp: 100, pills: { adv_hp_pill: 3 } }, prereq: 'xc_03' },
-  xc_08: { id: 'xc_08', name: '铁匠的烦恼', type: 'main', description: '收集10块铁矿', requirement: { type: 'gather', target: 10 }, reward: { exp: 200, equipment: 'leather_armor' }, prereq: 'xc_04' },
-  xc_09: { id: 'xc_09', name: '深入竹林', type: 'main', description: '到达竹林深处', requirement: { type: 'explore', target: '竹林' }, reward: { exp: 300 }, prereq: 'xc_08' },
-  xc_10: { id: 'xc_10', name: '神秘石碑', type: 'main', description: '调查竹林深处的石碑', requirement: { type: 'level', target: 8 }, reward: { exp: 200 }, prereq: 'xc_09' },
-  xc_11: { id: 'xc_11', name: '竹林霸主', type: 'main', description: '击杀竹林BOSS', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 500, equipment: 'bamboo_spear' }, prereq: 'xc_10' },
-  xc_12: { id: 'xc_12', name: '离村之路', type: 'main', description: '达到筑基境，离开新手村', requirement: { type: 'level', target: 15 }, reward: { exp: 500, silver: 200 }, prereq: 'xc_11' },
-  // ===== 【新增】中原主线任务 =====
-  zy_01: { id: 'zy_01', name: '洛阳初探', type: 'main', description: '探索洛阳城', requirement: { type: 'explore', target: '洛阳城' }, reward: { exp: 300, silver: 100 }, prereq: 'xc_12' },
-  zy_02: { id: 'zy_02', name: '酒楼听书', type: 'main', description: '在酒楼听传闻', requirement: { type: 'talk', target: '酒楼老板' }, reward: { exp: 200 }, prereq: 'zy_01' },
-  zy_03: { id: 'zy_03', name: '黑市初探', type: 'main', description: '到达黑市', requirement: { type: 'explore', target: '黑市' }, reward: { exp: 400 }, prereq: 'zy_01' },
-  zy_04: { id: 'zy_04', name: '华山脚下', type: 'main', description: '到达华山脚下', requirement: { type: 'explore', target: '华山脚下' }, reward: { exp: 300 }, prereq: 'zy_01' },
-  zy_05: { id: 'zy_05', name: '嵩山猎猪', type: 'main', description: '击杀5只野猪', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 400, silver: 150 }, prereq: 'zy_04' },
-  zy_06: { id: 'zy_06', name: '野外探险', type: 'main', description: '到达野外树林', requirement: { type: 'explore', target: '野外树林' }, reward: { exp: 500 }, prereq: 'zy_04' },
-  zy_07: { id: 'zy_07', name: '黑熊猎杀', type: 'main', description: '击杀3只黑熊', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 600, silver: 200 }, prereq: 'zy_06' },
-  zy_08: { id: 'zy_08', name: '门派消息', type: 'main', description: '听闻门派招收弟子', requirement: { type: 'level', target: 20 }, reward: { exp: 300 }, prereq: 'zy_07' },
-  zy_09: { id: 'zy_09', name: '初入山门', type: 'main', description: '到达门派山门', requirement: { type: 'explore', target: '少林寺' }, reward: { exp: 800, silver: 300 }, prereq: 'zy_08' },
-  // ===== 【新增】门派主线任务 =====
-  mp_01: { id: 'mp_01', name: '入门考验', type: 'main', description: '通过门派入门试炼', requirement: { type: 'level', target: 25 }, reward: { exp: 800 }, prereq: 'zy_09' },
-  mp_02: { id: 'mp_02', name: '藏书阁探索', type: 'main', description: '阅读5本典籍', requirement: { type: 'level', target: 28 }, reward: { exp: 800 }, prereq: 'mp_01' },
-  mp_03: { id: 'mp_03', name: '门派修炼', type: 'main', description: '修炼功法10次', requirement: { type: 'level', target: 30 }, reward: { exp: 600 }, prereq: 'mp_01' },
-  mp_04: { id: 'mp_04', name: '密室探索', type: 'main', description: '发现古老密室', requirement: { type: 'level', target: 35 }, reward: { exp: 1000 }, prereq: 'mp_02' },
-  mp_05: { id: 'mp_05', name: '手表激活', type: 'main', description: '获得管理员手表', requirement: { type: 'level', target: 35 }, reward: { exp: 500 }, prereq: 'mp_04' },
-  // ===== 【新增】秘境任务 =====
-  mj_01: { id: 'mj_01', name: '秘境入口', type: 'main', description: '到达修仙秘境', requirement: { type: 'level', target: 40 }, reward: { exp: 2000 }, prereq: 'mp_05' },
-  mj_02: { id: 'mj_02', name: '灵脉探索', type: 'main', description: '探索灵脉', requirement: { type: 'level', target: 42 }, reward: { exp: 1500 }, prereq: 'mj_01' },
-  mj_03: { id: 'mj_03', name: '幻境试炼', type: 'main', description: '击败幻影', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 2500 }, prereq: 'mj_02' },
-  mj_04: { id: 'mj_04', name: '代码墙', type: 'main', description: '发现代码墙', requirement: { type: 'level', target: 45 }, reward: { exp: 5000 }, prereq: 'mj_03' },
-  // ===== 【新增】遗迹任务 =====
-  yj_01: { id: 'yj_01', name: '遗迹入口', type: 'main', description: '到达上古遗迹', requirement: { type: 'level', target: 50 }, reward: { exp: 5000 }, prereq: 'mj_04' },
-  yj_02: { id: 'yj_02', name: '远古战场', type: 'main', description: '探索远古战场', requirement: { type: 'level', target: 52 }, reward: { exp: 4000 }, prereq: 'yj_01' },
-  yj_03: { id: 'yj_03', name: '创世者日记', type: 'main', description: '找到创世者日记', requirement: { type: 'level', target: 55 }, reward: { exp: 8000 }, prereq: 'yj_02' },
-  // ===== 【新增】渡劫任务 =====
-  dj_01: { id: 'dj_01', name: '天劫降临', type: 'main', description: '到达渡劫仙域', requirement: { type: 'level', target: 60 }, reward: { exp: 10000 }, prereq: 'yj_03' },
-  dj_02: { id: 'dj_02', name: '渡劫成功', type: 'main', description: '通过天劫考验', requirement: { type: 'level', target: 65 }, reward: { exp: 15000 }, prereq: 'dj_01' },
-  // ===== 【新增】代码空间任务 =====
-  dm_01: { id: 'dm_01', name: '代码空间', type: 'main', description: '进入代码空间', requirement: { type: 'level', target: 70 }, reward: { exp: 15000 }, prereq: 'dj_02' },
-  dm_02: { id: 'dm_02', name: '源码之心', type: 'main', description: '到达源码之心', requirement: { type: 'level', target: 75 }, reward: { exp: 20000 }, prereq: 'dm_01' },
-  dm_03: { id: 'dm_03', name: '最终选择', type: 'main', description: '做出最终选择', requirement: { type: 'level', target: 80 }, reward: { exp: 50000 }, prereq: 'dm_02' },
-  // ===== 【新增】支线任务 =====
-  xc_s01: { id: 'xc_s01', name: '采药老人', type: 'side', description: '帮药铺老板采集10株灵草', requirement: { type: 'gather', target: 10 }, reward: { exp: 200, silver: 100 }, prereq: null },
-  xc_s02: { id: 'xc_s02', name: '猎户的请求', type: 'side', description: '帮猎户击杀10只野兔', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 250, equipment: 'hunters_bow' }, prereq: null },
-  xc_s03: { id: 'xc_s03', name: '村庄巡逻', type: 'side', description: '巡逻村庄击退入侵者', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 250, silver: 50 }, prereq: 'xc_08' },
-  zy_s01: { id: 'zy_s01', name: '山贼清剿', type: 'side', description: '清除华山脚下的山贼', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 800, silver: 300 }, prereq: 'zy_04' },
-  zy_s02: { id: 'zy_s02', name: '黑市交易', type: 'side', description: '在黑市完成3次交易', requirement: { type: 'level', target: 20 }, reward: { exp: 500 }, prereq: 'zy_03' },
-  zy_s03: { id: 'zy_s03', name: '毒蛇之患', type: 'side', description: '清除野外树林的毒蛇', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 700 }, prereq: 'zy_06' },
-  mp_s01: { id: 'mp_s01', name: '门派贡献', type: 'side', description: '门派贡献达到100', requirement: { type: 'level', target: 30 }, reward: { exp: 1000 }, prereq: 'mp_01' },
-  mj_s01: { id: 'mj_s01', name: '幻境迷宫', type: 'side', description: '在幻境中找到出口', requirement: { type: 'level', target: 42 }, reward: { exp: 2000 }, prereq: 'mj_02' },
-  yj_s01: { id: 'yj_s01', name: '远古战士', type: 'side', description: '击败10个远古战士', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 5000 }, prereq: 'yj_01' },
-  dj_s01: { id: 'dj_s01', name: '天劫守卫', type: 'side', description: '击败天劫守卫', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 12000 }, prereq: 'dj_01' }
+  }
 };
 
 // NPC data
@@ -9283,38 +9170,6 @@ const NPC_DIALOGS = {
       '强化': '装备强化需要强化石，强化等级越高，属性越强。',
       '锻造': '高级装备需要稀有材料，多去危险区域探索吧。'
     }
-  },
-  '洛阳城守卫': {
-    greeting: '站住！洛阳城可不是随便什么人都能进的。',
-    topics: { '进城': '出示你的身份令牌，或者...交点进城费。', '江湖': '最近江湖不太平，正邪两派又要打起来了。', '异象': '你说那些奇怪的现象？别乱说，小心被当成妖言惑众。' }
-  },
-  '神秘老者': {
-    greeting: '年轻人，你身上有一股...特殊的气息。',
-    topics: { '修炼': '修仙之道，在于悟。悟透了，境界自然提升。', '遗物': '遗物？你竟然知道遗物...看来你不是普通人。', '真相': '这个世界的真相...等你准备好了，自然会知道。', '代码': '代码？你怎么会知道这个词...（老者脸色大变）' }
-  },
-  '黑市情报贩子': {
-    greeting: '想知道什么？价格好商量。',
-    topics: { '正派': '正派那帮伪君子，表面光鲜，背地里...', '邪派': '邪派虽然名声不好，但至少坦荡。', '遗物': '遗物？我有线索，但价格不便宜。', 'Bug': 'Bug？你说的是那些\'异常\'？我见过，在代码空间里。' }
-  },
-  '少林方丈': {
-    greeting: '阿弥陀佛，施主有何贵干？',
-    topics: { '佛法': '佛法无边，修仙亦是修心。', '武学': '少林七十二绝技，每一门都博大精深。', '正邪': '正邪之分，在心不在名。', '创世者': '创世者...那是上古传说，不可轻信。' }
-  },
-  '武当掌门': {
-    greeting: '道友，武当山欢迎你。',
-    topics: { '道法': '道法自然，无为而治。', '剑法': '武当剑法，以柔克刚。', '正邪': '正邪之争，由来已久。', '秘境': '修仙秘境中，据说藏有上古遗物。' }
-  },
-  '东方教主': {
-    greeting: '哼，又一个不知天高地厚的小子。',
-    topics: { '日月神教': '日月神教，千秋万载，一统江湖！', '正派': '那帮伪君子，迟早要收拾他们。', '邪道': '邪道？我们只是不被所谓的\'正道\'束缚罢了。', '力量': '力量，才是这个世界的真理。' }
-  },
-  '药铺学徒': {
-    greeting: '师兄好！我在学习炼丹呢。',
-    topics: { '炼丹': '师父说炼丹需要耐心和悟性。', '材料': '灵草最好找，在竹林里到处都是。', '秘方': '师父有一本祖传秘方，但从不让我们看。' }
-  },
-  '铁匠学徒': {
-    greeting: '客官，师父出去了，有什么需要我帮忙的吗？',
-    topics: { '锻造': '锻造需要火候和技巧，我还在学习。', '材料': '好材料才能打出好武器。', '强化': '强化装备需要强化石，成功率看运气。' }
   }
 };
 
