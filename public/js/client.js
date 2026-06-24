@@ -650,7 +650,8 @@
     appendMessage('  输入 /帮助 查看可用指令（包括 /学习、/修炼 等）', 'system');
     appendMessage('  /丹药 炼丹/使用丹药 | /装备 查看/穿戴装备 | /任务 查看任务', 'system');
     appendMessage('  /商店 交易物品 | /签到 每日签到 | /好友 好友系统 | /奇遇 随机事件', 'system');
-    appendMessage('  /遗物 查看遗物系统 | /Bug 查看Bug系统', 'system');
+    appendMessage('  /遗物 查看遗物系统(36件) | /Bug 查看Bug系统(32种)', 'system');
+    appendMessage('  /VIP 查看VIP | /解谜 遗物排列 | /结局进度 查看真结局', 'system');
     appendMessage('════════════════════════════════════════', 'system');
 
     $chatInput.focus();
