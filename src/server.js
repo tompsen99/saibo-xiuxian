@@ -1889,6 +1889,7 @@ function createPlayer(email, password, name, profession) {
     password: hashedPassword,
     name: name,
     isAdmin: email === 'admin@game.com',
+    isNewPlayer: true,
     profession: null,
     stats: null,
     level: 1,
@@ -2086,6 +2087,23 @@ wss.on('connection', (ws, req) => {
   });
 });
 
+// ===== 自动保存（每5分钟） =====
+const autoSaveInterval = setInterval(() => {
+  try {
+    const players = getPlayers();
+    // Update lastOnlineTime for connected players
+    for (const [ws, clientInfo] of connectedClients.entries()) {
+      if (ws.readyState === WebSocket.OPEN && players[clientInfo.playerId]) {
+        players[clientInfo.playerId].lastOnlineTime = Date.now();
+      }
+    }
+    savePlayers(players);
+    console.log(`[自动保存] ${new Date().toLocaleString('zh-CN')} - 保存了 ${Object.keys(players).length} 个玩家`);
+  } catch(e) {
+    console.error('[自动保存] 失败:', e.message);
+  }
+}, 5 * 60 * 1000); // 每5分钟
+
 // Heartbeat interval
 const heartbeatInterval = setInterval(() => {
   wss.clients.forEach((ws) => {
@@ -2098,6 +2116,7 @@ const heartbeatInterval = setInterval(() => {
 wss.on('close', () => {
   clearInterval(heartbeatInterval);
   clearInterval(idleTickInterval);
+  clearInterval(autoSaveInterval);
 });
 
 // Message handler
@@ -2372,6 +2391,16 @@ function handleLogin(ws, data) {
     type: 'system',
     data: { message: `${result.player.name} 进入了游戏` }
   }, ws);
+  
+  // 新手引导
+  if (result.player.isNewPlayer) {
+    result.player.isNewPlayer = false;
+    savePlayers(getPlayers());
+    sendToClient(ws, {
+      type: 'system',
+      data: { message: `🎓 新手引导：\n欢迎来到赛博修仙的世界！\n\n📋 快速上手：\n1. 输入 /属性 查看你的角色信息\n2. 输入 /移动 竹林 前往竹林\n3. 输入 /攻击 击杀怪物获取经验\n4. 输入 /打坐 挂机修炼\n5. 输入 /帮助 查看所有命令\n\n💡 提示：每天记得 /签到 领取奖励！` }
+    });
+  }
 }
 
 // Select profession handler
@@ -2508,11 +2537,16 @@ function handleChat(ws, data) {
   const { message } = data;
   if (!message || message.trim() === '') return;
   
+  // 聊天消息限制
+  let chatMessage = message.trim();
+  if (chatMessage.length > 200) chatMessage = chatMessage.substring(0, 200);
+  chatMessage = chatMessage.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  
   broadcast({
     type: 'chat',
     data: {
       sender: clientInfo.playerName,
-      message: message.trim(),
+      message: chatMessage,
       channel: 'world',
       timestamp: new Date().toISOString()
     }
@@ -2533,6 +2567,18 @@ function handleCommand(ws, data) {
   const players = getPlayers();
   const player = players[clientInfo.playerId];
   if (!player) return;
+  
+  // ===== 命令速率限制 =====
+  const now = Date.now();
+  if (!player._lastCommands) player._lastCommands = [];
+  player._lastCommands.push(now);
+  // 保留最近10条命令的时间戳
+  if (player._lastCommands.length > 10) player._lastCommands = player._lastCommands.slice(-10);
+  // 检查：10秒内超过8条命令则拒绝
+  if (player._lastCommands.length >= 8 && now - player._lastCommands[0] < 10000) {
+    sendToClient(ws, { type: 'system', data: { message: '⚠️ 操作太频繁，请稍后再试。' } });
+    return;
+  }
   
   const { command } = data;
   

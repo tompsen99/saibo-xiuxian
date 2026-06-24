@@ -137,7 +137,7 @@
     };
 
     ws.onclose = function () {
-      appendMessage('[系统] 连接断开，正在重连...', 'system');
+      appendMessage('[系统] ⚠️ 连接断开，正在自动重连... (请勿关闭页面)', 'system');
       scheduleReconnect();
     };
 
