@@ -1033,7 +1033,20 @@ const PILLS_DATA = {
   realm_pill: { id: 'realm_pill', name: '境界丹', grade: '天丹', effect: '直接突破一个小境界', price: 600, recipe: { herb: 12, spirit_shard: 10, beast_core: 5 }, apply: (p) => { return '请使用后查看效果。'; } },
   full_buff_pill: { id: 'full_buff_pill', name: '天罡丹', grade: '天丹', effect: '全属性+20%(1小时)', price: 300, recipe: { herb: 8, spirit_shard: 6, beast_core: 3 }, apply: (p) => { p.fullBuff = Date.now() + 3600000; return '全属性+20%，持续1小时！'; } },
   immortal_pill: { id: 'immortal_pill', name: '长生不老丹', grade: '仙丹', effect: '寿命+50,全属性+10%', price: 1000, recipe: { herb: 20, spirit_shard: 15, beast_core: 8 }, apply: (p) => { p.lifespan = (p.lifespan || 100) + 50; return '寿命+50，全属性+10%！'; } },
-  god_pill: { id: 'god_pill', name: '造化丹', grade: '仙丹', effect: '全属性永久+5', price: 2000, recipe: { herb: 25, spirit_shard: 20, beast_core: 10 }, apply: (p) => { p.str=(p.str||0)+5; p.dex=(p.dex||0)+5; p.con=(p.con||0)+5; p.wis=(p.wis||0)+5; return '全属性永久+5！'; } }
+  god_pill: { id: 'god_pill', name: '造化丹', grade: '仙丹', effect: '全属性永久+5', price: 2000, recipe: { herb: 25, spirit_shard: 20, beast_core: 10 }, apply: (p) => { p.str=(p.str||0)+5; p.dex=(p.dex||0)+5; p.con=(p.con||0)+5; p.wis=(p.wis||0)+5; return '全属性永久+5！'; } },
+  // ===== 【补全】更多丹药 =====
+  adv_stamina_pill: { id: 'adv_stamina_pill', name: '高级体力丹', grade: '玄丹', effect: '恢复150体力', price: 50, recipe: { herb: 4, spirit_shard: 3, beast_core: 0 }, apply: (p) => { const r = Math.min(150, (p.maxStamina||100)-(p.stamina||0)); p.stamina = Math.min(p.maxStamina||100, (p.stamina||0)+150); return `恢复了${r}点体力`; } },
+  poison_resist_pill: { id: 'poison_resist_pill', name: '解毒丹', grade: '凡丹', effect: '清除中毒状态', price: 25, recipe: { herb: 3, spirit_shard: 1, beast_core: 0 }, apply: (p) => { p.poisoned = false; return '中毒状态已清除！'; } },
+  dodge_pill: { id: 'dodge_pill', name: '闪避丹', grade: '玄丹', effect: '闪避+10%(30分钟)', price: 70, recipe: { herb: 3, spirit_shard: 2, beast_core: 1 }, apply: (p) => { p.dodgeBuff = Date.now() + 1800000; return '闪避+10%，持续30分钟！'; } },
+  defense_pill: { id: 'defense_pill', name: '铁壁丹', grade: '玄丹', effect: '防御+20%(30分钟)', price: 70, recipe: { herb: 3, spirit_shard: 3, beast_core: 1 }, apply: (p) => { p.defenseBuff = Date.now() + 1800000; return '防御+20%，持续30分钟！'; } },
+  attack_pill: { id: 'attack_pill', name: '狂暴丹', grade: '玄丹', effect: '攻击+20%(30分钟)', price: 70, recipe: { herb: 4, spirit_shard: 2, beast_core: 1 }, apply: (p) => { p.attackBuff = Date.now() + 1800000; return '攻击+20%，持续30分钟！'; } },
+  luck_pill: { id: 'luck_pill', name: '幸运丹', grade: '地丹', effect: '掉率+20%(1小时)', price: 200, recipe: { herb: 5, spirit_shard: 5, beast_core: 3 }, apply: (p) => { p.luckBuff = Date.now() + 3600000; return '掉率+20%，持续1小时！'; } },
+  exp_boost_pill: { id: 'exp_boost_pill', name: '经验丹', grade: '地丹', effect: '经验+50%(1小时)', price: 250, recipe: { herb: 6, spirit_shard: 5, beast_core: 2 }, apply: (p) => { p.expBuff = Date.now() + 3600000; return '经验获取+50%，持续1小时！'; } },
+  silver_boost_pill: { id: 'silver_boost_pill', name: '聚宝丹', grade: '地丹', effect: '灵石+50%(1小时)', price: 200, recipe: { herb: 5, spirit_shard: 4, beast_core: 2 }, apply: (p) => { p.silverBuff = Date.now() + 3600000; return '灵石获取+50%，持续1小时！'; } },
+  full_heal_spirit: { id: 'full_heal_spirit', name: '天灵丹', grade: '天丹', effect: '恢复全部灵力', price: 300, recipe: { herb: 8, spirit_shard: 8, beast_core: 3 }, apply: (p) => { p.spirit = p.maxSpirit || 50; return `灵力已满！${p.spirit}/${p.maxSpirit}`; } },
+  full_heal_stamina: { id: 'full_heal_stamina', name: '天体力丹', grade: '天丹', effect: '恢复全部体力', price: 300, recipe: { herb: 8, spirit_shard: 6, beast_core: 4 }, apply: (p) => { p.stamina = p.maxStamina || 100; return `体力已满！${p.stamina}/${p.maxStamina}`; } },
+  revive_pill: { id: 'revive_pill', name: '续命丹', grade: '天丹', effect: '死亡后自动复活(70%HP)', price: 500, recipe: { herb: 10, spirit_shard: 8, beast_core: 5 }, apply: (p) => { p.reviveBuff = true; return '获得续命效果：死亡后自动复活！'; } },
+  omniscient_pill: { id: 'omniscient_pill', name: '全知丹', grade: '仙丹', effect: '全属性临时+30%(2小时)', price: 800, recipe: { herb: 15, spirit_shard: 12, beast_core: 6 }, apply: (p) => { p.omniBuff = Date.now() + 7200000; return '全属性+30%，持续2小时！'; } }
 };
 // ===== ALCHEMY MATERIALS (炼丹材料) =====
 const MATERIALS_DATA = {
@@ -1416,6 +1429,15 @@ const ENCOUNTERS = [
       if (realmChanged) msg += '\n✨ 境界突破！';
       return msg;
     }
+  },
+  {
+    id: 'code_vision', name: '代码幻象', chance: 0.02,
+    trigger: 'explore',
+    text: '空气中突然出现一行闪烁的代码，你凝神观看...',
+    apply: (ws, player) => {
+      player.watchExp = (player.watchExp || 0) + 50;
+      return '你看到了一段代码碎片！手表经验+50';
+    }
   }
 ];
 
@@ -1552,7 +1574,51 @@ const QUESTS_DATA = {
   mp_s01: { id: 'mp_s01', name: '门派贡献', type: 'side', description: '门派贡献达到100', requirement: { type: 'level', target: 30 }, reward: { exp: 1000 }, prereq: 'mp_01' },
   mj_s01: { id: 'mj_s01', name: '幻境迷宫', type: 'side', description: '在幻境中找到出口', requirement: { type: 'level', target: 42 }, reward: { exp: 2000 }, prereq: 'mj_02' },
   yj_s01: { id: 'yj_s01', name: '远古战士', type: 'side', description: '击败10个远古战士', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 5000 }, prereq: 'yj_01' },
-  dj_s01: { id: 'dj_s01', name: '天劫守卫', type: 'side', description: '击败天劫守卫', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 12000 }, prereq: 'dj_01' }
+  dj_s01: { id: 'dj_s01', name: '天劫守卫', type: 'side', description: '击败天劫守卫', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 12000 }, prereq: 'dj_01' },
+  // ===== 【补全】更多支线任务 =====
+  xc_s04: { id: 'xc_s04', name: '铁匠学徒', type: 'side', description: '学习锻造基础', requirement: { type: 'level', target: 5 }, reward: { exp: 150 }, prereq: null },
+  xc_s05: { id: 'xc_s05', name: '药铺学徒', type: 'side', description: '学习炼丹基础', requirement: { type: 'level', target: 5 }, reward: { exp: 150 }, prereq: null },
+  xc_s06: { id: 'xc_s06', name: '客栈传闻', type: 'side', description: '在客栈听3个传闻', requirement: { type: 'level', target: 3 }, reward: { exp: 200 }, prereq: null },
+  xc_s07: { id: 'xc_s07', name: '修炼场挑战', type: 'side', description: '在修炼场击败3个对手', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 300, silver: 50 }, prereq: null },
+  xc_s08: { id: 'xc_s08', name: '竹林采集', type: 'side', description: '采集20株灵草', requirement: { type: 'gather', target: 20 }, reward: { exp: 400, silver: 200 }, prereq: 'xc_s01' },
+  xc_s09: { id: 'xc_s09', name: '铁匠的考验', type: 'side', description: '为铁匠收集5块精铁', requirement: { type: 'gather', target: 5 }, reward: { exp: 350, equipment: 'steel_sword' }, prereq: 'xc_08' },
+  xc_s10: { id: 'xc_s10', name: '村民的小猫', type: 'side', description: '找回走丢的小猫', requirement: { type: 'explore', target: '竹林' }, reward: { exp: 100, silver: 50 }, prereq: null },
+  zy_s04: { id: 'zy_s04', name: '嵩山采药', type: 'side', description: '在嵩山采集稀有灵草', requirement: { type: 'gather', target: 5 }, reward: { exp: 500 }, prereq: 'zy_05' },
+  zy_s05: { id: 'zy_s05', name: '洛阳比武', type: 'side', description: '参加洛阳比武大会', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1000, silver: 500 }, prereq: 'zy_01' },
+  zy_s06: { id: 'zy_s06', name: '行商的委托', type: 'side', description: '帮行商护送货物', requirement: { type: 'level', target: 18 }, reward: { exp: 800, silver: 300 }, prereq: 'zy_01' },
+  zy_s07: { id: 'zy_s07', name: '黑市情报', type: 'side', description: '从黑市商人获取情报', requirement: { type: 'level', target: 20 }, reward: { exp: 600 }, prereq: 'zy_03' },
+  zy_s08: { id: 'zy_s08', name: '酒楼挑战', type: 'side', description: '在酒楼击败闹事者', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 600, silver: 200 }, prereq: 'zy_02' },
+  zy_s09: { id: 'zy_s09', name: '野外秘境', type: 'side', description: '在野外树林发现隐藏洞穴', requirement: { type: 'explore', target: '野外树林' }, reward: { exp: 500 }, prereq: 'zy_06' },
+  zy_s10: { id: 'zy_s10', name: '华山论剑', type: 'side', description: '在华山绝顶挑战剑灵', requirement: { type: 'kill_any', target: 1 }, reward: { exp: 1500, silver: 500 }, prereq: 'zy_04' },
+  mp_s02: { id: 'mp_s02', name: '少林修行', type: 'side', description: '在少林寺修炼功法', requirement: { type: 'level', target: 25 }, reward: { exp: 800 }, prereq: 'mp_01' },
+  mp_s03: { id: 'mp_s03', name: '武当剑法', type: 'side', description: '学习武当剑法', requirement: { type: 'level', target: 28 }, reward: { exp: 1000 }, prereq: 'mp_01' },
+  mp_s04: { id: 'mp_s04', name: '峨眉医术', type: 'side', description: '学习峨眉医术', requirement: { type: 'level', target: 28 }, reward: { exp: 800 }, prereq: 'mp_01' },
+  mp_s05: { id: 'mp_s05', name: '昆仑采雪', type: 'side', description: '在昆仑山采集雪莲', requirement: { type: 'gather', target: 5 }, reward: { exp: 1000 }, prereq: 'mp_01' },
+  mp_s06: { id: 'mp_s06', name: '正派演武', type: 'side', description: '参加正派演武', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 1200, silver: 500 }, prereq: 'mp_01' },
+  mp_s07: { id: 'mp_s07', name: '护山任务', type: 'side', description: '击退入侵的敌人', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1000 }, prereq: 'mp_01' },
+  mp_s08: { id: 'mp_s08', name: '门派贡献', type: 'side', description: '门派贡献达到200', requirement: { type: 'level', target: 30 }, reward: { exp: 1500 }, prereq: 'mp_01' },
+  xp_s01: { id: 'xp_s01', name: '毒蝎猎杀', type: 'side', description: '在星宿海击杀10只毒蝎', requirement: { type: 'kill_any', target: 10 }, reward: { exp: 1000 }, prereq: 'mp_01' },
+  xp_s02: { id: 'xp_s02', name: '蛊虫研究', type: 'side', description: '研究蛊虫的特性', requirement: { type: 'level', target: 25 }, reward: { exp: 800 }, prereq: 'mp_01' },
+  xp_s03: { id: 'xp_s03', name: '血刀锻造', type: 'side', description: '学习血刀锻造术', requirement: { type: 'level', target: 28 }, reward: { exp: 1200 }, prereq: 'mp_01' },
+  xp_s04: { id: 'xp_s04', name: '幽冥谷探索', type: 'side', description: '探索幽冥谷', requirement: { type: 'level', target: 30 }, reward: { exp: 1000 }, prereq: 'mp_01' },
+  xp_s05: { id: 'xp_s05', name: '邪派演武', type: 'side', description: '参加邪派演武', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 1200, silver: 500 }, prereq: 'mp_01' },
+  mj_s02: { id: 'mj_s02', name: '灵脉守护者', type: 'side', description: '击败灵脉守护者', requirement: { type: 'kill_any', target: 3 }, reward: { exp: 3000 }, prereq: 'mj_02' },
+  mj_s03: { id: 'mj_s03', name: '秘境采集', type: 'side', description: '采集秘境稀有材料', requirement: { type: 'gather', target: 10 }, reward: { exp: 1500 }, prereq: 'mj_01' },
+  mj_s04: { id: 'mj_s04', name: '秘境遗迹', type: 'side', description: '发现秘境中的遗迹', requirement: { type: 'level', target: 42 }, reward: { exp: 2500 }, prereq: 'mj_02' },
+  mj_s05: { id: 'mj_s05', name: '幻影研究', type: 'side', description: '研究幻影的特性', requirement: { type: 'kill_any', target: 5 }, reward: { exp: 1800 }, prereq: 'mj_03' },
+  mj_s06: { id: 'mj_s06', name: '灵脉净化', type: 'side', description: '净化被污染的灵脉', requirement: { type: 'level', target: 44 }, reward: { exp: 2200 }, prereq: 'mj_02' },
+  yj_s02: { id: 'yj_s02', name: '仙人遗物', type: 'side', description: '收集仙人遗物', requirement: { type: 'level', target: 52 }, reward: { exp: 4000 }, prereq: 'yj_01' },
+  yj_s03: { id: 'yj_s03', name: '遗迹解谜', type: 'side', description: '解开遗迹的谜题', requirement: { type: 'level', target: 54 }, reward: { exp: 6000 }, prereq: 'yj_02' },
+  yj_s04: { id: 'yj_s04', name: '遗迹地图', type: 'side', description: '绘制遗迹完整地图', requirement: { type: 'level', target: 53 }, reward: { exp: 4000 }, prereq: 'yj_01' },
+  yj_s05: { id: 'yj_s05', name: '远古秘密', type: 'side', description: '发现远古大战的真相', requirement: { type: 'level', target: 55 }, reward: { exp: 5000 }, prereq: 'yj_02' },
+  dj_s02: { id: 'dj_s02', name: '飞升通道探索', type: 'side', description: '探索飞升通道', requirement: { type: 'level', target: 62 }, reward: { exp: 8000 }, prereq: 'dj_01' },
+  dj_s03: { id: 'dj_s03', name: '仙界边缘探索', type: 'side', description: '探索仙界边缘', requirement: { type: 'level', target: 64 }, reward: { exp: 10000 }, prereq: 'dj_02' },
+  dj_s04: { id: 'dj_s04', name: '天劫研究', type: 'side', description: '研究天劫的本质', requirement: { type: 'level', target: 63 }, reward: { exp: 8000 }, prereq: 'dj_01' },
+  dm_s01: { id: 'dm_s01', name: 'Bug收集', type: 'side', description: '收集所有32种Bug', requirement: { type: 'level', target: 70 }, reward: { exp: 20000 }, prereq: 'dm_01' },
+  dm_s02: { id: 'dm_s02', name: '遗物排列', type: 'side', description: '完成遗物排列解谜', requirement: { type: 'level', target: 70 }, reward: { exp: 15000 }, prereq: 'dm_01' },
+  dm_s03: { id: 'dm_s03', name: '源码解读', type: 'side', description: '解读源码之心的代码', requirement: { type: 'level', target: 75 }, reward: { exp: 12000 }, prereq: 'dm_02' },
+  dm_s04: { id: 'dm_s04', name: '代码空间探索', type: 'side', description: '探索代码空间所有区域', requirement: { type: 'level', target: 72 }, reward: { exp: 10000 }, prereq: 'dm_01' },
+  dm_s05: { id: 'dm_s05', name: '创世者的真相', type: 'side', description: '发现创世者的全部秘密', requirement: { type: 'level', target: 80 }, reward: { exp: 25000 }, prereq: 'dm_02' }
 };
 
 // NPC data
@@ -9315,6 +9381,22 @@ const NPC_DIALOGS = {
   '铁匠学徒': {
     greeting: '客官，师父出去了，有什么需要我帮忙的吗？',
     topics: { '锻造': '锻造需要火候和技巧，我还在学习。', '材料': '好材料才能打出好武器。', '强化': '强化装备需要强化石，成功率看运气。' }
+  },
+  '行商': {
+    greeting: '生意兴隆通四海，财源茂盛达三江！',
+    topics: { '商品': '我走南闯北，什么稀奇古怪的东西都有。', '江湖': '江湖上的事，我见多了。正邪之争？不过是一场戏。', '秘闻': '听说上古遗迹里有仙人留下的宝贝，你信不信？', '异象': '最近路上总看到奇怪的光影，像是代码在闪烁...' }
+  },
+  '天机老人': {
+    greeting: '天机不可泄露...但你例外。',
+    topics: { '命运': '你的命运，早已写在代码之中。', '世界': '这个世界比你看到的要复杂得多。', '真相': '真相？等你集齐遗物，修复所有Bug，自然会知道。', '创世者': '创世者...他还在。就在源码之心里。' }
+  },
+  '源码守护者': {
+    greeting: '你是第7个来到这里的穿越者。',
+    topics: { '穿越者': '前6个都失败了。有的被Bug吞噬，有的迷失在代码中。', '创世者': '创世者的意识已经很微弱了。世界即将崩溃。', '选择': '你可以选择成为新的创世者，或者回到你的世界。', '代码': '这个世界的本质就是代码。理解代码的人，才能拯救它。' }
+  },
+  '远古仙人': {
+    greeting: '...（无言的注视）',
+    topics: { '遗物': '这些遗物...是创世者的记忆碎片。', '日记': '创世者写了103篇日记。找到它们，你就能了解一切。', '守护': '我守护这里已经很久了。久到记不清时间。', '离开': '如果你想离开，去源码之心吧。那里有答案。' }
   }
 };
 
