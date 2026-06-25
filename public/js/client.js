@@ -824,7 +824,18 @@
 
   // Prevent zoom on double-tap (mobile)
   document.addEventListener('touchend', function (e) {
-    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
+    var tag = e.target.tagName;
+    var el = e.target;
+    // 允许按钮、输入框、链接、以及可点击的元素
+    if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A') return;
+    if (el.classList.contains('profession-card')) return;
+    if (el.closest('.profession-card')) return;
+    if (el.classList.contains('xp-btn')) return;
+    if (el.classList.contains('side-btn')) return;
+    if (el.classList.contains('attr-plus') || el.classList.contains('attr-minus')) return;
+    if (el.classList.contains('give-btn')) return;
+    if (el.classList.contains('item-option')) return;
+    if (el.classList.contains('quick-btn')) return;
     e.preventDefault();
   }, { passive: false });
 
