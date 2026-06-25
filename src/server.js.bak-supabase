@@ -5,8 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const supabaseSync = require("./supabase-sync");
-const { useSupabase, startSync, queueSync, queueDelete } = supabaseSync;
 const professions = require('./data/professions');
 const realms = require('./data/realms');
 
@@ -31,14 +29,8 @@ function initializeDataFiles() {
   }
 }
 
-// Read JSON file (支持Supabase缓存)
+// Read JSON file
 function readJSON(filePath) {
-  // 如果启用了Supabase，优先从缓存读取
-  if (useSupabase) {
-    const filename = require('path').basename(filePath);
-    const cached = supabaseSync.readCache(filename);
-    if (cached) return cached;
-  }
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
@@ -47,31 +39,9 @@ function readJSON(filePath) {
   }
 }
 
-// Write JSON file (支持Supabase同步)
+// Write JSON file
 function writeJSON(filePath, data) {
-  // 写入本地文件
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  
-  // 如果启用了Supabase，同步到云端
-  if (useSupabase) {
-    const filename = require('path').basename(filePath);
-    supabaseSync.writeCache(filename, data);
-    
-    // 根据文件类型队列同步
-    if (filename === 'players.json') {
-      for (const player of Object.values(data)) {
-        queueSync('player', player);
-      }
-    } else if (filename === 'sessions.json') {
-      for (const session of Object.values(data)) {
-        queueSync('session', session);
-      }
-    } else if (filename === 'vip_keys.json') {
-      for (const key of Object.values(data)) {
-        queueSync('vip_key', key);
-      }
-    }
-  }
 }
 
 // World data - maps and rooms
@@ -9975,17 +9945,9 @@ function autoBackup() {
 // Auto backup every hour
 setInterval(autoBackup, 3600000);
 
-// 启动Supabase同步（如果配置了）
-if (useSupabase) {
-  startSync();
-}
-
 server.listen(PORT, () => {
   console.log(`赛博修仙服务器已启动，端口: ${PORT}`);
   console.log(`访问 http://localhost:${PORT} 开始游戏`);
-  if (useSupabase) {
-    console.log('[Supabase] 数据库同步已启用');
-  }
 });
 
 module.exports = { app, server, wss };
