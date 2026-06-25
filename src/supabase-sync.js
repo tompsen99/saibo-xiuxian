@@ -59,7 +59,12 @@ async function loadFromSupabase() {
     if (!playersError && players) {
       const playersMap = {};
       for (const p of players) {
-        playersMap[p.id] = p;
+        // 从data列恢复完整玩家数据
+        if (p.data && typeof p.data === 'object') {
+          playersMap[p.id] = { ...p.data, id: p.id };
+        } else {
+          playersMap[p.id] = p;
+        }
       }
       writeCache('players.json', playersMap);
       console.log(`[Supabase] 已加载 ${players.length} 个玩家`);
@@ -122,15 +127,24 @@ async function syncAllPlayersNow(playersMap) {
     const playerList = Object.values(playersMap);
     if (playerList.length === 0) return;
     
+    // 将玩家数据转为Supabase格式（核心字段+data JSONB）
+    const rows = playerList.map(p => ({
+      id: p.id,
+      email: p.email || '',
+      password: p.password || '',
+      name: p.name || '',
+      is_admin: p.isAdmin || false,
+      data: p,  // 完整数据存入JSONB
+      updated_at: new Date().toISOString()
+    }));
+    
     // 批量upsert
     const { error } = await supabase
       .from('players')
-      .upsert(playerList, { onConflict: 'id' });
+      .upsert(rows, { onConflict: 'id' });
     
     if (error) {
       console.error('[Supabase] 批量同步失败:', error.message);
-    } else {
-      console.log(`[Supabase] 已同步 ${playerList.length} 个玩家`);
     }
   } catch (e) {
     console.error('[Supabase] 批量同步异常:', e.message);
