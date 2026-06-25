@@ -8,7 +8,6 @@ html, body {
   font-size: 14px;
   background: #0a0a1a;
   color: #00ff88;
-  overflow: hidden;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
 }
@@ -226,11 +225,22 @@ html, body {
 /* ═══════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  /* 侧边栏变成底部工具栏 */
-  #game-screen {
-    flex-direction: column;
+  /* 手机端：纵向布局，输入框固定底部 */
+  html, body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
   }
 
+  #game-screen {
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* 侧边栏 → 底部区域 */
   #sidebar {
     width: 100%;
     min-width: 0;
@@ -239,7 +249,8 @@ html, body {
     border-top: 1px solid #1a1a4a;
     padding: 0;
     overflow: visible;
-    order: 2; /* 底部 */
+    flex-shrink: 0; /* 不压缩 */
+    order: 3;
   }
 
   #sidebar h3 { display: none; }
@@ -248,25 +259,27 @@ html, body {
   #status-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 12px;
-    padding: 6px 10px;
+    gap: 2px 10px;
+    padding: 4px 10px;
     background: #111133;
     border-bottom: 1px solid #1a1a4a;
     font-size: 11px;
+    flex-shrink: 0;
   }
   #status-bar p { margin: 0; }
   #current-location { display: none; }
 
-  /* 按钮面板 - 可滚动横排 */
+  /* 按钮面板 - 横向滚动 */
   #side-panel {
     display: flex;
     flex-wrap: nowrap;
     gap: 4px;
-    padding: 6px 10px;
+    padding: 5px 10px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     background: #0d0d2b;
+    flex-shrink: 0;
   }
   #side-panel::-webkit-scrollbar { display: none; }
 
@@ -283,25 +296,36 @@ html, body {
     border-radius: 20px;
   }
 
-  /* 主区域 */
+  /* 主区域 - 占据剩余空间，可滚动 */
   #main {
     flex: 1;
     min-height: 0;
-    order: 1; /* 顶部 */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    order: 1;
   }
 
   #game-text {
+    flex: 1;
     font-size: 13px;
     padding: 8px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
   }
 
+  /* 输入框 - 固定在主区域底部 */
   #input-area {
-    order: 3; /* 最底部 */
-    padding: 6px 10px;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    order: 2;
+    background: #0d0d2b;
+    border-top: 1px solid #1a1a4a;
   }
 
   #chat-input {
-    font-size: 16px; /* 防止iOS缩放 */
+    font-size: 16px;
     padding: 10px 12px;
   }
 
@@ -312,9 +336,9 @@ html, body {
 
   /* 弹窗适配 */
   .overlay-box {
-    padding: 15px;
-    max-height: 95vh;
+    padding: 12px;
     max-height: 95dvh;
+    overflow-y: auto;
   }
 
   .profession-grid {
@@ -322,9 +346,7 @@ html, body {
     gap: 6px;
   }
 
-  .profession-card {
-    padding: 12px;
-  }
+  .profession-card { padding: 12px; }
 
   .attr-btn {
     width: 48px;
