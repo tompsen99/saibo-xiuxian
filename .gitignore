@@ -1,5 +1,10 @@
 node_modules/
 data/players.json
 data/sessions.json
+data/vip_keys.json
+data/backups/
+data/game.log
 .env
 *.log
+*.bak
+.wrangler/

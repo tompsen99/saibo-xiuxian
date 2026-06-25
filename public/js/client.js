@@ -118,7 +118,10 @@
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
     try {
-      ws = new WebSocket('ws://localhost:3000');
+      // 动态WebSocket地址，支持本地和远程部署
+      var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      var wsUrl = wsProtocol + '//' + location.host;
+      ws = new WebSocket(wsUrl);
     } catch (e) {
       appendMessage('[系统] WebSocket连接失败: ' + e.message, 'system');
       scheduleReconnect();
