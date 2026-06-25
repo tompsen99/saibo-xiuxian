@@ -504,17 +504,35 @@
         '</div>' +
         '<div class="prof-bonus"><span class="bonus-main">' + p.primary + '</span>' + (p.secondary !== '无' ? ' <span class="bonus-sub">' + p.secondary + '</span>' : '') + '</div>';
       card.addEventListener('click', function () {
+        console.log('Profession clicked:', p.id, p.name);
         document.querySelectorAll('.profession-card').forEach(function (c) { c.classList.remove('selected'); });
         card.classList.add('selected');
         selectedProfession = p;
         document.getElementById('profession-confirm').disabled = false;
+        document.getElementById('profession-confirm').textContent = '下一步 ✓';
       });
       $professionGrid.appendChild(card);
     });
   }
 
   function confirmProfession() {
-    if (!selectedProfession) return;
+    if (!selectedProfession) {
+      appendMessage('[系统] 请先选择一个职业', 'error');
+      return;
+    }
+    // 检查WebSocket连接
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      appendMessage('[系统] 服务器连接断开，正在重连...', 'error');
+      connectWS();
+      setTimeout(function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          showAttributeAllocation();
+        } else {
+          appendMessage('[系统] 重连失败，请刷新页面重试', 'error');
+        }
+      }, 2000);
+      return;
+    }
     appendMessage('[系统] 你选择了前世职业: ' + selectedProfession.name, 'system');
     showAttributeAllocation();
   }
@@ -626,10 +644,36 @@
      var total = attrValues.str + attrValues.con + attrValues.dex + attrValues.wis;
      console.log('total:', total, 'attrValues:', JSON.stringify(attrValues));
      if (total !== 100) {
-       appendMessage('[系统] 属性总和必须为100', 'error');
+       appendMessage('[系统] 属性总和必须为100，当前为' + total, 'error');
        return;
      }
-     console.log('pendingPlayerId:', pendingPlayerId, 'selectedProfession:', selectedProfession ? selectedProfession.id : null);
+     if (!pendingPlayerId) {
+       appendMessage('[系统] 错误：玩家ID丢失，请重新注册', 'error');
+       return;
+     }
+     if (!selectedProfession) {
+       appendMessage('[系统] 错误：未选择职业', 'error');
+       return;
+     }
+     // 检查WebSocket连接
+     if (!ws || ws.readyState !== WebSocket.OPEN) {
+       appendMessage('[系统] 服务器连接断开，正在重连...', 'error');
+       connectWS();
+       setTimeout(function() {
+         if (ws && ws.readyState === WebSocket.OPEN) {
+           sendWS('select_profession', {
+             playerId: pendingPlayerId,
+             professionId: selectedProfession.id,
+             stats: attrValues
+           });
+           appendMessage('[系统] 属性已确认，正在进入游戏...', 'system');
+         } else {
+           appendMessage('[系统] 重连失败，请刷新页面重试', 'error');
+         }
+       }, 2000);
+       return;
+     }
+     console.log('pendingPlayerId:', pendingPlayerId, 'selectedProfession:', selectedProfession.id);
      sendWS('select_profession', {
        playerId: pendingPlayerId,
        professionId: selectedProfession.id,
