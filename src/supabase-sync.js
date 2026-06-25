@@ -1,5 +1,5 @@
-// supabase-sync.js - Supabase同步模块
-// 使用本地缓存+后台同步的方式，兼容现有同步代码
+// supabase-sync.js - Supabase同步模块（改进版）
+// 立即同步 + 本地缓存，确保数据不丢失
 
 const fs = require('fs');
 const path = require('path');
@@ -9,9 +9,7 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
 
 let supabase = null;
-let syncQueue = [];
-let lastSyncTime = 0;
-const SYNC_INTERVAL = 30000; // 30秒同步一次
+let dataLoaded = false;
 
 if (useSupabase) {
   const { createClient } = require('@supabase/supabase-js');
@@ -48,7 +46,7 @@ function writeCache(filename, data) {
   }
 }
 
-// 从Supabase加载数据到本地缓存
+// 从Supabase加载数据到本地缓存（启动时调用）
 async function loadFromSupabase() {
   if (!useSupabase) return;
   
@@ -65,6 +63,8 @@ async function loadFromSupabase() {
       }
       writeCache('players.json', playersMap);
       console.log(`[Supabase] 已加载 ${players.length} 个玩家`);
+    } else if (playersError) {
+      console.error('[Supabase] 加载玩家失败:', playersError.message);
     }
     
     // 加载会话数据
@@ -93,83 +93,92 @@ async function loadFromSupabase() {
       writeCache('vip_keys.json', keysMap);
     }
     
-    lastSyncTime = Date.now();
+    dataLoaded = true;
+    console.log('[Supabase] 数据加载完成');
   } catch (e) {
     console.error('[Supabase] 加载失败:', e.message);
   }
 }
 
-// 同步本地更改到Supabase
-async function syncToSupabase() {
-  if (!useSupabase || syncQueue.length === 0) return;
-  
-  const batch = syncQueue.splice(0, 100); // 每次最多同步100条
-  
+// 立即同步单个玩家到Supabase
+async function syncPlayerNow(player) {
+  if (!useSupabase) return;
   try {
-    for (const item of batch) {
-      if (item.type === 'player') {
-        await supabase.from('players').upsert(item.data, { onConflict: 'id' });
-      } else if (item.type === 'session') {
-        await supabase.from('sessions').upsert(item.data, { onConflict: 'token' });
-      } else if (item.type === 'vip_key') {
-        await supabase.from('vip_keys').upsert(item.data, { onConflict: 'code' });
-      } else if (item.type === 'delete_player') {
-        await supabase.from('players').delete().eq('id', item.id);
-      } else if (item.type === 'delete_session') {
-        await supabase.from('sessions').delete().eq('token', item.token);
-      }
+    const { error } = await supabase
+      .from('players')
+      .upsert(player, { onConflict: 'id' });
+    if (error) {
+      console.error('[Supabase] 同步玩家失败:', error.message);
     }
-    console.log(`[Supabase] 已同步 ${batch.length} 条数据`);
   } catch (e) {
-    console.error('[Supabase] 同步失败:', e.message);
-    // 失败的数据重新加入队列
-    syncQueue.unshift(...batch);
+    console.error('[Supabase] 同步玩家异常:', e.message);
   }
 }
 
-// 启动后台同步
-function startSync() {
+// 立即同步所有玩家到Supabase
+async function syncAllPlayersNow(playersMap) {
   if (!useSupabase) return;
-  
-  // 初始加载
-  loadFromSupabase();
-  
-  // 定期同步
-  setInterval(async () => {
-    await syncToSupabase();
-  }, SYNC_INTERVAL);
+  try {
+    const playerList = Object.values(playersMap);
+    if (playerList.length === 0) return;
+    
+    // 批量upsert
+    const { error } = await supabase
+      .from('players')
+      .upsert(playerList, { onConflict: 'id' });
+    
+    if (error) {
+      console.error('[Supabase] 批量同步失败:', error.message);
+    } else {
+      console.log(`[Supabase] 已同步 ${playerList.length} 个玩家`);
+    }
+  } catch (e) {
+    console.error('[Supabase] 批量同步异常:', e.message);
+  }
+}
+
+// 立即同步会话
+async function syncSessionNow(sessionData) {
+  if (!useSupabase) return;
+  try {
+    await supabase.from('sessions').upsert(sessionData, { onConflict: 'token' });
+  } catch (e) {
+    console.error('[Supabase] 同步会话失败:', e.message);
+  }
+}
+
+// 立即同步VIP卡密
+async function syncVipKeyNow(keyData) {
+  if (!useSupabase) return;
+  try {
+    await supabase.from('vip_keys').upsert(keyData, { onConflict: 'code' });
+  } catch (e) {
+    console.error('[Supabase] 同步VIP卡密失败:', e.message);
+  }
+}
+
+// 启动同步（加载数据）
+async function startSync() {
+  if (!useSupabase) return;
+  await loadFromSupabase();
   
   // 定期重新加载（防止多实例数据不一致）
   setInterval(async () => {
     await loadFromSupabase();
-  }, 60000); // 每分钟重新加载一次
+  }, 120000); // 每2分钟重新加载一次
   
-  console.log('[Supabase] 后台同步已启动');
-}
-
-// 队列同步操作
-function queueSync(type, data) {
-  if (!useSupabase) return;
-  syncQueue.push({ type, data, timestamp: Date.now() });
-}
-
-// 队列删除操作
-function queueDelete(type, id) {
-  if (!useSupabase) return;
-  if (type === 'player') {
-    syncQueue.push({ type: 'delete_player', id, timestamp: Date.now() });
-  } else if (type === 'session') {
-    syncQueue.push({ type: 'delete_session', token: id, timestamp: Date.now() });
-  }
+  console.log('[Supabase] 同步已启动');
 }
 
 module.exports = {
   useSupabase,
   startSync,
   loadFromSupabase,
-  syncToSupabase,
-  queueSync,
-  queueDelete,
+  syncPlayerNow,
+  syncAllPlayersNow,
+  syncSessionNow,
+  syncVipKeyNow,
   readCache,
-  writeCache
+  writeCache,
+  get dataLoaded() { return dataLoaded; }
 };

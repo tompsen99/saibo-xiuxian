@@ -6,7 +6,7 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const supabaseSync = require("./supabase-sync");
-const { useSupabase, startSync, queueSync, queueDelete } = supabaseSync;
+const { useSupabase, startSync, syncPlayerNow, syncAllPlayersNow, syncSessionNow, syncVipKeyNow } = supabaseSync;
 const professions = require('./data/professions');
 const realms = require('./data/realms');
 
@@ -47,29 +47,19 @@ function readJSON(filePath) {
   }
 }
 
-// Write JSON file (支持Supabase同步)
+// Write JSON file (支持Supabase立即同步)
 function writeJSON(filePath, data) {
   // 写入本地文件
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   
-  // 如果启用了Supabase，同步到云端
+  // 如果启用了Supabase，立即同步到云端
   if (useSupabase) {
     const filename = require('path').basename(filePath);
     supabaseSync.writeCache(filename, data);
     
-    // 根据文件类型队列同步
+    // 立即同步（不等待）
     if (filename === 'players.json') {
-      for (const player of Object.values(data)) {
-        queueSync('player', player);
-      }
-    } else if (filename === 'sessions.json') {
-      for (const session of Object.values(data)) {
-        queueSync('session', session);
-      }
-    } else if (filename === 'vip_keys.json') {
-      for (const key of Object.values(data)) {
-        queueSync('vip_key', key);
-      }
+      syncAllPlayersNow(data).catch(e => console.error('[同步] 玩家同步失败:', e.message));
     }
   }
 }
