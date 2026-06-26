@@ -3616,7 +3616,10 @@ function handleAttackCommand(ws, player, command) {
       maxStamina: player.maxStamina,
       exp: player.exp,
       level: player.level,
-      realm: player.realm
+      realm: player.realm,
+      silver: player.silver,
+      currentMap: player.currentMap,
+      currentRoom: player.currentRoom
     }
   });
   

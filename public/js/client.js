@@ -423,6 +423,12 @@
     if (data.realm) {
       $statRealm.textContent = data.realm;
     }
+    if (data.level !== undefined) {
+      document.getElementById('stat-level').textContent = data.level;
+    }
+    if (data.currentMap && data.currentRoom) {
+      document.getElementById('current-location').textContent = data.currentMap + '-' + data.currentRoom;
+    }
   }
 
   // ─── Chat / Command Input ───

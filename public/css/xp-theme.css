@@ -403,3 +403,26 @@ html, body {
   #main { order: 0; }
   #input-area { order: 0; }
 }
+
+/* ═══════════════════════════════════════ */
+/*  滚动条美化                              */
+/* ═══════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a5a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a6a;
+}
+
+/* ═══════════════════════════════════════ */
+/*  功法/门派列表格式化                      */
+/* ═══════════════════════════════════════ */
+.msg-room { line-height: 1.8; }
