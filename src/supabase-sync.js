@@ -1,5 +1,5 @@
-// supabase-sync.js - Supabase同步模块（改进版）
-// 立即同步 + 本地缓存，确保数据不丢失
+// supabase-sync.js - Supabase同步模块（改进版 v2）
+// 核心改进：每次操作立即同步 + 登录时Supabase回退查询
 
 const fs = require('fs');
 const path = require('path');
@@ -61,6 +61,7 @@ async function loadFromSupabase() {
       for (const p of players) {
         // 从data列恢复完整玩家数据
         if (p.data && typeof p.data === 'object') {
+          // 确保id字段一致
           playersMap[p.id] = { ...p.data, id: p.id };
         } else {
           playersMap[p.id] = p;
@@ -80,7 +81,7 @@ async function loadFromSupabase() {
     if (!sessionsError && sessions) {
       const sessionsMap = {};
       for (const s of sessions) {
-        sessionsMap[s.token] = s;
+        sessionsMap[s.token] = s.player_id;
       }
       writeCache('sessions.json', sessionsMap);
     }
@@ -105,13 +106,71 @@ async function loadFromSupabase() {
   }
 }
 
+// 从Supabase查询单个玩家（登录回退用）
+async function getPlayerFromSupabase(playerId) {
+  if (!useSupabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('id', playerId)
+      .single();
+    
+    if (error) throw error;
+    
+    if (data && data.data && typeof data.data === 'object') {
+      return { ...data.data, id: data.id };
+    }
+    return data;
+  } catch (e) {
+    console.error('[Supabase] 查询玩家失败:', e.message);
+    return null;
+  }
+}
+
+// 从Supabase通过邮箱查询玩家（登录用）
+async function getPlayerByEmailFromSupabase(email) {
+  if (!useSupabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error) throw error;
+    
+    if (data && data.data && typeof data.data === 'object') {
+      return { ...data.data, id: data.id };
+    }
+    return data;
+  } catch (e) {
+    // 如果是PGRST116 (not found)，不打印错误
+    if (!e.message.includes('PGRST116')) {
+      console.error('[Supabase] 通过邮箱查询玩家失败:', e.message);
+    }
+    return null;
+  }
+}
+
 // 立即同步单个玩家到Supabase
 async function syncPlayerNow(player) {
   if (!useSupabase) return;
   try {
+    // 准备Supabase格式的数据
+    const row = {
+      id: player.id,
+      email: player.email || '',
+      password: player.password || '',
+      name: player.name || '',
+      is_admin: player.isAdmin || false,
+      data: player,  // 完整数据存入JSONB
+      updated_at: new Date().toISOString()
+    };
+    
     const { error } = await supabase
       .from('players')
-      .upsert(player, { onConflict: 'id' });
+      .upsert(row, { onConflict: 'id' });
     if (error) {
       console.error('[Supabase] 同步玩家失败:', error.message);
     }
@@ -127,7 +186,7 @@ async function syncAllPlayersNow(playersMap) {
     const playerList = Object.values(playersMap);
     if (playerList.length === 0) return;
     
-    // 将玩家数据转为Supabase格式（核心字段+data JSONB）
+    // 将玩家数据转为Supabase格式
     const rows = playerList.map(p => ({
       id: p.id,
       email: p.email || '',
@@ -152,12 +211,26 @@ async function syncAllPlayersNow(playersMap) {
 }
 
 // 立即同步会话
-async function syncSessionNow(sessionData) {
+async function syncSessionNow(token, playerId) {
   if (!useSupabase) return;
   try {
-    await supabase.from('sessions').upsert(sessionData, { onConflict: 'token' });
+    await supabase.from('sessions').upsert({
+      token: token,
+      player_id: playerId,
+      created_at: new Date().toISOString()
+    }, { onConflict: 'token' });
   } catch (e) {
     console.error('[Supabase] 同步会话失败:', e.message);
+  }
+}
+
+// 删除会话
+async function deleteSessionFromSupabase(token) {
+  if (!useSupabase) return;
+  try {
+    await supabase.from('sessions').delete().eq('token', token);
+  } catch (e) {
+    console.error('[Supabase] 删除会话失败:', e.message);
   }
 }
 
@@ -179,7 +252,7 @@ async function startSync() {
   // 定期重新加载（防止多实例数据不一致）
   setInterval(async () => {
     await loadFromSupabase();
-  }, 120000); // 每2分钟重新加载一次
+  }, 60000); // 每1分钟重新加载一次
   
   console.log('[Supabase] 同步已启动');
 }
@@ -188,9 +261,12 @@ module.exports = {
   useSupabase,
   startSync,
   loadFromSupabase,
+  getPlayerFromSupabase,
+  getPlayerByEmailFromSupabase,
   syncPlayerNow,
   syncAllPlayersNow,
   syncSessionNow,
+  deleteSessionFromSupabase,
   syncVipKeyNow,
   readCache,
   writeCache,

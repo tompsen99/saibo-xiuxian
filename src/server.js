@@ -6,7 +6,7 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const supabaseSync = require("./supabase-sync");
-const { useSupabase, startSync, syncPlayerNow, syncAllPlayersNow, syncSessionNow, syncVipKeyNow } = supabaseSync;
+const { useSupabase, startSync, syncPlayerNow, syncAllPlayersNow, syncSessionNow, deleteSessionFromSupabase, syncVipKeyNow, getPlayerByEmailFromSupabase } = supabaseSync;
 const professions = require('./data/professions');
 const realms = require('./data/realms');
 
@@ -2102,7 +2102,7 @@ function getSessions() {
   return readJSON(SESSIONS_FILE);
 }
 
-// Save player data
+// Save player data (支持单个玩家同步)
 function savePlayers(players) {
   // P0-4: Update lastOnlineTime for all connected players
   for (const [ws, clientInfo] of connectedClients.entries()) {
@@ -2111,6 +2111,20 @@ function savePlayers(players) {
     }
   }
   writeJSON(PLAYERS_FILE, players);
+}
+
+// 保存单个玩家（立即同步到Supabase）
+function saveSinglePlayer(player) {
+  const players = getPlayers();
+  players[player.id] = player;
+  writeJSON(PLAYERS_FILE, players);
+  
+  // 立即同步到Supabase
+  if (useSupabase) {
+    syncPlayerNow(player).catch(e => 
+      console.error('[同步] 单个玩家同步失败:', e.message)
+    );
+  }
 }
 
 // Save sessions data
@@ -2305,10 +2319,23 @@ function createPlayer(email, password, name, profession) {
   return { player: newPlayer };
 }
 
-// Authenticate player
-function authenticatePlayer(email, password) {
+// Authenticate player (支持Supabase回退查询)
+async function authenticatePlayer(email, password) {
   const players = getPlayers();
-  const player = Object.values(players).find(p => p.email === email);
+  let player = Object.values(players).find(p => p.email === email);
+  
+  // 如果本地没找到，尝试从Supabase查询
+  if (!player && useSupabase) {
+    console.log(`[登录] 本地未找到 ${email}，尝试从Supabase查询...`);
+    player = await getPlayerByEmailFromSupabase(email);
+    
+    // 如果从Supabase找到了，保存到本地
+    if (player) {
+      console.log(`[登录] 从Supabase找到玩家 ${player.name}，同步到本地`);
+      players[player.id] = player;
+      savePlayers(players);
+    }
+  }
   
   if (!player) {
     return { error: '账号不存在' };
@@ -2321,20 +2348,31 @@ function authenticatePlayer(email, password) {
   return { player };
 }
 
-// Create session
+// Create session (支持Supabase同步)
 function createSession(playerId) {
   const sessions = getSessions();
   const token = uuidv4();
   sessions[token] = playerId;
   saveSessions(sessions);
+  
+  // 同步到Supabase
+  if (useSupabase) {
+    syncSessionNow(token, playerId).catch(e => console.error('[同步] 会话同步失败:', e.message));
+  }
+  
   return token;
 }
 
-// Remove session
+// Remove session (支持Supabase同步)
 function removeSession(token) {
   const sessions = getSessions();
   delete sessions[token];
   saveSessions(sessions);
+  
+  // 从Supabase删除
+  if (useSupabase) {
+    deleteSessionFromSupabase(token).catch(e => console.error('[同步] 会话删除失败:', e.message));
+  }
 }
 
 // Handle WebSocket connection
@@ -2371,6 +2409,13 @@ wss.on('connection', (ws, req) => {
         savePlayers(players);
       }
       
+      // 玩家断开时立即同步到Supabase（确保数据不丢失）
+      if (player && useSupabase) {
+        syncPlayerNow(player).catch(e => 
+          console.error('[同步] 玩家断开时同步失败:', e.message)
+        );
+      }
+      
       connectedClients.delete(ws);
       broadcast({
         type: 'system',
@@ -2385,7 +2430,7 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-// ===== 自动保存（每5分钟） =====
+// ===== 自动保存（每1分钟） =====
 const autoSaveInterval = setInterval(() => {
   try {
     const players = getPlayers();
@@ -2393,6 +2438,13 @@ const autoSaveInterval = setInterval(() => {
     for (const [ws, clientInfo] of connectedClients.entries()) {
       if (ws.readyState === WebSocket.OPEN && players[clientInfo.playerId]) {
         players[clientInfo.playerId].lastOnlineTime = Date.now();
+        
+        // 单独同步在线玩家到Supabase（确保不丢失）
+        if (useSupabase) {
+          syncPlayerNow(players[clientInfo.playerId]).catch(e => 
+            console.error('[同步] 玩家同步失败:', e.message)
+          );
+        }
       }
     }
     savePlayers(players);
@@ -2509,8 +2561,8 @@ function handleRegister(ws, data) {
   });
 }
 
-// Login handler
-function handleLogin(ws, data) {
+// Login handler (支持Supabase回退查询)
+async function handleLogin(ws, data) {
   const { email, password } = data;
   
   if (!email || !password) {
@@ -2521,7 +2573,7 @@ function handleLogin(ws, data) {
     return;
   }
   
-  const result = authenticatePlayer(email, password);
+  const result = await authenticatePlayer(email, password);
   
   if (result.error) {
     sendToClient(ws, {
